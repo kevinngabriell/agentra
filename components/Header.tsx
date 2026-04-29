@@ -15,6 +15,10 @@ export function Header() {
     router.push('/register');
   }
 
+  const handleHome = () => {
+    router.push('/');
+  }
+
   return (
     <Box backgroundColor={"white"}
       as="header"
@@ -28,7 +32,7 @@ export function Header() {
     >
       <Flex maxW="1200px" mx="auto" align="center" justify="space-between">
         {/* Logo */}
-        <Text fontWeight="bold" fontSize="xl" color="#0D1B3E" letterSpacing="tight">
+        <Text fontWeight="bold" fontSize="xl" color="#0D1B3E" letterSpacing="tight" onClick={handleHome}>
           Agentra
         </Text>
 
