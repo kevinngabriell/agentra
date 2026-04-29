@@ -2,12 +2,22 @@
 
 import { Box, Flex, HStack, Button, Text } from "@chakra-ui/react"
 import Link from "next/link"
+import { useRouter } from "next/navigation";
 
 export function Header() {
+  const router = useRouter();
+  
+  const handleLogin = () => {
+    router.push('/login');
+  };
+
+  const handleRegister = () => {
+    router.push('/register');
+  }
+
   return (
-    <Box
+    <Box backgroundColor={"white"}
       as="header"
-      bg="white"
       borderBottom="1px solid"
       borderColor="gray.200"
       px={{ base: 6, md: 12 }}
@@ -25,15 +35,7 @@ export function Header() {
         {/* Nav Links */}
         <HStack gap={8} display={{ base: "none", md: "flex" }}>
           <Link href="#features">
-            <Text
-              fontSize="sm"
-              fontWeight="medium"
-              color="#3B82F6"
-              borderBottom="2px solid"
-              borderColor="#3B82F6"
-              pb="2px"
-              _hover={{ color: "#2563EB" }}
-            >
+            <Text fontSize={"sm"} fontWeight={"medium"} color={"#3B82F6"} borderBottom={"2px solid"} borderColor={"#3B82F6"} pb={"2px"} _hover={{ color: "#2563EB" }}>
               Fitur
             </Text>
           </Link>
@@ -51,30 +53,8 @@ export function Header() {
 
         {/* CTA Buttons */}
         <HStack gap={3}>
-          <Link href="/login">
-            <Button
-              variant="ghost"
-              size="sm"
-              color="gray.700"
-              _hover={{ bg: "gray.100" }}
-              minH="40px"
-              px={4}
-            >
-              Masuk
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button
-              size="sm"
-              bg="#0D1B3E"
-              color="white"
-              _hover={{ bg: "#1a2f5c" }}
-              minH="40px"
-              px={5}
-            >
-              Coba Gratis
-            </Button>
-          </Link>
+          <Button variant={"ghost"} size={"sm"} color={"gray.700"} _hover={{ bg: "gray.100" }} minH={"40px"} px={4} onClick={handleLogin}>Masuk</Button>
+          <Button backgroundColor={"#0D1B3E"} size={"sm"} color={"white"} _hover={{ bg: "#1a2f5c" }} minH={"40px"} px={5} onClick={handleRegister}>Coba Gratis</Button>
         </HStack>
       </Flex>
     </Box>
