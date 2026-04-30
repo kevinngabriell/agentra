@@ -3,9 +3,15 @@
 import { Button, Card, Checkbox, Field, Flex, Image, Input, InputGroup, Link, Text } from "@chakra-ui/react";
 import { PasswordInput } from "../../components/ui/password-input";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login(){
     const [agreed, setAgreed] = useState(false);
+    const router = useRouter();
+      
+      const handleLogin = () => {
+        router.push('/agentra/dashboard');
+      };
 
     return(
         <Flex backgroundColor={"#1A3557"} p={16} gap={"31.18px"} flexDir={"column"} minH={"100vh"} alignItems={"center"} justifyContent={"center"}>
@@ -36,7 +42,7 @@ export default function Login(){
                             </Checkbox.Label>
                         </Checkbox.Root>
                 
-                        <Button backgroundColor={"#001F40"} color={"#FFFFFF"} fontSize={"16px"} borderRadius={"8px"}>Masuk</Button>
+                        <Button onClick={handleLogin} backgroundColor={"#001F40"} color={"#FFFFFF"} fontSize={"16px"} borderRadius={"8px"}>Masuk</Button>
                     </Flex>
                     
 
