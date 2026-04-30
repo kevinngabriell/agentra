@@ -3,8 +3,10 @@ import { HeroSection } from "../components/HeroSection"
 import { FeaturesSection } from "../components/FeaturesSection"
 import { PricingSection } from "../components/PricingSection"
 import { Footer } from "../components/Footer"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
+
   return (
     <>
       <Header />
