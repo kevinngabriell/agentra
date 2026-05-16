@@ -1,11 +1,13 @@
 "use client"
 
 import React, { useState } from "react"
-import { Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, NativeSelect, SimpleGrid, Steps, Text } from "@chakra-ui/react"
+import { useRouter } from "next/navigation"
+import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, NativeSelect, SimpleGrid, Steps, Text } from "@chakra-ui/react"
 import { Header } from "../../components/Header"
 import { FaShieldAlt } from "react-icons/fa"
 import { FiAlertCircle, FiAward, FiCheck, FiCreditCard, FiEye, FiEyeOff, FiLock, FiShield, FiSmartphone, FiZap, FiMessageCircle } from "react-icons/fi"
 import { MdAccountBalance, MdSupportAgent } from "react-icons/md"
+import { RegisterAgent } from "@/lib/auth/auth"
 
 function Stepper({ currentStep }: { currentStep: number }) {
   const steps = [
@@ -223,14 +225,23 @@ const PROVINCES = [
   "Sumatera Selatan", "Sumatera Utara",
 ]
 
-const INSURANCE_COMPANIES = [
-  "Prudential Indonesia", "Allianz Life Indonesia", "AIA Financial",
-  "BCA Life", "Manulife Indonesia", "Sun Life Indonesia",
-  "Tokio Marine Life", "Great Eastern Life", "Generali Indonesia",
-  "Sequis Life", "Panin Dai-ichi Life", "Cigna Indonesia",
-]
-
-function Step2Form({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function Step2Form({
+  onBack,
+  onNext,
+  businessName,
+  onBusinessNameChange,
+  city,
+  onCityChange,
+  errors,
+}: {
+  onBack: () => void
+  onNext: () => void
+  businessName: string
+  onBusinessNameChange: (v: string) => void
+  city: string
+  onCityChange: (v: string) => void
+  errors: Record<string, string>
+}) {
   return (
     <Card.Root boxShadow="sm" border="1px solid" borderColor="#E5E7EB">
       <Card.Body gap="0" p="32px">
@@ -244,33 +255,26 @@ function Step2Form({ onBack, onNext }: { onBack: () => void; onNext: () => void 
         </Flex>
 
         <Flex flexDir="column" gap="16px" mb="28px">
-          <Field.Root>
+          <Field.Root invalid={!!errors.business_name}>
             <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
-              Nama Perusahaan Asuransi
+              Nama Bisnis / Agen
             </Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field fontSize="14px" color="#1C2833">
-                <option value="">Pilih Perusahaan</option>
-                {INSURANCE_COMPANIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
-
-          <Field.Root>
-            <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
-              Kode Agen{" "}
-              <Box as="span" fontWeight="normal" color="#9CA3AF">(Opsional)</Box>
-            </Field.Label>
-            <Input placeholder="Masukkan kode lisensi agen" fontSize="14px" />
+            <Input
+              placeholder="Masukkan nama bisnis atau agensi Anda"
+              fontSize="14px"
+              value={businessName}
+              onChange={(e) => onBusinessNameChange(e.target.value)}
+            />
+            {errors.business_name && (
+              <Field.ErrorText fontSize="12px">{errors.business_name}</Field.ErrorText>
+            )}
           </Field.Root>
 
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="16px">
             <Field.Root>
               <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
-                Provinsi
+                Provinsi{" "}
+                <Box as="span" fontWeight="normal" color="#9CA3AF">(Opsional)</Box>
               </Field.Label>
               <NativeSelect.Root>
                 <NativeSelect.Field fontSize="14px" color="#1C2833">
@@ -283,16 +287,19 @@ function Step2Form({ onBack, onNext }: { onBack: () => void; onNext: () => void 
               </NativeSelect.Root>
             </Field.Root>
 
-            <Field.Root>
+            <Field.Root invalid={!!errors.city}>
               <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
-                Kota/Kabupaten
+                Kota / Kabupaten
               </Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field fontSize="14px" color="#1C2833">
-                  <option value="">Pilih Kota</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
+              <Input
+                placeholder="Masukkan nama kota"
+                fontSize="14px"
+                value={city}
+                onChange={(e) => onCityChange(e.target.value)}
+              />
+              {errors.city && (
+                <Field.ErrorText fontSize="12px">{errors.city}</Field.ErrorText>
+              )}
             </Field.Root>
           </SimpleGrid>
         </Flex>
@@ -372,7 +379,7 @@ const PLANS = [
     featured: true,
   },
   {
-    id: "agensi",
+    id: "scale",
     name: "Agensi",
     tagline: "Untuk tim & kantor cabang",
     price: "Rp 499k",
@@ -498,13 +505,23 @@ function Step3Form({ onBack, onNext }: { onBack: () => void; onNext: (planId: st
   )
 }
 
-function Step4Form({ onBack, planId }: { onBack: () => void; planId: string }) {
+function Step4Form({
+  onBack,
+  planId,
+  onSubmit,
+  loading,
+}: {
+  onBack: () => void
+  planId: string
+  onSubmit: () => void
+  loading: boolean
+}) {
   const [paymentMethod, setPaymentMethod] = useState<"va" | "card" | "ewallet">("va")
 
   const planInfo: Record<string, { name: string; price: string }> = {
     starter: { name: "Starter", price: "Rp 99.000" },
     pro:     { name: "Pro",     price: "Rp 249.000" },
-    agensi:  { name: "Agensi",  price: "Rp 499.000" },
+    scale:   { name: "Agensi",  price: "Rp 499.000" },
   }
   const plan = planInfo[planId] ?? planInfo.pro
 
@@ -695,6 +712,7 @@ function Step4Form({ onBack, planId }: { onBack: () => void; planId: string }) {
           fontSize="14px"
           px="24px"
           onClick={onBack}
+          disabled={loading}
         >
           Kembali
         </Button>
@@ -704,8 +722,11 @@ function Step4Form({ onBack, planId }: { onBack: () => void; planId: string }) {
           _hover={{ bg: "#1a2f5c" }}
           fontSize="14px"
           px="28px"
+          onClick={onSubmit}
+          loading={loading}
+          loadingText="Memproses..."
         >
-          Konfirmasi & Bayar
+          Konfirmasi &amp; Bayar
         </Button>
       </Flex>
 
@@ -826,9 +847,92 @@ function PageFooter() {
 }
 
 export default function Register() {
+  const router = useRouter()
+
   const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedPlan, setSelectedPlan] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [alert, setAlert] = useState<{ status: "success" | "error"; message: string } | null>(null)
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+    phone: "",
+    business_name: "",
+    city: "",
+    plan: "",
+  })
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  const setField = (field: keyof typeof formData) => (value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => { const next = { ...prev }; delete next[field]; return next })
+    }
+  }
+
+  function validateStep0(): boolean {
+    const errs: Record<string, string> = {}
+    if (!formData.name.trim()) errs.name = "Nama wajib diisi"
+    if (!formData.email.trim()) {
+      errs.email = "Email wajib diisi"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errs.email = "Format email tidak valid"
+    }
+    if (!formData.password) {
+      errs.password = "Password wajib diisi"
+    } else if (formData.password.length < 8) {
+      errs.password = "Min 8 karakter"
+    }
+    if (!formData.password_confirmation) {
+      errs.password_confirmation = "Konfirmasi password wajib diisi"
+    } else if (formData.password !== formData.password_confirmation) {
+      errs.password_confirmation = "Konfirmasi password tidak cocok"
+    }
+    if (!formData.phone.trim()) errs.phone = "Nomor telepon wajib diisi"
+    setFieldErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  function validateStep1(): boolean {
+    const errs: Record<string, string> = {}
+    if (!formData.business_name.trim()) errs.business_name = "Nama bisnis wajib diisi"
+    if (!formData.city.trim()) errs.city = "Kota wajib diisi"
+    setFieldErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const onRegister = async () => {
+    try {
+      setLoading(true)
+      setAlert(null)
+      await RegisterAgent({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+        phone: formData.phone,
+        whatsapp_number: formData.phone,
+        business_name: formData.business_name,
+        city: formData.city,
+        plan: formData.plan,
+      })
+      setAlert({ status: "success", message: "Akun berhasil dibuat! Anda akan diarahkan ke halaman login..." })
+      setTimeout(() => router.push("/login"), 2500)
+    } catch (err: any) {
+      if (err.errors && Object.keys(err.errors).length > 0) {
+        setFieldErrors(err.errors)
+      }
+      setAlert({ status: "error", message: err.message || "Pendaftaran gagal. Silakan coba lagi." })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <Box backgroundColor="#FAF9FC" minH="100vh">
@@ -836,6 +940,13 @@ export default function Register() {
       <Box py="48px">
         <Flex direction="column" maxW={currentStep >= 2 ? "960px" : "640px"} mx="auto" px="16px" transition="max-width 0.3s">
           <Stepper currentStep={currentStep} />
+
+          {alert && (
+            <Alert.Root status={alert.status} mb="16px" borderRadius="8px">
+              <Alert.Indicator />
+              <Alert.Description fontSize="14px">{alert.message}</Alert.Description>
+            </Alert.Root>
+          )}
 
           {currentStep === 0 && (
             <>
@@ -851,21 +962,38 @@ export default function Register() {
                   </Flex>
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} gap="16px" mb="20px">
-                    <Field.Root>
+                    <Field.Root invalid={!!fieldErrors.name}>
                       <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
                         Nama Lengkap
                       </Field.Label>
-                      <Input placeholder="Masukkan nama sesuai KTP" fontSize="14px" />
+                      <Input
+                        placeholder="Masukkan nama sesuai KTP"
+                        fontSize="14px"
+                        value={formData.name}
+                        onChange={(e) => setField("name")(e.target.value)}
+                      />
+                      {fieldErrors.name && (
+                        <Field.ErrorText fontSize="12px">{fieldErrors.name}</Field.ErrorText>
+                      )}
                     </Field.Root>
 
-                    <Field.Root>
+                    <Field.Root invalid={!!fieldErrors.email}>
                       <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
                         Alamat Email
                       </Field.Label>
-                      <Input type="email" placeholder="contoh@email.com" fontSize="14px" />
+                      <Input
+                        type="email"
+                        placeholder="contoh@email.com"
+                        fontSize="14px"
+                        value={formData.email}
+                        onChange={(e) => setField("email")(e.target.value)}
+                      />
+                      {fieldErrors.email && (
+                        <Field.ErrorText fontSize="12px">{fieldErrors.email}</Field.ErrorText>
+                      )}
                     </Field.Root>
 
-                    <Field.Root>
+                    <Field.Root invalid={!!fieldErrors.password}>
                       <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
                         Kata Sandi
                       </Field.Label>
@@ -885,17 +1013,59 @@ export default function Register() {
                           type={showPassword ? "text" : "password"}
                           placeholder="Min. 8 karakter"
                           fontSize="14px"
+                          value={formData.password}
+                          onChange={(e) => setField("password")(e.target.value)}
                         />
                       </InputGroup>
+                      {fieldErrors.password && (
+                        <Field.ErrorText fontSize="12px">{fieldErrors.password}</Field.ErrorText>
+                      )}
                     </Field.Root>
 
-                    <Field.Root>
+                    <Field.Root invalid={!!fieldErrors.password_confirmation}>
                       <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
-                        Nomor WhatsApp
+                        Konfirmasi Kata Sandi
+                      </Field.Label>
+                      <InputGroup
+                        width="100%"
+                        endElement={
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswordConfirm((v) => !v)}
+                            style={{ color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer" }}
+                          >
+                            {showPasswordConfirm ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                          </button>
+                        }
+                      >
+                        <Input
+                          type={showPasswordConfirm ? "text" : "password"}
+                          placeholder="Ulangi kata sandi"
+                          fontSize="14px"
+                          value={formData.password_confirmation}
+                          onChange={(e) => setField("password_confirmation")(e.target.value)}
+                        />
+                      </InputGroup>
+                      {fieldErrors.password_confirmation && (
+                        <Field.ErrorText fontSize="12px">{fieldErrors.password_confirmation}</Field.ErrorText>
+                      )}
+                    </Field.Root>
+
+                    <Field.Root invalid={!!fieldErrors.phone} gridColumn={{ md: "span 2" }}>
+                      <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
+                        Nomor WhatsApp / Telepon
                       </Field.Label>
                       <InputGroup width="100%" startAddon="+62">
-                        <Input placeholder="812xxxx" fontSize="14px" />
+                        <Input
+                          placeholder="812xxxx"
+                          fontSize="14px"
+                          value={formData.phone}
+                          onChange={(e) => setField("phone")(e.target.value)}
+                        />
                       </InputGroup>
+                      {fieldErrors.phone && (
+                        <Field.ErrorText fontSize="12px">{fieldErrors.phone}</Field.ErrorText>
+                      )}
                     </Field.Root>
                   </SimpleGrid>
 
@@ -939,7 +1109,7 @@ export default function Register() {
                       _hover={{ bg: "#1a2f5c" }}
                       fontSize="14px"
                       px="24px"
-                      onClick={() => setCurrentStep(1)}
+                      onClick={() => { if (validateStep0()) setCurrentStep(1) }}
                     >
                       Lanjutkan →
                     </Button>
@@ -956,7 +1126,12 @@ export default function Register() {
             <>
               <Step2Form
                 onBack={() => setCurrentStep(0)}
-                onNext={() => setCurrentStep(2)}
+                onNext={() => { if (validateStep1()) setCurrentStep(2) }}
+                businessName={formData.business_name}
+                onBusinessNameChange={setField("business_name")}
+                city={formData.city}
+                onCityChange={setField("city")}
+                errors={fieldErrors}
               />
               <Step2TrustIndicators />
             </>
@@ -965,7 +1140,11 @@ export default function Register() {
           {currentStep === 2 && (
             <Step3Form
               onBack={() => setCurrentStep(1)}
-              onNext={(planId) => { setSelectedPlan(planId); setCurrentStep(3) }}
+              onNext={(planId) => {
+                setSelectedPlan(planId)
+                setFormData((prev) => ({ ...prev, plan: planId }))
+                setCurrentStep(3)
+              }}
             />
           )}
 
@@ -973,6 +1152,8 @@ export default function Register() {
             <Step4Form
               onBack={() => setCurrentStep(2)}
               planId={selectedPlan}
+              onSubmit={onRegister}
+              loading={loading}
             />
           )}
         </Flex>

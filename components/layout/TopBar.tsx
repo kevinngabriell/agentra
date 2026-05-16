@@ -3,10 +3,14 @@
 import { Box, Flex, Separator, Text } from "@chakra-ui/react"
 import { FiBell, FiSettings } from "react-icons/fi"
 
-export function TopBar() {
+interface TopBarProps {
+  title: string
+}
+
+export function TopBar({ title }: TopBarProps) {
   return (
     <Flex align="center" justify="space-between" paddingX="24px" paddingY="9px" borderBottom="1px solid" borderColor="#E2E8F0" bgColor="#FFFFFF">
-      <Text color="#0F172A" fontSize="20px" fontWeight="bold">Dashboard</Text>
+      <Text color="#0F172A" fontSize="20px" fontWeight="bold">{title}</Text>
       <Flex align="center" gap="12px">
         <Flex
           w="36px" h="36px" borderRadius="full"

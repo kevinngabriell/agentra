@@ -1,539 +1,257 @@
 "use client"
 
-import { useState } from "react"
-import { Sidebar, TopBar, MobileHeader, MobileBottomNav } from "@/components/layout"
-import {
-  Box, Button, Flex, Grid, Input, Text, Textarea,
-} from "@chakra-ui/react"
-import {
-  FiShield, FiUpload, FiArrowRight, FiBriefcase, FiUser, FiInfo, FiCheck,
-} from "react-icons/fi"
+import { Sidebar, MobileHeader, MobileBottomNav, TopBar } from "@/components/layout";
+import { Box, Button, Card, Checkbox, Field, FileUpload, Flex, Icon, Image, Input, List, NativeSelect, SimpleGrid, Tabs, Text, Textarea } from "@chakra-ui/react";
+import { FaInfoCircle, FaArrowRight, FaRegFileImage, FaLock } from "react-icons/fa";
+import { LuUpload, LuUser } from "react-icons/lu";
+import verifiedImg from "@/assets/verified.png";
+import companyImg from "@/assets/company.png";
 
-// ─── Phone Input ──────────────────────────────────────────────────────────────
+const lbl = { color: "#5D6D7E", fontSize: "12px", fontWeight: "semibold" } as const;
+const clbl = { color: "#1C2833", fontSize: "14px", fontWeight: "medium" } as const;
 
-function PhoneInput({ placeholder }: { placeholder: string }) {
-  return (
-    <Flex border="1px solid" borderColor="#DDE1E7" borderRadius="10px" overflow="hidden" bg="white" _focusWithin={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}>
-      <Flex align="center" px="12px" bg="#F8FAFC" borderRight="1px solid" borderColor="#DDE1E7" flexShrink={0}>
-        <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">+62</Text>
-      </Flex>
-      <Input
-        border="none"
-        borderRadius="0"
-        h="44px"
-        fontSize="14px"
-        placeholder={placeholder}
-        _placeholder={{ color: "#B0BAC8" }}
-        _focus={{ boxShadow: "none" }}
-      />
+const PhoneInput = ({ placeholder = "81234567890" }) => (
+    <Flex border="1px solid" borderColor="#E2E8F0" borderRadius="md" overflow="hidden">
+        <Box px="3" display="flex" alignItems="center" bg="#F8FAFC" color="#94A3B8" fontSize="14px" borderRight="1px solid" borderRightColor="#E2E8F0" whiteSpace="nowrap">+62</Box>
+        <Input border="0" borderRadius="0" placeholder={placeholder} />
     </Flex>
-  )
-}
+);
 
-// ─── Field Label ─────────────────────────────────────────────────────────────
+export default function CustomerDetail() {
+    return (
+        <Box bg="#F4F6F9" minH="100vh">
+            <Sidebar />
+            <MobileHeader />
+            <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+                <Box display={{ base: "none", md: "block" }}>
+                    <TopBar title="Customer Detail" />
+                </Box>
 
-function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
-  return (
-    <Flex align="center" gap="6px" mb="6px">
-      <Text fontSize="12px" fontWeight="semibold" color="#5D6D7E" letterSpacing="0.04em" textTransform="uppercase">
-        {children}
-      </Text>
-      {optional && (
-        <Text fontSize="11px" color="#B0BAC8">(Opsional)</Text>
-      )}
-    </Flex>
-  )
-}
+                <Flex gap="32px" p="32px" flexDir="column">
+                    <Tabs.Root defaultValue="individual" variant="plain">
+                        <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w="max-content">
+                            {(["individual", "corporate"] as const).map((v, i) => (
+                                <Tabs.Trigger key={v} value={v} px="20px" py="8px" borderRadius="8px" fontSize="14px" fontWeight="medium" color="#64748B" _selected={{ bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" }} transition="all 0.15s">
+                                    {["Perorangan", "Perusahaan"][i]}
+                                </Tabs.Trigger>
+                            ))}
+                        </Tabs.List>
 
-// ─── Section Card ─────────────────────────────────────────────────────────────
+                        {/* ── Individual ── */}
+                        <Tabs.Content value="individual">
+                            <Flex w="100%" gap="32px">
+                                <Flex w="70%">
+                                    <Card.Root w="100%" border="1px solid" borderColor="#F1F5F9" borderRadius="12px">
+                                        <Card.Body gap="24px" p="32px">
+                                            <Flex borderLeft="4px solid" borderColor="#1A3557" pl="12px" alignItems="center">
+                                                <Text color="#1A3557" fontSize="18px" fontWeight="semibold">Data Identitas</Text>
+                                            </Flex>
+                                            <SimpleGrid columns={{ md: 2 }} gap="24px">
+                                                <Field.Root>
+                                                    <Field.Label {...lbl}>NOMOR INDUK KEPENDUDUKAN (NIK)</Field.Label>
+                                                    <Input placeholder="Contoh: 3273012345678901" />
+                                                </Field.Root>
+                                                <Field.Root>
+                                                    <Field.Label {...lbl}>NPWP (OPSIONAL)</Field.Label>
+                                                    <Input placeholder="00.000.000.0-000.000" />
+                                                </Field.Root>
+                                            </SimpleGrid>
+                                            <Field.Root>
+                                                <Field.Label {...lbl}>NAMA LENGKAP (SESUAI KTP)</Field.Label>
+                                                <Input placeholder="Masukkan nama lengkap" />
+                                            </Field.Root>
+                                            <SimpleGrid columns={{ md: 2 }} gap="24px">
+                                                <Field.Root>
+                                                    <Field.Label {...lbl}>TANGGAL LAHIR</Field.Label>
+                                                    <Input type="date" />
+                                                </Field.Root>
+                                                <Field.Root>
+                                                    <Field.Label {...lbl}>EMAIL</Field.Label>
+                                                    <Input placeholder="nama@email.com" />
+                                                </Field.Root>
+                                            </SimpleGrid>
+                                            <SimpleGrid columns={{ md: 2 }} gap="24px">
+                                                <Field.Root>
+                                                    <Field.Label {...lbl}>NO. TELEPON (HP)</Field.Label>
+                                                    <PhoneInput />
+                                                </Field.Root>
+                                                <Field.Root>
+                                                    <Field.Label {...lbl}>NO. WHATSAPP</Field.Label>
+                                                    <PhoneInput />
+                                                </Field.Root>
+                                            </SimpleGrid>
+                                            <Field.Root>
+                                                <Field.Label {...lbl}>ALAMAT LENGKAP</Field.Label>
+                                                <Textarea placeholder="Contoh: Jl. Sudirman No. 123, Kebayoran Baru, Jakarta Selatan" />
+                                            </Field.Root>
+                                        </Card.Body>
+                                    </Card.Root>
+                                </Flex>
 
-function SectionCard({ icon, title, children }: { icon?: React.ReactNode; title: string; children: React.ReactNode }) {
-  return (
-    <Box bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="14px" overflow="hidden">
-      <Flex align="center" gap="10px" px="24px" py="16px" borderLeft="4px solid" borderColor="#006397" borderBottom="1px solid" borderBottomColor="#DDE1E7">
-        {icon && <Box color="#006397">{icon}</Box>}
-        <Text fontSize="17px" fontWeight="semibold" color="#001F40">{title}</Text>
-      </Flex>
-      <Box p="24px">{children}</Box>
-    </Box>
-  )
-}
+                                <Flex w="30%" gap="24px" flexDir="column">
+                                    {/* Petunjuk Pengisian */}
+                                    <Card.Root bgColor="#1A3557" color="white" borderRadius="12px">
+                                        <Card.Body gap="16px">
+                                            <Flex gap="8px" alignItems="center" fontWeight="semibold" fontSize="16px">
+                                                <FaInfoCircle color="#7DD3FC" /> Petunjuk Pengisian
+                                            </Flex>
+                                            <List.Root gap="12px" ps="4" listStyleType="disc" color="#7DD3FC">
+                                                {[
+                                                    "Pastikan data NIK telah divalidasi melalui sistem Dukcapil pusat.",
+                                                    "Nama lengkap harus sesuai dengan E-KTP tanpa gelar (kecuali profesional).",
+                                                    "Nomor WhatsApp aktif diperlukan untuk pengiriman e-Polis secara otomatis.",
+                                                ].map((t, i) => <List.Item key={i} fontSize="12px" color="white">{t}</List.Item>)}
+                                            </List.Root>
+                                        </Card.Body>
+                                    </Card.Root>
 
-// ─── Perorangan Form ──────────────────────────────────────────────────────────
+                                    {/* Verifikasi Dokumen */}
+                                    <Card.Root borderRadius="12px">
+                                        <Card.Body p="16px">
+                                            <Flex flexDir="column" alignItems="center" gap="12px" border="2px dashed" borderColor="#CBD5E1" borderRadius="10px" p="16px">
+                                                <Image src={verifiedImg.src} w="72px" />
+                                                <Text color="#1A3557" fontSize="15px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
+                                                <Text color="#64748B" fontSize="12px" textAlign="center">Unggah foto KTP nasabah untuk mempercepat proses verifikasi data secara otomatis melalui OCR</Text>
+                                                <Flex w="100%" alignItems="center" justifyContent="center" gap="8px" border="1px solid" borderColor="#CBD5E1" borderRadius="8px" py="10px" color="#94A3B8" fontSize="13px" cursor="pointer" _hover={{ borderColor: "#93C5FD", color: "#60A5FA" }}>
+                                                    <FaRegFileImage size={15} /> Unggah Foto KTP
+                                                </Flex>
+                                            </Flex>
+                                        </Card.Body>
+                                    </Card.Root>
 
-function PeroranganForm() {
-  return (
-    <SectionCard title="Data Identitas">
-      <Flex flexDir="column" gap="20px">
-        <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="20px">
-          <Box>
-            <Label>Nomor Induk Kependudukan (NIK)</Label>
-            <Input
-              h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" placeholder="Contoh: 3273012345678901"
-              _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-            />
-          </Box>
-          <Box>
-            <Label optional>NPWP</Label>
-            <Input
-              h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" placeholder="00.000.000.0-000.000"
-              _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-            />
-          </Box>
-        </Grid>
+                                    <Flex flexDir="column" gap="12px">
+                                        <Button bgColor="#1A3557" color="white" fontSize="14px" fontWeight="bold" py="16px" borderRadius="10px">
+                                            Simpan Data Nasabah <FaArrowRight />
+                                        </Button>
+                                        <Button bgColor="white" color="#5D6D7E" fontSize="14px" border="1px solid" borderColor="#DDE1E7" py="16px" borderRadius="10px">Batalkan</Button>
+                                    </Flex>
+                                </Flex>
+                            </Flex>
+                        </Tabs.Content>
 
-        <Box>
-          <Label>Nama Lengkap (Sesuai KTP)</Label>
-          <Input
-            h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-            fontSize="14px" placeholder="Masukkan nama lengkap"
-            _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-          />
-        </Box>
+                        {/* ── Corporate ── */}
+                        <Tabs.Content value="corporate">
+                            <Flex gap="32px" flexDir="column">
+                                {/* Informasi Perusahaan */}
+                                <Card.Root borderRadius="12px" border="1px solid" borderColor="#F1F5F9">
+                                    <Card.Body gap="24px" p="32px">
+                                        <Flex gap="12px" alignItems="center">
+                                            <Image src={companyImg.src} w="40px" h="40px" />
+                                            <Flex flexDir="column">
+                                                <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi Perusahaan</Text>
+                                                <Text color="#5D6D7E" fontSize="12px">Lengkapi detail legalitas dan operasional perusahaan nasabah</Text>
+                                            </Flex>
+                                        </Flex>
+                                        <SimpleGrid columns={{ lg: 3 }} gap="24px">
+                                            <Field.Root><Field.Label {...clbl}>Nama Perusahaan</Field.Label><Input placeholder="Contoh: PT Teknologi Maju Jaya" /></Field.Root>
+                                            <Field.Root><Field.Label {...clbl}>Nama Legal</Field.Label><Input placeholder="Sesuai Akta Notaris" /></Field.Root>
+                                            <Field.Root><Field.Label {...clbl}>NPWP</Field.Label><Input placeholder="00.000.000.0-000.000" /></Field.Root>
+                                        </SimpleGrid>
+                                        <SimpleGrid columns={{ lg: 3 }} gap="24px">
+                                            <Field.Root><Field.Label {...clbl}>NIB</Field.Label><Input placeholder="Nomor Induk Berusaha" /></Field.Root>
+                                            <Field.Root>
+                                                <Field.Label {...clbl}>Tipe Bisnis</Field.Label>
+                                                <NativeSelect.Root>
+                                                    <NativeSelect.Field placeholder="Pilih Tipe Bisnis">
+                                                        <option>PT</option><option>CV</option><option>Firma</option><option>Koperasi</option>
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
+                                            </Field.Root>
+                                            <Field.Root><Field.Label {...clbl}>Email Kantor</Field.Label><Input placeholder="corporate@company.com" /></Field.Root>
+                                        </SimpleGrid>
+                                        <SimpleGrid columns={{ md: 2 }} gap="24px">
+                                            <Field.Root><Field.Label {...clbl}>No. Telp Kantor</Field.Label><Input placeholder="(021) 1234567" /></Field.Root>
+                                            <Field.Root><Field.Label {...clbl}>Alamat Operasional</Field.Label><Input placeholder="Alamat lengkap operasional saat ini..." /></Field.Root>
+                                        </SimpleGrid>
+                                        <Field.Root>
+                                            <Flex justifyContent="space-between" alignItems="center">
+                                                <Field.Label {...clbl} mb="0">Alamat Legal (Sesuai Domisili/NPWP)</Field.Label>
+                                                <Text color="#3B82F6" fontSize="12px" cursor="pointer">⟳ Samakan dengan Operasional</Text>
+                                            </Flex>
+                                            <Input placeholder="Alamat sesuai dokumen hukum..." mt="2" />
+                                        </Field.Root>
+                                    </Card.Body>
+                                </Card.Root>
 
-        <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="20px">
-          <Box>
-            <Label>Tanggal Lahir</Label>
-            <Input
-              type="date" h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" color="#B0BAC8"
-              _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-            />
-          </Box>
-          <Box>
-            <Label>Email</Label>
-            <Input
-              type="email" h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" placeholder="nama@email.com"
-              _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-            />
-          </Box>
-        </Grid>
+                                <Flex w="100%" gap="32px">
+                                    {/* Informasi PIC */}
+                                    <Flex w="70%">
+                                        <Card.Root w="100%" borderRadius="12px" border="1px solid" borderColor="#F1F5F9">
+                                            <Card.Body gap="24px" p="32px">
+                                                <Flex gap="12px" alignItems="center">
+                                                    <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuUser size={20} /></Box>
+                                                    <Flex flexDir="column">
+                                                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi PIC</Text>
+                                                        <Text color="#5D6D7E" fontSize="12px">Detail orang yang bertanggung jawab (Person In Charge).</Text>
+                                                    </Flex>
+                                                </Flex>
+                                                <SimpleGrid columns={{ md: 2 }} gap="24px">
+                                                    <Field.Root><Field.Label {...clbl}>Nama PIC</Field.Label><Input placeholder="Nama Lengkap PIC" /></Field.Root>
+                                                    <Field.Root><Field.Label {...clbl}>Jabatan PIC</Field.Label><Input placeholder="Contoh: Direktur Keuangan" /></Field.Root>
+                                                </SimpleGrid>
+                                                <SimpleGrid columns={{ md: 2 }} gap="24px">
+                                                    <Field.Root><Field.Label {...clbl}>No. HP PIC</Field.Label><Input placeholder="0812xxxx" /></Field.Root>
+                                                    <Field.Root>
+                                                        <Field.Label {...clbl}>No. WA PIC</Field.Label>
+                                                        <Flex gap="8px" alignItems="center">
+                                                            <Input placeholder="0812xxxx" />
+                                                            <Checkbox.Root size="sm" defaultChecked colorPalette="green">
+                                                                <Checkbox.HiddenInput />
+                                                                <Checkbox.Control />
+                                                                <Checkbox.Label fontSize="12px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
+                                                            </Checkbox.Root>
+                                                        </Flex>
+                                                    </Field.Root>
+                                                </SimpleGrid>
+                                            </Card.Body>
+                                        </Card.Root>
+                                    </Flex>
 
-        <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="20px">
-          <Box>
-            <Label>No. Telepon (HP)</Label>
-            <PhoneInput placeholder="81234567890" />
-          </Box>
-          <Box>
-            <Label>No. WhatsApp</Label>
-            <PhoneInput placeholder="81234567890" />
-          </Box>
-        </Grid>
+                                    {/* Right sidebar */}
+                                    <Flex w="30%" gap="24px" flexDir="column">
+                                        <Card.Root bgColor="#1A3557" color="white" borderRadius="12px">
+                                            <Card.Body gap="12px">
+                                                <Text fontSize="16px" fontWeight="semibold">Verifikasi Data</Text>
+                                                <Text fontSize="12px" color="#BFDBFE">Pastikan seluruh informasi perusahaan dan PIC telah sesuai dengan dokumen legal asli untuk mempercepat proses underwriting.</Text>
+                                                <Flex flexDir="column" gap="8px" my="4px">
+                                                    {[
+                                                        { label: "NPWP tervalidasi oleh sistem", done: true },
+                                                        { label: "Dokumen NIB telah diunggah", done: false },
+                                                        { label: "Alamat legal telah diverifikasi", done: false },
+                                                    ].map((item, i) => (
+                                                        <Flex key={i} gap="8px" alignItems="center">
+                                                            <Box w="10px" h="10px" borderRadius="full" flexShrink={0} bg={item.done ? "#4ADE80" : "transparent"} border={item.done ? "none" : "2px solid #94A3B8"} />
+                                                            <Text fontSize="12px" color={item.done ? "white" : "#94A3B8"}>{item.label}</Text>
+                                                        </Flex>
+                                                    ))}
+                                                </Flex>
+                                                <Button bg="white" color="#1A3557" fontSize="14px" fontWeight="semibold" borderRadius="8px">
+                                                    Simpan Data Nasabah <FaLock size={12} />
+                                                </Button>
+                                                <Button bg="transparent" color="#DBEAFE" fontSize="14px" border="1px solid" borderColor="#2F5788" borderRadius="8px">Batalkan</Button>
+                                            </Card.Body>
+                                        </Card.Root>
 
-        <Box>
-          <Label>Alamat Lengkap</Label>
-          <Textarea
-            bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-            fontSize="14px" rows={4}
-            placeholder="Contoh: Jl. Sudirman No. 123, Kebayoran Baru, Jakarta Selatan"
-            _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-            resize="none"
-          />
-        </Box>
-      </Flex>
-    </SectionCard>
-  )
-}
-
-// ─── Perorangan Sidebar ───────────────────────────────────────────────────────
-
-function PeroranganSidebar() {
-  return (
-    <Flex flexDir="column" gap="16px">
-      {/* Guidance */}
-      <Box bg="#001F40" borderRadius="14px" p="20px">
-        <Flex align="center" gap="8px" mb="12px">
-          <Box color="#60A5FA"><FiInfo size={16} /></Box>
-          <Text fontSize="14px" fontWeight="semibold" color="white">Petunjuk Pengisian</Text>
-        </Flex>
-        <Flex flexDir="column" gap="8px">
-          {[
-            "Pastikan data NIK telah divalidasi melalui sistem Dukcapil pusat.",
-            "Nama lengkap harus sesuai dengan E-KTP tanpa gelar (kecuali profesional).",
-            "Nomor WhatsApp aktif diperlukan untuk pengiriman e-Polis secara otomatis.",
-          ].map((tip, i) => (
-            <Flex key={i} align="flex-start" gap="8px">
-              <Box w="5px" h="5px" borderRadius="full" bg="#60A5FA" mt="7px" flexShrink={0} />
-              <Text fontSize="13px" color="#CBD5E1" lineHeight="1.5">{tip}</Text>
-            </Flex>
-          ))}
-        </Flex>
-      </Box>
-
-      {/* Document verification */}
-      <Box bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="14px" p="20px">
-        <Flex align="center" justify="center" mb="12px">
-          <Box color="#B0BAC8"><FiShield size={32} /></Box>
-        </Flex>
-        <Text fontSize="14px" fontWeight="semibold" color="#1C2833" textAlign="center" mb="4px">
-          Verifikasi Dokumen
-        </Text>
-        <Text fontSize="12px" color="#8B9BB4" textAlign="center" mb="16px" lineHeight="1.5">
-          Unggah foto KTP nasabah untuk mempercepat proses verifikasi data secara otomatis melalui OCR.
-        </Text>
-        <Button
-          w="full" h="44px" bg="white" border="2px dashed" borderColor="#DDE1E7"
-          borderRadius="10px" fontSize="13px" color="#5D6D7E" fontWeight="medium"
-          _hover={{ borderColor: "#006397", color: "#006397", bg: "#F0F7FF" }}
-        >
-          <Flex align="center" gap="8px">
-            <FiUpload size={15} />
-            Unggah Foto KTP
-          </Flex>
-        </Button>
-      </Box>
-
-      {/* Actions */}
-      <Button
-        h="48px" bg="#001F40" color="white" borderRadius="12px"
-        fontSize="14px" fontWeight="semibold"
-        _hover={{ bg: "#0a3060" }}
-      >
-        <Flex align="center" gap="8px">
-          Simpan Data Nasabah
-          <FiArrowRight size={16} />
-        </Flex>
-      </Button>
-      <Button
-        h="44px" bg="white" color="#5D6D7E" borderRadius="12px"
-        border="1px solid" borderColor="#DDE1E7"
-        fontSize="14px" fontWeight="medium"
-        _hover={{ bg: "#F8FAFC" }}
-      >
-        Batalkan
-      </Button>
-    </Flex>
-  )
-}
-
-// ─── Perusahaan Form ──────────────────────────────────────────────────────────
-
-function PerusahaanForm() {
-  const [sameAddress, setSameAddress] = useState(false)
-  const [sameWA, setSameWA] = useState(false)
-
-  const tipeOptions = [
-    "Pilih Tipe Bisnis", "PT (Perseroan Terbatas)", "CV (Commanditaire Vennootschap)",
-    "Firma", "Koperasi", "Yayasan", "Perorangan (UMKM)",
-  ]
-
-  return (
-    <Flex flexDir="column" gap="20px">
-      {/* Company Info */}
-      <SectionCard icon={<FiBriefcase size={18} />} title="Informasi Perusahaan">
-        <Flex flexDir="column" gap="20px">
-          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr 1fr" }} gap="20px">
-            <Box>
-              <Label>Nama Perusahaan</Label>
-              <Input
-                h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="Contoh: PT Teknologi Maju Jaya"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-            <Box>
-              <Label>Nama Legal</Label>
-              <Input
-                h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="Sesuai Akta Notaris"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-            <Box>
-              <Label>NPWP</Label>
-              <Input
-                h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="01.065.065.0-045.060"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-          </Grid>
-
-          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr 1fr" }} gap="20px">
-            <Box>
-              <Label>NB</Label>
-              <Input
-                h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="Nomor Induk Berusaha"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-            <Box>
-              <Label>Tipe Bisnis</Label>
-              <Box
-                as="select"
-                h="44px" w="full" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" color="#5D6D7E" px="12px"
-                style={{ outline: "none" }}
-              >
-                {tipeOptions.map((o) => (
-                  <option key={o} value={o === "Pilih Tipe Bisnis" ? "" : o}>{o}</option>
-                ))}
-              </Box>
-            </Box>
-            <Box>
-              <Label>Email Kantor</Label>
-              <Input
-                type="email" h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="corporate@company.com"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-          </Grid>
-
-          <Box>
-            <Label>No. Telp Kantor</Label>
-            <Input
-              h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" placeholder="021-1234567"
-              _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-            />
-          </Box>
-
-          <Box>
-            <Label>Alamat Operasional</Label>
-            <Textarea
-              bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" rows={3}
-              placeholder="Alamat lengkap operasional saat ini..."
-              _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              resize="none"
-            />
-          </Box>
-
-          <Box>
-            <Flex justify="space-between" align="center" mb="6px">
-              <Label>Alamat Legal (Domisili/NPWP)</Label>
-              <Text
-                fontSize="12px" color="#006397" cursor="pointer" fontWeight="medium"
-                _hover={{ textDecor: "underline" }}
-                onClick={() => setSameAddress(!sameAddress)}
-              >
-                Samakan dengan Operasional
-              </Text>
-            </Flex>
-            <Textarea
-              bg={sameAddress ? "#F8FAFC" : "white"} border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-              fontSize="14px" rows={3}
-              placeholder="Alamat sesuai dokumen hukum..."
-              _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              resize="none"
-            />
-          </Box>
-        </Flex>
-      </SectionCard>
-
-      {/* PIC Info */}
-      <SectionCard icon={<FiUser size={18} />} title="Informasi PIC">
-        <Text fontSize="13px" color="#8B9BB4" mb="20px">
-          Detail orang yang bertanggung jawab atas Person in Charge/el.
-        </Text>
-        <Flex flexDir="column" gap="20px">
-          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="20px">
-            <Box>
-              <Label>Nama PIC</Label>
-              <Input
-                h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="Nama Lengkap PIC"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-            <Box>
-              <Label>Jabatan PIC</Label>
-              <Input
-                h="44px" bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="10px"
-                fontSize="14px" placeholder="Contoh: Direktur Keuangan"
-                _placeholder={{ color: "#B0BAC8" }} _focus={{ borderColor: "#006397", boxShadow: "0 0 0 3px rgba(0,99,151,0.12)" }}
-              />
-            </Box>
-          </Grid>
-
-          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="20px">
-            <Box>
-              <Label>No. HP PIC</Label>
-              <PhoneInput placeholder="08xxxxxxxx" />
-            </Box>
-            <Box>
-              <Flex justify="space-between" align="center" mb="6px">
-                <Label>No. WA PIC</Label>
-                <Flex
-                  align="center" gap="6px" cursor="pointer"
-                  onClick={() => setSameWA(!sameWA)}
-                >
-                  <Flex
-                    w="16px" h="16px" borderRadius="4px" border="2px solid"
-                    borderColor={sameWA ? "#006397" : "#DDE1E7"}
-                    bg={sameWA ? "#006397" : "white"}
-                    align="center" justify="center" flexShrink={0}
-                  >
-                    {sameWA && <FiCheck size={10} color="white" />}
-                  </Flex>
-                  <Text fontSize="12px" color="#5D6D7E">Sama</Text>
+                                        <FileUpload.Root maxFiles={5}>
+                                            <FileUpload.HiddenInput />
+                                            <FileUpload.Dropzone borderRadius="12px">
+                                                <Icon size="md" color="fg.muted"><LuUpload /></Icon>
+                                                <FileUpload.DropzoneContent>
+                                                    <Box fontWeight="bold" fontSize="14px" color="#1C2833">Unggah Dokumen Legal</Box>
+                                                    <Box color="#94A3B8" fontSize="12px">PDF, JPG (Maks. 5MB)</Box>
+                                                </FileUpload.DropzoneContent>
+                                            </FileUpload.Dropzone>
+                                            <FileUpload.List />
+                                        </FileUpload.Root>
+                                    </Flex>
+                                </Flex>
+                            </Flex>
+                        </Tabs.Content>
+                    </Tabs.Root>
                 </Flex>
-              </Flex>
-              <PhoneInput placeholder="08xxxxxxxx" />
             </Box>
-          </Grid>
-        </Flex>
-      </SectionCard>
-    </Flex>
-  )
-}
-
-// ─── Perusahaan Sidebar ───────────────────────────────────────────────────────
-
-function PerusahaanSidebar() {
-  const checks = [
-    "NIP/NPWP telah diverifikasi",
-    "Dokumen akta terisi",
-    "Alamat legal sesuai dokumen resmi",
-  ]
-
-  return (
-    <Flex flexDir="column" gap="16px">
-      {/* Verification checklist */}
-      <Box bg="#001F40" borderRadius="14px" p="20px">
-        <Text fontSize="14px" fontWeight="semibold" color="white" mb="8px">Verifikasi Data</Text>
-        <Text fontSize="12px" color="#CBD5E1" mb="16px" lineHeight="1.5">
-          Pastikan informasi perusahaan berikut sudah terisi sebelum verifikasi. Kami akan menghubungi Anda dalam 1x24 jam setelah data terverifikasi.
-        </Text>
-        <Flex flexDir="column" gap="10px">
-          {checks.map((c, i) => (
-            <Flex key={i} align="center" gap="10px">
-              <Flex
-                w="18px" h="18px" borderRadius="full" border="2px solid"
-                borderColor="#475569" align="center" justify="center" flexShrink={0}
-              />
-              <Text fontSize="13px" color="#CBD5E1">{c}</Text>
-            </Flex>
-          ))}
-        </Flex>
-      </Box>
-
-      {/* Legal doc upload */}
-      <Box bg="white" border="1px solid" borderColor="#DDE1E7" borderRadius="14px" p="20px">
-        <Flex align="center" justify="center" mb="12px">
-          <Box color="#B0BAC8"><FiUpload size={28} /></Box>
-        </Flex>
-        <Text fontSize="13px" fontWeight="semibold" color="#1C2833" textAlign="center" mb="4px">
-          Unggah Dokumen Legal
-        </Text>
-        <Text fontSize="12px" color="#8B9BB4" textAlign="center" mb="14px" lineHeight="1.5">
-          Akta pendirian, NPWP perusahaan, dan dokumen legalitas lainnya.
-        </Text>
-        <Button
-          w="full" h="44px" bg="white" border="2px dashed" borderColor="#DDE1E7"
-          borderRadius="10px" fontSize="13px" color="#5D6D7E" fontWeight="medium"
-          _hover={{ borderColor: "#006397", color: "#006397", bg: "#F0F7FF" }}
-        >
-          <Flex align="center" gap="8px">
-            <FiUpload size={14} />
-            Pilih Dokumen
-          </Flex>
-        </Button>
-      </Box>
-
-      {/* Actions */}
-      <Button
-        h="48px" bg="#001F40" color="white" borderRadius="12px"
-        fontSize="14px" fontWeight="semibold"
-        _hover={{ bg: "#0a3060" }}
-      >
-        <Flex align="center" gap="8px">
-          Simpan Data Nasabah
-          <FiArrowRight size={16} />
-        </Flex>
-      </Button>
-      <Button
-        h="44px" bg="white" color="#5D6D7E" borderRadius="12px"
-        border="1px solid" borderColor="#DDE1E7"
-        fontSize="14px" fontWeight="medium"
-        _hover={{ bg: "#F8FAFC" }}
-      >
-        Batalkan
-      </Button>
-
-      {/* Notice */}
-      <Box bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="10px" p="12px">
-        <Text fontSize="12px" color="#92400E" lineHeight="1.5">
-          <Text as="span" fontWeight="semibold">Perhatian:</Text> Agen Perusahaan hanya bisa mendapatkan 1 kode agen utama yang berlaku seumur hidup. Pastikan data sudah benar sebelum menyimpan.
-        </Text>
-      </Box>
-    </Flex>
-  )
-}
-
-// ─── Tab Button ───────────────────────────────────────────────────────────────
-
-function TabBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <Button
-      onClick={onClick}
-      h="40px" px="28px"
-      bg={active ? "white" : "transparent"}
-      color={active ? "#001F40" : "#8B9BB4"}
-      fontWeight={active ? "semibold" : "medium"}
-      fontSize="14px"
-      borderRadius="8px"
-      boxShadow={active ? "0 1px 4px rgba(0,0,0,0.10)" : "none"}
-      _hover={{ color: "#001F40" }}
-    >
-      {label}
-    </Button>
-  )
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-export default function CustomerDetailPage() {
-  const [tab, setTab] = useState<"perorangan" | "perusahaan">("perorangan")
-
-  return (
-    <Box bg="#F4F6F9" minH="100vh">
-      <Sidebar />
-      <MobileHeader />
-
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
-        <Box display={{ base: "none", md: "block" }}><TopBar /></Box>
-
-        <Flex p="24px" gap="24px" flexDir="column">
-
-          {/* Page header */}
-          <Box>
-            <Text fontSize="24px" fontWeight="bold" color="#001F40">Daftarkan Nasabah Baru</Text>
-            <Text fontSize="14px" color="#5D6D7E" mt="4px">
-              Isi formulir berikut untuk menambahkan data nasabah ke dalam sistem.
-            </Text>
-          </Box>
-
-          {/* Tab switcher */}
-          <Flex>
-            <Flex bg="#E9EDF2" borderRadius="10px" p="4px" gap="2px">
-              <TabBtn label="Perorangan" active={tab === "perorangan"} onClick={() => setTab("perorangan")} />
-              <TabBtn label="Perusahaan" active={tab === "perusahaan"} onClick={() => setTab("perusahaan")} />
-            </Flex>
-          </Flex>
-
-          {/* Content grid */}
-          <Grid templateColumns={{ base: "1fr", lg: "1fr 300px" }} gap="24px" alignItems="flex-start">
-            {/* Left: form */}
-            <Box>
-              {tab === "perorangan" ? <PeroranganForm /> : <PerusahaanForm />}
-            </Box>
-
-            {/* Right: sidebar */}
-            <Box>
-              {tab === "perorangan" ? <PeroranganSidebar /> : <PerusahaanSidebar />}
-            </Box>
-          </Grid>
-
-        </Flex>
-      </Box>
-
-      <MobileBottomNav />
-    </Box>
-  )
+            <MobileBottomNav />
+        </Box>
+    );
 }

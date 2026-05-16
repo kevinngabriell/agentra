@@ -280,7 +280,8 @@ export default function DashboardPage() {
         <MobileHeader />
 
         <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
-          <Box display={{ base: "none", md: "block" }}><TopBar /></Box>
+          <Box display={{ base: "none", md: "block" }}>
+            <TopBar title="Dashboard" /></Box>
 
           <Flex p={"24px"} gap={"24px"} flexDir={"column"}>
             <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={{ base: "12px", md: "16px" }}>
