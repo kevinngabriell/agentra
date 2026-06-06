@@ -105,10 +105,10 @@ export default function Customer() {
 
           {/* Search */}
           <Flex flexDir="column" gap="10px">
-            <Flex align="center" gap="10px" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" px="14px" py="10px">
+            <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" px="14px" py="5px">
               <LuSearch size={16} color="#94A3B8" />
               <Input
-                flex="1" outline="none" border="none" fontSize="14px" color="#1C2833"
+                outline="none" border="none" fontSize="14px" color="#1C2833"
                 placeholder="Cari Nama, NIK, NPWP, atau PIC..."
                 value={query}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}

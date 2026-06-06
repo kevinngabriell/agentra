@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, NativeSelect, SimpleGrid, Steps, Text } from "@chakra-ui/react"
 import { Header } from "../../components/Header"
@@ -8,6 +8,7 @@ import { FaShieldAlt } from "react-icons/fa"
 import { FiAlertCircle, FiAward, FiCheck, FiCreditCard, FiEye, FiEyeOff, FiLock, FiShield, FiSmartphone, FiZap, FiMessageCircle } from "react-icons/fi"
 import { MdAccountBalance, MdSupportAgent } from "react-icons/md"
 import { RegisterAgent } from "@/lib/auth/auth"
+import { getPlans, formatPlanPrice, formatBillingCycle, type Plan } from "@/lib/plans/plans"
 
 function Stepper({ currentStep }: { currentStep: number }) {
   const steps = [
@@ -347,56 +348,18 @@ function Step2TrustIndicators() {
   )
 }
 
-const PLANS = [
-  {
-    id: "starter",
-    name: "Starter",
-    tagline: "Untuk agen pemula yang baru",
-    price: "Rp 99k",
-    period: "/bln",
-    badge: null,
-    features: [
-      "Hingga 500 Nasabah",
-      "Dashboard Dasar",
-      "WhatsApp Digest",
-      "Dukungan Sub-agen",
-    ],
-    featured: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    tagline: "Solusi lengkap produktivitas",
-    price: "Rp 249k",
-    period: "/bln",
-    badge: "TERPOPULER",
-    features: [
-      "Nasabah Tak Terbatas",
-      "WhatsApp Digest Harian",
-      "Hingga 3 Sub-agen",
-      "Laporan Analitik Lanjut",
-    ],
-    featured: true,
-  },
-  {
-    id: "scale",
-    name: "Agensi",
-    tagline: "Untuk tim & kantor cabang",
-    price: "Rp 499k",
-    period: "/bln",
-    badge: null,
-    features: [
-      "Nasabah Tak Terbatas",
-      "WhatsApp Digest & API",
-      "Sub-agen Tak Terbatas",
-      "Dukungan Prioritas 24/7",
-    ],
-    featured: false,
-  },
-]
-
-function Step3Form({ onBack, onNext }: { onBack: () => void; onNext: (planId: string) => void }) {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+function Step3Form({
+  onBack,
+  onNext,
+  plans,
+  loadingPlans,
+}: {
+  onBack: () => void
+  onNext: (plan: Plan) => void
+  plans: Plan[]
+  loadingPlans: boolean
+}) {
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
 
   return (
     <>
@@ -409,84 +372,104 @@ function Step3Form({ onBack, onNext }: { onBack: () => void; onNext: (planId: st
         </Text>
       </Flex>
 
-      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr 1fr" }} gap="20px" mb="32px">
-        {PLANS.map((plan) => {
-          const isSelected = selectedPlan === plan.id
-          return (
-            <Box
-              key={plan.id}
-              position="relative"
-              border="2px solid"
-              borderColor={plan.featured || isSelected ? "#0D1B3E" : "#E5E7EB"}
-              borderRadius="16px"
-              p="24px"
-              bg="white"
-              cursor="pointer"
-              onClick={() => setSelectedPlan(plan.id)}
-              _hover={{ borderColor: "#0D1B3E", boxShadow: "sm" }}
-              transition="all 0.2s"
-            >
-              {plan.badge && (
-                <Box
-                  position="absolute"
-                  top="-13px"
-                  left="50%"
-                  transform="translateX(-50%)"
-                  bg="#0D1B3E"
-                  color="white"
-                  px="14px"
-                  py="3px"
-                  borderRadius="full"
-                  fontSize="10px"
-                  fontWeight="bold"
-                  letterSpacing="0.06em"
-                  whiteSpace="nowrap"
-                >
-                  {plan.badge}
-                </Box>
-              )}
-
-              <Text fontWeight="bold" fontSize="16px" color="#0D1B3E" mb="2px">
-                {plan.name}
-              </Text>
-              <Text fontSize="12px" color="#5D6D7E" mb="16px">
-                {plan.tagline}
-              </Text>
-
-              <Flex align="baseline" gap="4px" mb="20px">
-                <Text fontWeight="bold" fontSize="28px" color="#0D1B3E">
-                  {plan.price}
-                </Text>
-                <Text fontSize="13px" color="#5D6D7E">{plan.period}</Text>
-              </Flex>
-
-              <Flex flexDir="column" gap="10px" mb="24px">
-                {plan.features.map((f) => (
-                  <Flex key={f} gap="8px" align="center">
-                    <Box color="#10B981" flexShrink={0}>
-                      <FiCheck size={14} />
-                    </Box>
-                    <Text fontSize="13px" color="#374151">{f}</Text>
-                  </Flex>
-                ))}
-              </Flex>
-
-              <Button
-                w="100%"
-                bg={plan.featured ? "#0D1B3E" : "transparent"}
-                color={plan.featured ? "white" : "#0D1B3E"}
-                border="1px solid"
-                borderColor="#0D1B3E"
-                _hover={{ bg: plan.featured ? "#1a2f5c" : "#EFF6FF" }}
-                fontSize="14px"
-                onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan.id); onNext(plan.id) }}
-              >
-                Pilih Paket
-              </Button>
+      {loadingPlans ? (
+        <Grid templateColumns={{ base: "1fr", md: "1fr 1fr 1fr" }} gap="20px" mb="32px">
+          {[0, 1, 2].map((i) => (
+            <Box key={i} border="2px solid" borderColor="#E5E7EB" borderRadius="16px" p="24px" bg="white" minH="300px">
+              <Box w="40%" h="16px" bg="gray.100" borderRadius="md" mb={3} />
+              <Box w="60%" h="28px" bg="gray.100" borderRadius="md" mb={4} />
+              {[0, 1, 2, 3].map((j) => (
+                <Box key={j} w="80%" h="12px" bg="gray.100" borderRadius="md" mb={3} />
+              ))}
             </Box>
-          )
-        })}
-      </Grid>
+          ))}
+        </Grid>
+      ) : plans.length === 0 ? (
+        <Text color="gray.400" fontSize="md" mb="32px">Paket tidak tersedia saat ini.</Text>
+      ) : (
+        <Grid templateColumns={{ base: "1fr", md: "1fr 1fr 1fr" }} gap="20px" mb="32px">
+          {plans.map((plan, index) => {
+            const isSelected = selectedPlanId === plan.plan_id
+            const isFeatured = index === 1
+            const price = formatPlanPrice(plan.price_idr)
+            const period = plan.price_idr ? formatBillingCycle(plan.billing_cycle) : ""
+
+            return (
+              <Box
+                key={plan.plan_id}
+                position="relative"
+                border="2px solid"
+                borderColor={isFeatured || isSelected ? "#0D1B3E" : "#E5E7EB"}
+                borderRadius="16px"
+                p="24px"
+                bg="white"
+                cursor="pointer"
+                onClick={() => setSelectedPlanId(plan.plan_id)}
+                _hover={{ borderColor: "#0D1B3E", boxShadow: "sm" }}
+                transition="all 0.2s"
+              >
+                {isFeatured && (
+                  <Box
+                    position="absolute"
+                    top="-13px"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    bg="#0D1B3E"
+                    color="white"
+                    px="14px"
+                    py="3px"
+                    borderRadius="full"
+                    fontSize="10px"
+                    fontWeight="bold"
+                    letterSpacing="0.06em"
+                    whiteSpace="nowrap"
+                  >
+                    TERPOPULER
+                  </Box>
+                )}
+
+                <Text fontWeight="bold" fontSize="16px" color="#0D1B3E" mb="2px">
+                  {plan.name}
+                </Text>
+                <Text fontSize="12px" color="#5D6D7E" mb="16px">
+                  {plan.tagline}
+                </Text>
+
+                <Flex align="baseline" gap="4px" mb="20px">
+                  <Text fontWeight="bold" fontSize="28px" color="#0D1B3E">
+                    {price}
+                  </Text>
+                  {period && <Text fontSize="13px" color="#5D6D7E">{period}</Text>}
+                </Flex>
+
+                <Flex flexDir="column" gap="10px" mb="24px">
+                  {plan.features.map((f) => (
+                    <Flex key={f.label} gap="8px" align="center">
+                      <Box color="#10B981" flexShrink={0}>
+                        <FiCheck size={14} />
+                      </Box>
+                      <Text fontSize="13px" color="#374151">{f.label}</Text>
+                    </Flex>
+                  ))}
+                </Flex>
+
+                <Button
+                  w="100%"
+                  bg={isFeatured ? "#0D1B3E" : "transparent"}
+                  color={isFeatured ? "white" : "#0D1B3E"}
+                  border="1px solid"
+                  borderColor="#0D1B3E"
+                  _hover={{ bg: isFeatured ? "#1a2f5c" : "#EFF6FF" }}
+                  fontSize="14px"
+                  onClick={(e) => { e.stopPropagation(); setSelectedPlanId(plan.plan_id); onNext(plan) }}
+                >
+                  Pilih Paket
+                </Button>
+              </Box>
+            )
+          })}
+        </Grid>
+      )}
 
       <Flex justify="center">
         <Button
@@ -507,23 +490,19 @@ function Step3Form({ onBack, onNext }: { onBack: () => void; onNext: (planId: st
 
 function Step4Form({
   onBack,
-  planId,
+  selectedPlan,
   onSubmit,
   loading,
 }: {
   onBack: () => void
-  planId: string
+  selectedPlan: Plan
   onSubmit: () => void
   loading: boolean
 }) {
   const [paymentMethod, setPaymentMethod] = useState<"va" | "card" | "ewallet">("va")
 
-  const planInfo: Record<string, { name: string; price: string }> = {
-    starter: { name: "Starter", price: "Rp 99.000" },
-    pro:     { name: "Pro",     price: "Rp 249.000" },
-    scale:   { name: "Agensi",  price: "Rp 499.000" },
-  }
-  const plan = planInfo[planId] ?? planInfo.pro
+  const planName = selectedPlan.name
+  const planPrice = formatPlanPrice(selectedPlan.price_idr)
 
   const instructions = [
     "Pilih bank yang ingin Anda gunakan untuk transfer Virtual Account.",
@@ -564,16 +543,16 @@ function Step4Form({
             </Text>
             <Flex justify="space-between" mb="10px">
               <Text fontSize="14px" color="#5D6D7E">Paket Terpilih</Text>
-              <Text fontSize="14px" color="#1C2833" fontWeight="medium">{plan.name}</Text>
+              <Text fontSize="14px" color="#1C2833" fontWeight="medium">{planName}</Text>
             </Flex>
             <Flex justify="space-between" mb="16px">
               <Text fontSize="14px" color="#5D6D7E">Premi Bulanan</Text>
-              <Text fontSize="14px" color="#1C2833">{plan.price}</Text>
+              <Text fontSize="14px" color="#1C2833">{planPrice}</Text>
             </Flex>
             <Box borderTop="1px solid" borderColor="#E5E7EB" pt="16px">
               <Flex justify="space-between" align="center">
                 <Text fontWeight="bold" color="#0D1B3E">Total Bayar</Text>
-                <Text fontWeight="bold" color="#0D1B3E" fontSize="18px">{plan.price}</Text>
+                <Text fontWeight="bold" color="#0D1B3E" fontSize="18px">{planPrice}</Text>
               </Flex>
             </Box>
           </Box>
@@ -852,9 +831,17 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedPlan, setSelectedPlan] = useState("")
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(true)
   const [loading, setLoading] = useState(false)
   const [alert, setAlert] = useState<{ status: "success" | "error"; message: string } | null>(null)
+
+  useEffect(() => {
+    getPlans()
+      .then(setPlans)
+      .finally(() => setLoadingPlans(false))
+  }, [])
 
   const [formData, setFormData] = useState({
     name: "",
@@ -864,7 +851,6 @@ export default function Register() {
     phone: "",
     business_name: "",
     city: "",
-    plan: "",
   })
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -920,7 +906,7 @@ export default function Register() {
         whatsapp_number: formData.phone,
         business_name: formData.business_name,
         city: formData.city,
-        plan: formData.plan,
+        plan: selectedPlan?.plan_id ?? "",
       })
       setAlert({ status: "success", message: "Akun berhasil dibuat! Anda akan diarahkan ke halaman login..." })
       setTimeout(() => router.push("/login"), 2500)
@@ -1140,18 +1126,19 @@ export default function Register() {
           {currentStep === 2 && (
             <Step3Form
               onBack={() => setCurrentStep(1)}
-              onNext={(planId) => {
-                setSelectedPlan(planId)
-                setFormData((prev) => ({ ...prev, plan: planId }))
+              onNext={(plan) => {
+                setSelectedPlan(plan)
                 setCurrentStep(3)
               }}
+              plans={plans}
+              loadingPlans={loadingPlans}
             />
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 3 && selectedPlan && (
             <Step4Form
               onBack={() => setCurrentStep(2)}
-              planId={selectedPlan}
+              selectedPlan={selectedPlan}
               onSubmit={onRegister}
               loading={loading}
             />
