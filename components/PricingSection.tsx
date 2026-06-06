@@ -1,62 +1,20 @@
 "use client"
 
-import { Box, Flex, VStack, HStack, Grid, Button, Text, Heading, Badge } from "@chakra-ui/react"
+import { useEffect, useState } from "react"
+import { Box, Flex, VStack, HStack, Grid, Button, Text, Heading, Badge, Skeleton, SkeletonText } from "@chakra-ui/react"
 import Link from "next/link"
-
-const plans = [
-  {
-    name: "Starter",
-    price: "Gratis",
-    period: "",
-    description: "Cocok untuk agen asuransi individual yang baru memulai.",
-    cta: "Daftar Gratis",
-    ctaHref: "/register",
-    highlighted: false,
-    features: [
-      "Hingga 50 polis aktif",
-      "Notifikasi renewal via email",
-      "Laporan komisi dasar",
-      "Dukungan komunitas",
-    ],
-  },
-  {
-    name: "Profesional",
-    price: "Rp 299.000",
-    period: "/bulan",
-    description: "Untuk agen aktif yang ingin mengotomasi seluruh operasional bisnis.",
-    cta: "Coba Gratis 14 Hari",
-    ctaHref: "/register?plan=pro",
-    highlighted: true,
-    badge: "Paling Populer",
-    features: [
-      "Polis tidak terbatas",
-      "Notifikasi WhatsApp otomatis",
-      "Laporan komisi lengkap",
-      "Dashboard renewal real-time",
-      "Ekspor data Excel & PDF",
-      "Dukungan prioritas via chat",
-    ],
-  },
-  {
-    name: "Tim",
-    price: "Rp 799.000",
-    period: "/bulan",
-    description: "Untuk tim atau agen senior yang mengelola beberapa sub-agen.",
-    cta: "Hubungi Kami",
-    ctaHref: "/contact",
-    highlighted: false,
-    features: [
-      "Semua fitur Profesional",
-      "Manajemen multi-agen",
-      "Pembagian komisi otomatis",
-      "Analitik tim & kinerja",
-      "Integrasi API khusus",
-      "Manajer akun dedikasi",
-    ],
-  },
-]
+import { getPlans, formatPlanPrice, formatBillingCycle, type Plan } from "@/lib/plans/plans"
 
 export function PricingSection() {
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getPlans()
+      .then(setPlans)
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <Box
       as="section"
@@ -86,126 +44,162 @@ export function PricingSection() {
         </VStack>
 
         {/* Pricing cards */}
-        <Grid
-          templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-          gap={6}
-          w="100%"
-          alignItems="start"
-        >
-          {plans.map((plan) => (
-            <Box
-              key={plan.name}
-              bg={plan.highlighted ? "#0D1B3E" : "white"}
-              borderRadius="2xl"
-              p={8}
-              border="2px solid"
-              borderColor={plan.highlighted ? "#3B82F6" : "gray.200"}
-              position="relative"
-              boxShadow={plan.highlighted ? "0 20px 60px rgba(13,27,62,0.3)" : "none"}
-            >
-              {plan.badge && (
-                <Badge
-                  position="absolute"
-                  top="-14px"
-                  left="50%"
-                  transform="translateX(-50%)"
-                  bg="#3B82F6"
-                  color="white"
-                  px={4}
-                  py={1.5}
-                  borderRadius="full"
-                  fontSize="xs"
-                  fontWeight="semibold"
-                  whiteSpace="nowrap"
-                >
-                  {plan.badge}
-                </Badge>
-              )}
-
-              <VStack align="flex-start" gap={6}>
-                {/* Plan name & description */}
-                <VStack align="flex-start" gap={2}>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="semibold"
-                    color={plan.highlighted ? "blue.300" : "#3B82F6"}
-                  >
-                    {plan.name}
-                  </Text>
-                  <HStack align="baseline" gap={1}>
-                    <Text
-                      fontSize="3xl"
-                      fontWeight="bold"
-                      color={plan.highlighted ? "white" : "#0D1B3E"}
-                    >
-                      {plan.price}
-                    </Text>
-                    {plan.period && (
-                      <Text fontSize="sm" color={plan.highlighted ? "gray.400" : "gray.500"}>
-                        {plan.period}
-                      </Text>
-                    )}
-                  </HStack>
-                  <Text
-                    fontSize="sm"
-                    color={plan.highlighted ? "gray.400" : "gray.500"}
-                    lineHeight="1.6"
-                  >
-                    {plan.description}
-                  </Text>
+        {loading ? (
+          <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6} w="100%">
+            {[0, 1, 2].map((i) => (
+              <Box key={i} bg="white" borderRadius="2xl" p={8} border="2px solid" borderColor="gray.200">
+                <VStack align="flex-start" gap={6}>
+                  <VStack align="flex-start" gap={3} w="100%">
+                    <Skeleton w="35%" h="14px" borderRadius="md" />
+                    <Skeleton w="55%" h="36px" borderRadius="md" />
+                    <SkeletonText noOfLines={2} w="100%" />
+                  </VStack>
+                  <Skeleton w="100%" h="48px" borderRadius="lg" />
+                  <Box w="100%" h="1px" bg="gray.100" />
+                  <VStack align="flex-start" gap={3} w="100%">
+                    {[0, 1, 2, 3].map((j) => (
+                      <HStack key={j} gap={3} w="100%">
+                        <Skeleton w={5} h={5} borderRadius="full" flexShrink={0} />
+                        <Skeleton w={`${65 + j * 7}%`} h="14px" borderRadius="md" />
+                      </HStack>
+                    ))}
+                  </VStack>
                 </VStack>
+              </Box>
+            ))}
+          </Grid>
+        ) : plans.length === 0 ? (
+          <Text color="gray.400" fontSize="md">Paket tidak tersedia saat ini.</Text>
+        ) : (
+          <Grid
+            templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+            gap={6}
+            w="100%"
+            alignItems="start"
+          >
+            {plans.map((plan, index) => {
+              const highlighted = index === 1
+              const price = formatPlanPrice(plan.price_idr)
+              const period = plan.price_idr ? formatBillingCycle(plan.billing_cycle) : ""
+              const isFree = !plan.price_idr
+              const ctaLabel = isFree ? "Daftar Gratis" : "Pilih Paket"
 
-                {/* CTA */}
-                <Link href={plan.ctaHref} style={{ width: "100%" }}>
-                  <Button
-                    w="100%"
-                    size="lg"
-                    minH="48px"
-                    bg={plan.highlighted ? "#3B82F6" : "transparent"}
-                    color={plan.highlighted ? "white" : "#0D1B3E"}
-                    border={plan.highlighted ? "none" : "2px solid"}
-                    borderColor={plan.highlighted ? "transparent" : "#0D1B3E"}
-                    _hover={{
-                      bg: plan.highlighted ? "#2563EB" : "gray.50",
-                    }}
-                    fontWeight="semibold"
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
+              return (
+                <Box
+                  key={plan.plan_id}
+                  bg={highlighted ? "#0D1B3E" : "white"}
+                  borderRadius="2xl"
+                  p={8}
+                  border="2px solid"
+                  borderColor={highlighted ? "#3B82F6" : "gray.200"}
+                  position="relative"
+                  boxShadow={highlighted ? "0 20px 60px rgba(13,27,62,0.3)" : "none"}
+                >
+                  {highlighted && (
+                    <Badge
+                      position="absolute"
+                      top="-14px"
+                      left="50%"
+                      transform="translateX(-50%)"
+                      bg="#3B82F6"
+                      color="white"
+                      px={4}
+                      py={1.5}
+                      borderRadius="full"
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      whiteSpace="nowrap"
+                    >
+                      Paling Populer
+                    </Badge>
+                  )}
 
-                {/* Divider */}
-                <Box w="100%" h="1px" bg={plan.highlighted ? "rgba(255,255,255,0.1)" : "gray.100"} />
-
-                {/* Feature list */}
-                <VStack align="flex-start" gap={3} w="100%">
-                  {plan.features.map((feature) => (
-                    <HStack key={feature} gap={3}>
-                      <Flex
-                        w={5}
-                        h={5}
-                        borderRadius="full"
-                        bg={plan.highlighted ? "rgba(59,130,246,0.2)" : "#EFF6FF"}
-                        align="center"
-                        justify="center"
-                        flexShrink={0}
-                      >
-                        <Text fontSize="10px" color="#3B82F6">✓</Text>
-                      </Flex>
+                  <VStack align="flex-start" gap={6}>
+                    {/* Plan name & description */}
+                    <VStack align="flex-start" gap={2}>
                       <Text
                         fontSize="sm"
-                        color={plan.highlighted ? "gray.300" : "gray.600"}
-                        lineHeight="1.5"
+                        fontWeight="semibold"
+                        color={highlighted ? "blue.300" : "#3B82F6"}
                       >
-                        {feature}
+                        {plan.name}
                       </Text>
-                    </HStack>
-                  ))}
-                </VStack>
-              </VStack>
-            </Box>
-          ))}
-        </Grid>
+                      <HStack align="baseline" gap={1}>
+                        <Text
+                          fontSize="3xl"
+                          fontWeight="bold"
+                          color={highlighted ? "white" : "#0D1B3E"}
+                        >
+                          {price}
+                        </Text>
+                        {period && (
+                          <Text fontSize="sm" color={highlighted ? "gray.400" : "gray.500"}>
+                            {period}
+                          </Text>
+                        )}
+                      </HStack>
+                      <Text
+                        fontSize="sm"
+                        color={highlighted ? "gray.400" : "gray.500"}
+                        lineHeight="1.6"
+                      >
+                        {plan.tagline}
+                      </Text>
+                    </VStack>
+
+                    {/* CTA */}
+                    <Link href={`/register?plan=${plan.plan_id}`} style={{ width: "100%" }}>
+                      <Button
+                        w="100%"
+                        size="lg"
+                        minH="48px"
+                        bg={highlighted ? "#3B82F6" : "transparent"}
+                        color={highlighted ? "white" : "#0D1B3E"}
+                        border={highlighted ? "none" : "2px solid"}
+                        borderColor={highlighted ? "transparent" : "#0D1B3E"}
+                        _hover={{
+                          bg: highlighted ? "#2563EB" : "gray.50",
+                        }}
+                        fontWeight="semibold"
+                      >
+                        {ctaLabel}
+                      </Button>
+                    </Link>
+
+                    {/* Divider */}
+                    <Box w="100%" h="1px" bg={highlighted ? "rgba(255,255,255,0.1)" : "gray.100"} />
+
+                    {/* Feature list */}
+                    <VStack align="flex-start" gap={3} w="100%">
+                      {plan.features.map((feature) => (
+                        <HStack key={feature.label} gap={3}>
+                          <Flex
+                            w={5}
+                            h={5}
+                            borderRadius="full"
+                            bg={highlighted ? "rgba(59,130,246,0.2)" : "#EFF6FF"}
+                            align="center"
+                            justify="center"
+                            flexShrink={0}
+                          >
+                            <Text fontSize="10px" color="#3B82F6">✓</Text>
+                          </Flex>
+                          <Text
+                            fontSize="sm"
+                            color={highlighted ? "gray.300" : "gray.600"}
+                            lineHeight="1.5"
+                          >
+                            {feature.label}
+                          </Text>
+                        </HStack>
+                      ))}
+                    </VStack>
+                  </VStack>
+                </Box>
+              )
+            })}
+          </Grid>
+        )}
 
         {/* Bottom note */}
         <Text fontSize="sm" color="gray.400" textAlign="center">
