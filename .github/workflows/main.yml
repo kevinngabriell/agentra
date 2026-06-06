@@ -11,7 +11,7 @@ jobs:
 
     env:
       APP_DIR: /home/ubuntu/apps/agentra
-      NEXT_PUBLIC_API_URL: "https://agentra-api.getmovira.com/"
+      NEXT_PUBLIC_API_URL: "https://getmovira.com/agentra-api"
 
     steps:
       - name: Checkout repository
