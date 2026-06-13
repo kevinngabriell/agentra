@@ -1,0 +1,309 @@
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
+async function req<T>(
+    method: string,
+    path: string,
+    token: string,
+    body?: Record<string, unknown>,
+): Promise<T> {
+    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+        const err: any = new Error(json.status_message || 'Request failed')
+        err.status = res.status
+        throw err
+    }
+    return json.data as T
+}
+
+export type ApiProductType = 'fire' | 'motorcycle' | 'car' | 'travel' | 'cargo' | 'other' | 'kecelakaan' | 'aep'
+export type ApiRenewalStatus = 'pending' | 'renewed' | 'lapsed' | 'cancelled'
+export type ApiPaymentStatus = 'unpaid' | 'paid' | 'confirmed'
+
+export interface ApiPolicy {
+    policy_id: string
+    policy_number: string
+    product_type: ApiProductType
+    coverage_start: string
+    coverage_end: string
+    sum_insured: number
+    premium_amount: number
+    commission_rate: number
+    commission_amount: number
+    renewal_status: ApiRenewalStatus
+    payment_status: ApiPaymentStatus
+    customer_id: string
+    customer_name: string
+    customer_type?: string
+    insurer_id: string
+    insurer_name: string
+    insurer_short_name?: string
+    object_insured?: string
+    notes?: string
+    policy_year?: number
+}
+
+export interface ApiFollowUp {
+    follow_up_id: string
+    follow_up_date: string
+    action_type?: string
+    notes?: string
+    outcome?: string
+    created_at?: string
+}
+
+export interface ApiPolicyDetail extends ApiPolicy {
+    coverage_notes?: string
+    issuing_agent_id?: string | null
+    previous_policy_id?: string | null
+    customer: {
+        customer_id: string
+        display_name: string
+        customer_type: string
+        personal_phone?: string
+        personal_whatsapp?: string
+        personal_email?: string
+        personal_address?: string
+        pic_name?: string
+        pic_phone?: string
+        pic_whatsapp?: string
+    }
+    insurer: {
+        insurer_id: string
+        name: string
+        short_name: string
+        agent_code?: string
+    }
+    follow_ups?: ApiFollowUp[]
+    created_at?: string
+    updated_at?: string
+}
+
+export interface PoliciesListResponse {
+    data: ApiPolicy[]
+    pagination: {
+        total: number
+        page: number
+        limit: number
+        total_pages: number
+    }
+}
+
+export interface PoliciesListParams {
+    page?: number
+    limit?: number
+    search?: string
+    customer_id?: string
+    product_type?: ApiProductType
+    insurer_id?: string
+    renewal_status?: ApiRenewalStatus
+    expiry_month?: string
+    agent_id?: string
+}
+
+export interface CreatePolicyPayload {
+    insurer_id: string
+    customer_id: string
+    policy_number: string
+    product_type: ApiProductType
+    coverage_start: string
+    coverage_end: string
+    sum_insured: number
+    premium_amount: number
+    commission_rate: number
+    policy_year?: number
+    issuing_agent_id?: string
+    previous_policy_id?: string
+    object_insured?: string
+    coverage_notes?: string
+    notes?: string
+}
+
+export interface AddFollowUpPayload {
+    follow_up_date?: string
+    action_type?: string
+    notes?: string
+    outcome?: string
+}
+
+export interface PaymentSummaryParams {
+    insurer_id: string
+    month?: string
+    payment_status?: 'all' | ApiPaymentStatus
+}
+
+const EMPTY_POLICIES: PoliciesListResponse = {
+    data: [],
+    pagination: { total: 0, page: 1, limit: 10, total_pages: 0 },
+}
+
+export async function getPolicies(
+    token: string,
+    params: PoliciesListParams = {},
+): Promise<PoliciesListResponse> {
+    const qs = new URLSearchParams()
+    qs.set('page', String(params.page ?? 1))
+    qs.set('limit', String(params.limit ?? 10))
+    if (params.search) qs.set('search', params.search)
+    if (params.customer_id) qs.set('customer_id', params.customer_id)
+    if (params.product_type) qs.set('product_type', params.product_type)
+    if (params.insurer_id) qs.set('insurer_id', params.insurer_id)
+    if (params.renewal_status) qs.set('renewal_status', params.renewal_status)
+    if (params.expiry_month) qs.set('expiry_month', params.expiry_month)
+    if (params.agent_id) qs.set('agent_id', params.agent_id)
+
+    const res = await fetch(`${BASE_URL}/api/v1/policies?${qs.toString()}`, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    })
+    const json = await res.json()
+
+    if (res.status === 404) return EMPTY_POLICIES
+    if (!res.ok) {
+        const err: any = new Error(json.status_message || 'Request failed')
+        err.status = res.status
+        throw err
+    }
+
+    return json.data as PoliciesListResponse
+}
+
+export async function getPolicyDetail(token: string, policyId: string): Promise<ApiPolicyDetail> {
+    return req<ApiPolicyDetail>('GET', `/policies/${policyId}`, token)
+}
+
+export async function createPolicy(
+    token: string,
+    data: CreatePolicyPayload,
+): Promise<{ policy_id: string }> {
+    return req<{ policy_id: string }>('POST', '/policies', token, data as Record<string, unknown>)
+}
+
+export async function updatePolicy(
+    token: string,
+    policyId: string,
+    data: Partial<CreatePolicyPayload>,
+): Promise<void> {
+    await req<unknown>('PUT', `/policies/${policyId}`, token, data as Record<string, unknown>)
+}
+
+export async function updateRenewalStatus(
+    token: string,
+    policyId: string,
+    status: ApiRenewalStatus,
+): Promise<void> {
+    await req<unknown>('PATCH', `/policies/${policyId}/renewal-status`, token, { renewal_status: status })
+}
+
+export async function updatePaymentStatus(
+    token: string,
+    policyId: string,
+    status: ApiPaymentStatus,
+): Promise<void> {
+    await req<unknown>('PATCH', `/policies/${policyId}/payment-status`, token, { payment_status: status })
+}
+
+export async function addPolicyFollowUp(
+    token: string,
+    policyId: string,
+    data: AddFollowUpPayload,
+): Promise<{ follow_up_id: string }> {
+    return req<{ follow_up_id: string }>(
+        'POST',
+        `/policies/${policyId}/follow-ups`,
+        token,
+        data as Record<string, unknown>,
+    )
+}
+
+export async function getPaymentSummary(
+    token: string,
+    params: PaymentSummaryParams,
+): Promise<any> {
+    const qs = new URLSearchParams({ insurer_id: params.insurer_id })
+    if (params.month) qs.set('month', params.month)
+    if (params.payment_status) qs.set('payment_status', params.payment_status)
+    return req<any>('GET', `/policies/payment-summary?${qs.toString()}`, token)
+}
+
+// ── Coverages ──────────────────────────────────────────────────────────────
+
+export type ApiCoverageType = 'bangunan' | 'stok' | 'invenisi' | 'mesin' | 'dll'
+
+export const COVERAGE_TYPE_LABELS: Record<ApiCoverageType, string> = {
+    bangunan: 'Bangunan',
+    stok:     'Stok / Persediaan',
+    invenisi: 'Inventaris / Isi',
+    mesin:    'Mesin',
+    dll:      'Lain-lain (DLL)',
+}
+
+export interface ApiCoverageItem {
+    coverage_id:    string
+    coverage_type:  ApiCoverageType
+    coverage_label: string | null
+    sum_insured:    number
+    rate_permille:  string   // decimal string from API e.g. "0.3280"
+    premium_amount: number
+    created_at:     string
+    updated_at:     string
+}
+
+export interface ApiCoveragesResponse {
+    items:              ApiCoverageItem[]
+    total_sum_insured:  number
+    total_premium:      number
+}
+
+export interface AddCoveragePayload {
+    coverage_type:   ApiCoverageType
+    coverage_label?: string
+    sum_insured:     number
+    rate_permille:   number
+}
+
+export interface UpdateCoveragePayload {
+    coverage_type?:  ApiCoverageType
+    coverage_label?: string
+    sum_insured?:    number
+    rate_permille?:  number
+}
+
+export async function getCoverages(
+    token: string,
+    policyId: string,
+): Promise<ApiCoveragesResponse> {
+    return req<ApiCoveragesResponse>('GET', `/policies/${policyId}/coverages`, token)
+}
+
+export async function addCoverage(
+    token: string,
+    policyId: string,
+    data: AddCoveragePayload,
+): Promise<{ coverage_id: string; premium_amount: number }> {
+    return req<{ coverage_id: string; premium_amount: number }>(
+        'POST', `/policies/${policyId}/coverages`, token, data as Record<string, unknown>,
+    )
+}
+
+export async function updateCoverage(
+    token: string,
+    policyId: string,
+    coverageId: string,
+    data: UpdateCoveragePayload,
+): Promise<{ premium_amount: number }> {
+    return req<{ premium_amount: number }>(
+        'PUT', `/policies/${policyId}/coverages/${coverageId}`, token, data as Record<string, unknown>,
+    )
+}
+
+export async function deleteCoverage(
+    token: string,
+    policyId: string,
+    coverageId: string,
+): Promise<void> {
+    await req<unknown>('DELETE', `/policies/${policyId}/coverages/${coverageId}`, token)
+}

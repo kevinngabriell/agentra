@@ -1,268 +1,739 @@
 "use client"
 
-import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout";
-import { Avatar, Badge, Box, Button, Flex, Table, Text } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
-import { LuArrowLeft, LuPencil, LuFlag, LuCalendar, LuCreditCard, LuMessageSquare, LuPhone, LuMail, LuFileText, LuUpload, LuUser, LuCircleCheck } from "react-icons/lu";
-import { FaWhatsapp } from "react-icons/fa";
+import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
+import { Avatar, Badge, Box, Button, Dialog, Flex, IconButton, Input, NativeSelect, Skeleton, Table, Text } from "@chakra-ui/react"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import {
+  LuArrowLeft, LuPencil, LuCalendar, LuCreditCard, LuMessageSquare,
+  LuPhone, LuMail, LuFileText, LuUser, LuCircleCheck, LuTrash2, LuPlus,
+} from "react-icons/lu"
+import { FaWhatsapp } from "react-icons/fa"
+import { getAccessToken } from "@/lib/auth/session"
+import {
+  getPolicyDetail, updateRenewalStatus, updatePaymentStatus, addPolicyFollowUp,
+  getCoverages, addCoverage, updateCoverage, deleteCoverage,
+  type ApiPolicyDetail, type ApiFollowUp,
+  type ApiCoverageItem, type ApiCoverageType, COVERAGE_TYPE_LABELS,
+} from "@/lib/api/policies"
 
-const policy = {
-  id: "POL-88293-JKT", insurer: "CHUBB", status: "AKTIF",
-  nasabah: "PT. Sejahtera Abadi Jaya", address: "Jl. Sudirman No. 45, Jakarta Selatan",
-  periodeStart: "01 Jan 2023", periodeEnd: "01 Jan 2024", sisaHari: 82,
-  objek: "Gudang & Inventaris Kantor", rate: "0.05 % (Per-mille)",
-  tsi: 2500000000, premiNett: 2125000, komisiPct: 15, komisiNom: 318750,
-  pph: 7968, meterai: 10000, total: 2135000,
-  updatedAt: "12 Okt 2023",
+const PRODUCT_LABELS: Record<string, string> = {
+  fire:        "Asuransi Kebakaran",
+  motorcycle:  "Asuransi Motor",
+  car:         "Asuransi Kendaraan",
+  travel:      "Asuransi Perjalanan",
+  cargo:       "Asuransi Kargo",
+  other:       "Asuransi Lainnya",
+  kecelakaan:  "Asuransi Kecelakaan",
+  aep:         "AEP",
 }
 
-const renewalHistory = [
-  { polisLama:"POL-7720-JKT",  tahun:2023, status:"Expired", premi:2135000 },
-  { polisLama:"POL-66104-JKT", tahun:2021, status:"Expired", premi:1950000 },
-]
+const ACTION_TYPE_LABELS: Record<string, string> = {
+  call:      "Telepon",
+  whatsapp:  "WhatsApp",
+  email:     "Email",
+  visit:     "Kunjungan",
+  other:     "Lainnya",
+}
 
-const followUpLog = [
-  { Icon:LuPhone, type:"Telepon - Mengingatkan Renewal", time:"17 Okt, 14:20",
-    note:"Nasabah mengkonfirmasi akan melakukan perpanjangan. Meminta penawaran dikirim via WhatsApp sebelum ini." },
-  { Icon:LuMail,  type:"Email - Pengiriman Softcopy",    time:"25 Okt, 09:15",
-    note:"Softcopy polis terbaru telah dikirim ke email finance@sejahteraabadi.com" },
-]
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
+}
 
-const documents = [
-  { name:"Polis_Final_PT.S...", meta:"5.4 MB • 12 Okt 2023" },
-  { name:"Bukti_Bayar_001...",  meta:"602 KB • 1 Okt 2023"  },
-]
+function formatDateTime(iso: string) {
+  const d = new Date(iso)
+  return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) +
+    ", " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false })
+}
 
-const fmt = (n: number) => "Rp " + n.toLocaleString("id-ID")
+function fmt(n: number) {
+  return "Rp " + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+}
 
-const lbl = { color:"#94A3B8", fontSize:"11px", fontWeight:"semibold", letterSpacing:"0.05em" }
+function daysUntil(iso: string) {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000)
+}
+
+const lbl = { color: "#94A3B8", fontSize: "11px", fontWeight: "semibold", letterSpacing: "0.05em" } as const
+
+function ActionIcon({ type }: { type?: string }) {
+  if (type === "call") return <LuPhone size={14} />
+  if (type === "email") return <LuMail size={14} />
+  return <LuMessageSquare size={14} />
+}
 
 export default function PolicyDetail() {
   const router = useRouter()
+  const { id } = useParams<{ id: string }>()
 
-  return (
+  const [policy, setPolicy]   = useState<ApiPolicyDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  // Coverage state
+  const [coverages, setCoverages]           = useState<ApiCoverageItem[]>([])
+  const [coverageTotals, setCoverageTotals] = useState({ total_sum_insured: 0, total_premium: 0 })
+  const [coverageLoading, setCoverageLoading] = useState(false)
+  const [covDialog, setCovDialog]           = useState<{ open: boolean; editing: ApiCoverageItem | null }>({ open: false, editing: null })
+  const [covForm, setCovForm]               = useState({ coverage_type: 'bangunan' as ApiCoverageType, coverage_label: '', sum_insured: '', rate_permille: '' })
+  const [covSaving, setCovSaving]           = useState(false)
+  const [covError, setCovError]             = useState<string | null>(null)
+  const [covToDelete, setCovToDelete]       = useState<ApiCoverageItem | null>(null)
+  const [covDeleting, setCovDeleting]       = useState(false)
+
+  // Must be before early returns — hooks cannot be called conditionally
+  const previewPremium = useMemo(() => {
+    const s = Number(covForm.sum_insured)
+    const r = Number(covForm.rate_permille)
+    return (s > 0 && r > 0) ? Math.round(s * r / 1000) : null
+  }, [covForm.sum_insured, covForm.rate_permille])
+
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!token) { router.push("/login"); return }
+
+    setLoading(true)
+    setError(null)
+    getPolicyDetail(token, id)
+      .then((p) => { setPolicy(p); })
+      .catch((err) => setError(err.message ?? "Gagal memuat detail polis"))
+      .finally(() => setLoading(false))
+
+    loadCoverages()
+  }, [id])
+
+  async function markRenewed() {
+    const token = getAccessToken()
+    if (!token || !policy) return
+    setActionLoading("renewed")
+    try {
+      await updateRenewalStatus(token, policy.policy_id, "renewed")
+      setPolicy((p) => p ? { ...p, renewal_status: "renewed" } : p)
+    } catch {}
+    setActionLoading(null)
+  }
+
+  async function recordPayment() {
+    const token = getAccessToken()
+    if (!token || !policy) return
+    setActionLoading("payment")
+    try {
+      await updatePaymentStatus(token, policy.policy_id, "paid")
+      setPolicy((p) => p ? { ...p, payment_status: "paid" } : p)
+    } catch {}
+    setActionLoading(null)
+  }
+
+  async function logFollowUp() {
+    const token = getAccessToken()
+    if (!token || !policy) return
+    setActionLoading("followup")
+    try {
+      const result = await addPolicyFollowUp(token, policy.policy_id, {
+        action_type: "whatsapp",
+        notes: "Follow-up via WhatsApp",
+      })
+      const newFollowUp: ApiFollowUp = {
+        follow_up_id: result.follow_up_id,
+        follow_up_date: new Date().toISOString().split("T")[0],
+        action_type: "whatsapp",
+        notes: "Follow-up via WhatsApp",
+        created_at: new Date().toISOString(),
+      }
+      setPolicy((p) => p ? { ...p, follow_ups: [newFollowUp, ...(p.follow_ups ?? [])] } : p)
+    } catch {}
+    setActionLoading(null)
+  }
+
+  // ── Coverage helpers ──────────────────────────────────────────────────────
+
+  async function loadCoverages() {
+    const token = getAccessToken()
+    if (!token) return
+    setCoverageLoading(true)
+    try {
+      const data = await getCoverages(token, id)
+      setCoverages(Array.isArray(data.items) ? data.items : [])
+      setCoverageTotals({ total_sum_insured: data.total_sum_insured ?? 0, total_premium: data.total_premium ?? 0 })
+    } catch {}
+    finally { setCoverageLoading(false) }
+  }
+
+  async function handleSaveCoverage() {
+    const token = getAccessToken()
+    if (!token) return
+    const sumInsured   = Number(covForm.sum_insured)
+    const ratePermille = Number(covForm.rate_permille)
+    if (!covForm.coverage_type || !covForm.sum_insured || !covForm.rate_permille || isNaN(sumInsured) || isNaN(ratePermille)) {
+      setCovError('Kategori, Uang Pertanggungan, dan Rate wajib diisi')
+      return
+    }
+    setCovSaving(true)
+    setCovError(null)
+    try {
+      if (covDialog.editing) {
+        await updateCoverage(token, id, covDialog.editing.coverage_id, {
+          coverage_type:  covForm.coverage_type,
+          coverage_label: covForm.coverage_label || undefined,
+          sum_insured:    sumInsured,
+          rate_permille:  ratePermille,
+        })
+      } else {
+        await addCoverage(token, id, {
+          coverage_type:  covForm.coverage_type,
+          coverage_label: covForm.coverage_label || undefined,
+          sum_insured:    sumInsured,
+          rate_permille:  ratePermille,
+        })
+      }
+      await loadCoverages()
+      setCovDialog({ open: false, editing: null })
+      setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '' })
+    } catch (err: any) {
+      setCovError(err.message ?? 'Gagal menyimpan')
+    } finally {
+      setCovSaving(false)
+    }
+  }
+
+  async function handleDeleteCoverage() {
+    if (!covToDelete) return
+    const token = getAccessToken()
+    if (!token) return
+    setCovDeleting(true)
+    try {
+      await deleteCoverage(token, id, covToDelete.coverage_id)
+      await loadCoverages()
+      setCovToDelete(null)
+    } catch {}
+    finally { setCovDeleting(false) }
+  }
+
+  const shell = (children: React.ReactNode) => (
     <Box bg="#F4F6F9" minH="100vh">
-      <Sidebar />
-      <MobileHeader />
+      <Sidebar /><MobileHeader />
+      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+        <Box display={{ base: "none", md: "block" }}><TopBar title="Detail Polis" /></Box>
+        {children}
+      </Box>
+      <MobileBottomNav />
 
-      <Box ml={{ base:0, md:"200px" }} paddingY={{ base:"56px", md:0 }}>
-        <Box display={{ base:"none", md:"block" }}>
-          <TopBar title="Detail Polis" />
-        </Box>
+      {/* ── Add / Edit coverage dialog ───────────────────────────────────── */}
+      <Dialog.Root
+        open={covDialog.open}
+        onOpenChange={(d) => { if (!d.open && !covSaving) { setCovDialog({ open: false, editing: null }); setCovError(null) } }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" maxW="440px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                {covDialog.editing ? 'Edit Item Coverage' : 'Tambah Item Coverage'}
+              </Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Flex flexDir="column" gap="14px">
 
-        <Flex flexDir="column" gap="24px" p="32px">
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                    Kategori <Text as="span" color="#DC2626">*</Text>
+                  </Text>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                      fontSize="13px" color="#1C2833"
+                      value={covForm.coverage_type}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        setCovForm((f) => ({ ...f, coverage_type: e.target.value as ApiCoverageType }))
+                      }
+                    >
+                      {(Object.entries(COVERAGE_TYPE_LABELS) as [ApiCoverageType, string][]).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                </Flex>
 
-          {/* Page header */}
-          <Flex align="center" justify="space-between">
-            <Flex align="center" gap="12px">
-              <Button size="sm" variant="ghost" color="#64748B" onClick={() => router.back()} px="0">
-                <LuArrowLeft size={16}/>
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Label (opsional)</Text>
+                  <Input
+                    bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                    fontSize="13px" color="#1C2833"
+                    placeholder="Contoh: Stok 1, Bangunan Utama"
+                    value={covForm.coverage_label}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setCovForm((f) => ({ ...f, coverage_label: e.target.value }))
+                    }
+                  />
+                </Flex>
+
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                    Uang Pertanggungan (IDR) <Text as="span" color="#DC2626">*</Text>
+                  </Text>
+                  <Input
+                    bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                    fontSize="13px" color="#1C2833"
+                    type="number" min={0} placeholder="500000000"
+                    value={covForm.sum_insured}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setCovForm((f) => ({ ...f, sum_insured: e.target.value }))
+                    }
+                  />
+                </Flex>
+
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                    Rate (‰) <Text as="span" color="#DC2626">*</Text>
+                  </Text>
+                  <Input
+                    bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                    fontSize="13px" color="#1C2833"
+                    type="number" min={0} step="0.0001" placeholder="2.28"
+                    value={covForm.rate_permille}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setCovForm((f) => ({ ...f, rate_permille: e.target.value }))
+                    }
+                  />
+                  {previewPremium !== null && (
+                    <Text fontSize="12px" color="#1D4ED8" fontWeight="medium">
+                      Preview Premi: {fmt(previewPremium)}
+                    </Text>
+                  )}
+                </Flex>
+
+                {covError && (
+                  <Text fontSize="12px" color="#DC2626">{covError}</Text>
+                )}
+              </Flex>
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" _hover={{ bg: "#F1F5F9" }}
+                disabled={covSaving}
+                onClick={() => { setCovDialog({ open: false, editing: null }); setCovError(null) }}
+              >
+                Batal
               </Button>
-              <Box p="8px" bg="#EFF6FF" borderRadius="10px" color="#1D4ED8"><LuFileText size={20}/></Box>
-              <Flex align="center" gap="8px">
-                <Text color="#1C2833" fontSize="20px" fontWeight="bold">{policy.id}</Text>
-                <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg="#DBEAFE" color="#1D4ED8">{policy.insurer}</Badge>
-                <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg="#DCFCE7" color="#16A34A">● {policy.status}</Badge>
+              <Button
+                flex="1" bg="#1A3557" color="white" fontSize="14px" borderRadius="8px"
+                loading={covSaving} loadingText="Menyimpan..."
+                _hover={{ bg: "#162C47" }}
+                onClick={handleSaveCoverage}
+              >
+                Simpan
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* ── Delete coverage dialog ────────────────────────────────────────── */}
+      <Dialog.Root
+        open={covToDelete !== null}
+        onOpenChange={(d) => { if (!d.open && !covDeleting) setCovToDelete(null) }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" maxW="400px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Hapus Item Coverage</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Text color="#5D6D7E" fontSize="14px" lineHeight="1.6">
+                Hapus{" "}
+                <Text as="span" fontWeight="semibold" color="#1C2833">
+                  {covToDelete
+                    ? COVERAGE_TYPE_LABELS[covToDelete.coverage_type] + (covToDelete.coverage_label ? ` – ${covToDelete.coverage_label}` : '')
+                    : ''}
+                </Text>
+                ? Total premi polis akan disesuaikan otomatis.
+              </Text>
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" _hover={{ bg: "#F1F5F9" }}
+                disabled={covDeleting}
+                onClick={() => setCovToDelete(null)}
+              >
+                Batal
+              </Button>
+              <Button
+                flex="1" bg="#DC2626" color="white" fontSize="14px" borderRadius="8px"
+                loading={covDeleting} loadingText="Menghapus..."
+                _hover={{ bg: "#B91C1C" }}
+                onClick={handleDeleteCoverage}
+              >
+                Ya, Hapus
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+    </Box>
+  )
+
+  if (loading) {
+    return shell(
+      <Flex flexDir="column" gap="24px" p="32px">
+        <Skeleton h="32px" w="280px" borderRadius="8px" />
+        <Flex gap="24px">
+          <Flex flexDir="column" gap="16px" flex="1">
+            <Skeleton h="280px" borderRadius="12px" />
+            <Skeleton h="200px" borderRadius="12px" />
+            <Skeleton h="180px" borderRadius="12px" />
+          </Flex>
+          <Flex flexDir="column" gap="16px" w="280px">
+            <Skeleton h="300px" borderRadius="12px" />
+            <Skeleton h="160px" borderRadius="12px" />
+          </Flex>
+        </Flex>
+      </Flex>
+    )
+  }
+
+  if (error || !policy) {
+    return shell(
+      <Flex p="32px" flexDir="column" gap="16px">
+        <Text color="#DC2626" fontSize="16px">{error ?? "Data polis tidak ditemukan"}</Text>
+        <Button w="max-content" variant="outline" gap="8px" onClick={() => router.push("/agentra/policies")}>
+          <LuArrowLeft size={12} /> Kembali ke Daftar Polis
+        </Button>
+      </Flex>
+    )
+  }
+
+  const days = daysUntil(policy.coverage_end)
+  const renewalStatusCfg = {
+    pending:   { bg: "#FEF3C7", color: "#D97706", label: "Pending" },
+    renewed:   { bg: "#DCFCE7", color: "#16A34A", label: "Diperbarui" },
+    lapsed:    { bg: "#FEE2E2", color: "#DC2626", label: "Lapse" },
+    cancelled: { bg: "#F1F5F9", color: "#64748B", label: "Dibatalkan" },
+  }[policy.renewal_status] ?? { bg: "#F1F5F9", color: "#64748B", label: policy.renewal_status }
+
+  const paymentStatusCfg = {
+    unpaid:    { bg: "#FEE2E2", color: "#DC2626", label: "Belum Dibayar" },
+    paid:      { bg: "#FEF3C7", color: "#D97706", label: "Sudah Dibayar" },
+    confirmed: { bg: "#DCFCE7", color: "#16A34A", label: "Terkonfirmasi" },
+  }[policy.payment_status] ?? { bg: "#F1F5F9", color: "#64748B", label: policy.payment_status }
+
+  const effectivePremium = coverageTotals.total_premium > 0 ? coverageTotals.total_premium : policy.premium_amount
+  const commissionAmount = policy.commission_amount ?? Math.round(effectivePremium * policy.commission_rate / 100)
+
+  return shell(
+    <Flex flexDir="column" gap="24px" p="32px">
+
+      {/* Page header */}
+      <Flex align="center" justify="space-between">
+        <Flex align="center" gap="12px">
+          <Button size="sm" variant="ghost" color="#64748B" onClick={() => router.back()} px="0">
+            <LuArrowLeft size={16} />
+          </Button>
+          <Box p="8px" bg="#EFF6FF" borderRadius="10px" color="#1D4ED8"><LuFileText size={20} /></Box>
+          <Flex align="center" gap="8px" flexWrap="wrap">
+            <Text color="#1C2833" fontSize="18px" fontWeight="bold">{policy.policy_number}</Text>
+            <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg="#DBEAFE" color="#1D4ED8">
+              {policy.insurer?.short_name ?? policy.insurer_name}
+            </Badge>
+            <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg={renewalStatusCfg.bg} color={renewalStatusCfg.color}>
+              {renewalStatusCfg.label}
+            </Badge>
+          </Flex>
+        </Flex>
+        <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="13px">
+          <LuPencil size={13} /> Edit Polis
+        </Button>
+      </Flex>
+
+      <Flex gap="24px" align="flex-start">
+        {/* ── Left column ── */}
+        <Flex flexDir="column" gap="16px" flex="1">
+
+          {/* Detail Polis */}
+          <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
+            <Flex justify="space-between" align="center" mb="20px">
+              <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Detail Polis</Text>
+              {policy.updated_at && (
+                <Text color="#94A3B8" fontSize="11px">Terakhir diupdate: {formatDate(policy.updated_at)}</Text>
+              )}
+            </Flex>
+
+            <Flex gap="32px" mb="20px" flexWrap="wrap">
+              <Flex flexDir="column" gap="4px" flex="1" minW="160px">
+                <Text {...lbl}>NASABAH</Text>
+                <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{policy.customer?.display_name ?? policy.customer_name}</Text>
+                {policy.customer?.personal_address && (
+                  <Text color="#64748B" fontSize="12px">{policy.customer.personal_address}</Text>
+                )}
+              </Flex>
+              <Flex flexDir="column" gap="4px" flex="1" minW="160px">
+                <Text {...lbl}>PERIODE POLIS</Text>
+                <Text color="#1C2833" fontSize="14px">{formatDate(policy.coverage_start)} – {formatDate(policy.coverage_end)}</Text>
+                {days > 0
+                  ? <Text color="#3B82F6" fontSize="12px">Sisa {days} hari</Text>
+                  : <Text color="#DC2626" fontSize="12px">Sudah berakhir {Math.abs(days)} hari lalu</Text>
+                }
+              </Flex>
+            </Flex>
+
+            <Flex gap="32px" mb="24px" flexWrap="wrap">
+              <Flex flexDir="column" gap="4px" flex="1" minW="160px">
+                <Text {...lbl}>JENIS PRODUK</Text>
+                <Text color="#1C2833" fontSize="14px">{PRODUCT_LABELS[policy.product_type] ?? policy.product_type}</Text>
+              </Flex>
+              {policy.object_insured && (
+                <Flex flexDir="column" gap="4px" flex="1" minW="160px">
+                  <Text {...lbl}>OBJEK PERTANGGUNGAN</Text>
+                  <Text color="#1C2833" fontSize="14px">{policy.object_insured}</Text>
+                </Flex>
+              )}
+            </Flex>
+
+            {/* Rincian Keuangan + Coverage breakdown */}
+            <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
+
+              {/* Header */}
+              <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
+                <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Uang Pertanggungan & Rate</Text>
+                <Button
+                  size="xs" bg="#1A3557" color="white" fontSize="11px" gap="4px" borderRadius="6px"
+                  _hover={{ bg: "#162C47" }}
+                  onClick={() => { setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '' }); setCovError(null); setCovDialog({ open: true, editing: null }) }}
+                >
+                  <LuPlus size={10} /> Tambah Item
+                </Button>
+              </Flex>
+
+              {/* Column headers (only when rows exist) */}
+              {coverages.length > 0 && (
+                <Flex px="16px" py="6px" gap="8px" bg="#F1F5F9" borderBottom="1px solid" borderColor="#E2E8F0">
+                  <Text flex="1.5" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em">KATEGORI</Text>
+                  <Text flex="1" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em" textAlign="right">UANG PERTANGGUNGAN</Text>
+                  <Text w="64px" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em" textAlign="right">RATE ‰</Text>
+                  <Text w="90px" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em" textAlign="right">PREMI</Text>
+                  <Box w="44px" />
+                </Flex>
+              )}
+
+              {/* Skeleton while loading */}
+              {coverageLoading && (
+                <Flex px="16px" py="14px" align="center" justify="center">
+                  <Text color="#94A3B8" fontSize="13px">Memuat...</Text>
+                </Flex>
+              )}
+
+              {/* Empty state */}
+              {!coverageLoading && coverages.length === 0 && (
+                <Flex px="16px" py="20px" align="center" justify="center">
+                  <Text color="#94A3B8" fontSize="13px">Belum ada item coverage. Klik "+ Tambah Item" untuk mulai.</Text>
+                </Flex>
+              )}
+
+              {/* Coverage rows */}
+              {!coverageLoading && coverages.map((cov) => (
+                <Flex key={cov.coverage_id} px="16px" py="10px" gap="8px" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
+                  <Flex flexDir="column" flex="1.5" gap="1px">
+                    <Text color="#1C2833" fontSize="13px">{COVERAGE_TYPE_LABELS[cov.coverage_type]}</Text>
+                    {cov.coverage_label && <Text color="#94A3B8" fontSize="11px">{cov.coverage_label}</Text>}
+                  </Flex>
+                  <Text flex="1" color="#64748B" fontSize="12px" fontFamily="mono" textAlign="right">
+                    {fmt(cov.sum_insured)}
+                  </Text>
+                  <Text w="64px" color="#64748B" fontSize="12px" textAlign="right">
+                    {parseFloat(cov.rate_permille)}‰
+                  </Text>
+                  <Text w="90px" color="#1C2833" fontSize="13px" fontWeight="medium" textAlign="right">
+                    {fmt(cov.premium_amount)}
+                  </Text>
+                  <Flex w="44px" justify="flex-end" gap="2px">
+                    <IconButton
+                      size="xs" variant="ghost" aria-label="Edit"
+                      color="#64748B" _hover={{ bg: "#EFF6FF", color: "#1D4ED8" }}
+                      onClick={() => {
+                        setCovForm({
+                          coverage_type:  cov.coverage_type,
+                          coverage_label: cov.coverage_label ?? '',
+                          sum_insured:    String(cov.sum_insured),
+                          rate_permille:  String(parseFloat(cov.rate_permille)),
+                        })
+                        setCovError(null)
+                        setCovDialog({ open: true, editing: cov })
+                      }}
+                    >
+                      <LuPencil size={11} />
+                    </IconButton>
+                    <IconButton
+                      size="xs" variant="ghost" aria-label="Hapus"
+                      color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
+                      onClick={() => setCovToDelete(cov)}
+                    >
+                      <LuTrash2 size={11} />
+                    </IconButton>
+                  </Flex>
+                </Flex>
+              ))}
+
+              {/* Total row */}
+              {coverages.length > 0 && (
+                <Flex px="16px" py="10px" gap="8px" justify="space-between" align="center" bg="#F1F5F9" borderBottom="1px solid" borderColor="#E2E8F0">
+                  <Text color="#64748B" fontSize="12px" fontWeight="semibold">
+                    Total UP: {fmt(coverageTotals.total_sum_insured)}
+                  </Text>
+                  <Text color="#1C2833" fontSize="13px" fontWeight="semibold">
+                    Total Premi: {fmt(coverageTotals.total_premium)}
+                  </Text>
+                </Flex>
+              )}
+
+              {/* KOMISI */}
+              <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
+                <Text color="#64748B" fontSize="13px">KOMISI ({policy.commission_rate}%)</Text>
+                <Text color="#1C2833" fontSize="13px">{fmt(commissionAmount)}</Text>
+              </Flex>
+
+              {/* STATUS PEMBAYARAN */}
+              <Flex px="16px" py="12px" justify="space-between" align="center" bg="#EFF6FF">
+                <Text color="#1D4ED8" fontSize="13px" fontWeight="bold">STATUS PEMBAYARAN</Text>
+                <Badge px="10px" py="3px" borderRadius="full" fontSize="11px" bg={paymentStatusCfg.bg} color={paymentStatusCfg.color}>
+                  {paymentStatusCfg.label}
+                </Badge>
+              </Flex>
+            </Box>
+
+            {policy.coverage_notes && (
+              <Box mt="16px" p="12px" bg="#F8FAFC" borderRadius="8px" border="1px solid" borderColor="#E2E8F0">
+                <Text color="#64748B" fontSize="11px" fontWeight="semibold" mb="4px">CATATAN COVERAGE</Text>
+                <Text color="#1C2833" fontSize="13px">{policy.coverage_notes}</Text>
+              </Box>
+            )}
+          </Box>
+
+          {/* Follow-up Log */}
+          <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
+            <Flex align="center" gap="8px" mb="20px">
+              <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Follow-up Log</Text>
+            </Flex>
+            {(!policy.follow_ups || policy.follow_ups.length === 0) ? (
+              <Flex align="center" justify="center" py="24px">
+                <Text color="#94A3B8" fontSize="14px">Belum ada follow-up tercatat</Text>
+              </Flex>
+            ) : (
+              <Flex flexDir="column" gap="16px">
+                {policy.follow_ups.map((f) => (
+                  <Flex key={f.follow_up_id} gap="12px">
+                    <Box p="8px" bg="#F1F5F9" borderRadius="full" h="fit-content" color="#64748B" flexShrink={0}>
+                      <ActionIcon type={f.action_type} />
+                    </Box>
+                    <Flex flexDir="column" gap="4px">
+                      <Flex align="center" gap="8px">
+                        <Text color="#1C2833" fontSize="13px" fontWeight="semibold">
+                          {ACTION_TYPE_LABELS[f.action_type ?? ""] ?? "Follow-up"}
+                        </Text>
+                        <Text color="#94A3B8" fontSize="11px">
+                          {f.created_at ? formatDateTime(f.created_at) : formatDate(f.follow_up_date)}
+                        </Text>
+                      </Flex>
+                      {f.notes && <Text color="#64748B" fontSize="12px" lineHeight="1.6">{f.notes}</Text>}
+                      {f.outcome && <Text color="#1C2833" fontSize="12px" fontStyle="italic">Hasil: {f.outcome}</Text>}
+                    </Flex>
+                  </Flex>
+                ))}
+              </Flex>
+            )}
+          </Box>
+        </Flex>
+
+        {/* ── Right column ── */}
+        <Flex flexDir="column" gap="16px" w="280px" flexShrink={0}>
+
+          {/* Days to expiry + actions */}
+          <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px" textAlign="center">
+            <Text color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.08em" mb="12px">
+              {days >= 0 ? "HARI MENUJU EXPIRY" : "SUDAH BERAKHIR"}
+            </Text>
+            <Text color={days < 0 ? "#DC2626" : "#1A3557"} fontSize="52px" fontWeight="bold" lineHeight="1">
+              {Math.abs(days)}
+            </Text>
+            <Text color={days < 0 ? "#DC2626" : "#1A3557"} fontSize="18px" fontWeight="semibold" mb="12px">Hari</Text>
+            <Flex align="center" justify="center" gap="6px" color="#94A3B8" fontSize="12px" mb="20px">
+              <LuCalendar size={13} /> Berakhir: {formatDate(policy.coverage_end)}
+            </Flex>
+            <Flex flexDir="column" gap="8px">
+              <Button
+                w="100%" variant="outline" borderColor="#3B82F6" color="#3B82F6" fontSize="13px" gap="6px"
+                _hover={{ bg: "#EFF6FF" }}
+                loading={actionLoading === "payment"}
+                disabled={policy.payment_status === "confirmed"}
+                onClick={recordPayment}
+              >
+                <LuCreditCard size={13} /> {policy.payment_status === "paid" ? "Konfirmasi Pembayaran" : "Catat Pembayaran"}
+              </Button>
+              <Button
+                w="100%" bg="#16A34A" color="white" fontSize="13px" gap="6px"
+                _hover={{ bg: "#15803D" }}
+                loading={actionLoading === "renewed"}
+                disabled={policy.renewal_status === "renewed"}
+                onClick={markRenewed}
+              >
+                <LuCircleCheck size={13} /> Tandai Sudah Diperbarui
+              </Button>
+              <Button
+                w="100%" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px" gap="6px"
+                loading={actionLoading === "followup"}
+                onClick={logFollowUp}
+              >
+                <LuMessageSquare size={13} /> Catat Follow-up
+              </Button>
+            </Flex>
+          </Box>
+
+          {/* Customer contact */}
+          <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
+            <Text color="#1C2833" fontSize="14px" fontWeight="semibold" mb="14px">Kontak Nasabah</Text>
+            <Flex align="center" gap="10px" mb="14px">
+              <Avatar.Root w="36px" h="36px" bg="#1D4ED8" borderRadius="full">
+                <Avatar.Fallback color="white" fontSize="12px" fontWeight="bold">
+                  {(policy.customer?.display_name ?? policy.customer_name ?? "").slice(0, 2).toUpperCase()}
+                </Avatar.Fallback>
+              </Avatar.Root>
+              <Flex flexDir="column">
+                <Text color="#1C2833" fontSize="13px" fontWeight="semibold">{policy.customer?.display_name ?? policy.customer_name}</Text>
+                <Text color="#94A3B8" fontSize="11px">
+                  {(policy.customer?.customer_type ?? policy.customer_type) === "company" ? "Korporat" : "Perorangan"}
+                </Text>
               </Flex>
             </Flex>
             <Flex gap="8px">
-              <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="13px">
-                <LuPencil size={13}/> Edit Polis
+              <Button flex="1" size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="12px" gap="4px">
+                <LuUser size={12} /> Detail
               </Button>
-              <Button size="sm" bg="#EF4444" color="white" gap="6px" fontSize="13px">
-                <LuFlag size={13}/> Lapor
-              </Button>
+              {(policy.customer?.personal_whatsapp ?? policy.customer?.pic_whatsapp) && (
+                <Button
+                  flex="1" size="sm" bg="#25D366" color="white" fontSize="12px" gap="4px"
+                  onClick={() => {
+                    const wa = policy.customer?.personal_whatsapp ?? policy.customer?.pic_whatsapp
+                    if (wa) window.open(`https://wa.me/${wa.replace(/\D/g, "")}`, "_blank")
+                  }}
+                >
+                  <FaWhatsapp size={12} /> WhatsApp
+                </Button>
+              )}
             </Flex>
-          </Flex>
+          </Box>
 
-          <Flex gap="24px" align="flex-start">
-            {/* ── Left column ── */}
-            <Flex flexDir="column" gap="16px" flex="1">
-
-              {/* Detail Polis */}
-              <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
-                <Flex justify="space-between" align="center" mb="20px">
-                  <Flex align="center" gap="8px">
-                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Detail Polis</Text>
-                  </Flex>
-                  <Text color="#94A3B8" fontSize="11px">Terakhir diupdate: {policy.updatedAt}</Text>
-                </Flex>
-
-                <Flex gap="32px" mb="20px">
-                  <Flex flexDir="column" gap="4px" flex="1">
-                    <Text {...lbl}>NASABAH</Text>
-                    <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{policy.nasabah}</Text>
-                    <Text color="#64748B" fontSize="12px">{policy.address}</Text>
-                  </Flex>
-                  <Flex flexDir="column" gap="4px" flex="1">
-                    <Text {...lbl}>PERIODE POLIS</Text>
-                    <Text color="#1C2833" fontSize="14px">{policy.periodeStart} – {policy.periodeEnd}</Text>
-                    <Text color="#3B82F6" fontSize="12px">Sisa {policy.sisaHari} hari</Text>
-                  </Flex>
-                </Flex>
-
-                <Flex gap="32px" mb="24px">
-                  <Flex flexDir="column" gap="4px" flex="1">
-                    <Text {...lbl}>OBJEK PERTANGGUNGAN</Text>
-                    <Text color="#1C2833" fontSize="14px">{policy.objek}</Text>
-                  </Flex>
-                  <Flex flexDir="column" gap="4px" flex="1">
-                    <Text {...lbl}>RATE PREMI</Text>
-                    <Text color="#1C2833" fontSize="14px">{policy.rate}</Text>
-                  </Flex>
-                </Flex>
-
-                {/* Rincian Keuangan */}
-                <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
-                  <Box px="16px" py="10px" borderBottom="1px solid" borderColor="#E2E8F0">
-                    <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Rincian Keuangan</Text>
-                  </Box>
-                  {[
-                    { label:"Nilai Pertanggungan (TSI)", value:fmt(policy.tsi),      sub:null,                              bold:false },
-                    { label:"KOMISI (%)",                value:`${policy.komisiPct}%`, sub:fmt(policy.komisiNom),           bold:false },
-                    { label:"PREMI NETT",                value:fmt(policy.premiNett), sub:null,                             bold:false },
-                    { label:"PPH KOMISI",                value:fmt(policy.pph),       sub:null,                             bold:false },
-                    { label:"METERAI",                   value:fmt(policy.meterai),   sub:null,                             bold:false },
-                  ].map(({ label, value, sub }) => (
-                    <Flex key={label} px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9">
-                      <Text color="#64748B" fontSize="13px">{label}</Text>
-                      <Flex align="center" gap="8px">
-                        {sub && <Text color="#94A3B8" fontSize="12px">{sub}</Text>}
-                        <Text color="#1C2833" fontSize="13px">{value}</Text>
-                      </Flex>
-                    </Flex>
-                  ))}
-                  <Flex px="16px" py="12px" justify="space-between" align="center" bg="#EFF6FF">
-                    <Text color="#1D4ED8" fontSize="13px" fontWeight="bold">TOTAL TAGIHAN</Text>
-                    <Text color="#1D4ED8" fontSize="14px" fontWeight="bold">{fmt(policy.total)}</Text>
-                  </Flex>
-                </Box>
-              </Box>
-
-              {/* Riwayat Renewal */}
-              <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
-                <Flex align="center" gap="8px" px="24px" py="16px" borderBottom="1px solid" borderColor="#E2E8F0">
-                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Riwayat Renewal</Text>
-                </Flex>
-                <Table.Root>
-                  <Table.Header>
-                    <Table.Row bg="#F8FAFC">
-                      {["NO. POLIS LAMA","TAHUN","STATUS","PREMI"].map((h) => (
-                        <Table.ColumnHeader key={h} color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="10px">{h}</Table.ColumnHeader>
-                      ))}
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {renewalHistory.map((r) => (
-                      <Table.Row key={r.polisLama} borderBottom="1px solid" borderColor="#F1F5F9">
-                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="13px" fontFamily="mono">{r.polisLama}</Table.Cell>
-                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="13px">{r.tahun}</Table.Cell>
-                        <Table.Cell px="20px" py="12px">
-                          <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg="#FEE2E2" color="#DC2626">{r.status}</Badge>
-                        </Table.Cell>
-                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="13px">{fmt(r.premi)}</Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </Table.Body>
-                </Table.Root>
-              </Box>
-
-              {/* Follow-up Log */}
-              <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
-                <Flex align="center" gap="8px" mb="20px">
-                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Follow-up Log</Text>
-                </Flex>
-                <Flex flexDir="column" gap="16px">
-                  {followUpLog.map(({ Icon, type, time, note }) => (
-                    <Flex key={type} gap="12px">
-                      <Box p="8px" bg="#F1F5F9" borderRadius="full" h="fit-content" color="#64748B" flexShrink={0}>
-                        <Icon size={14}/>
-                      </Box>
-                      <Flex flexDir="column" gap="4px">
-                        <Flex align="center" gap="8px">
-                          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">{type}</Text>
-                          <Text color="#94A3B8" fontSize="11px">{time}</Text>
-                        </Flex>
-                        <Text color="#64748B" fontSize="12px" lineHeight="1.6">{note}</Text>
-                      </Flex>
-                    </Flex>
-                  ))}
-                </Flex>
-              </Box>
-            </Flex>
-
-            {/* ── Right column ── */}
-            <Flex flexDir="column" gap="16px" w="280px" flexShrink={0}>
-
-              {/* Days to expiry */}
-              <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px" textAlign="center">
-                <Text color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.08em" mb="12px">HARI MENUJU EXPIRY</Text>
-                <Text color="#1A3557" fontSize="52px" fontWeight="bold" lineHeight="1">{policy.sisaHari}</Text>
-                <Text color="#1A3557" fontSize="18px" fontWeight="semibold" mb="12px">Hari</Text>
-                <Flex align="center" justify="center" gap="6px" color="#94A3B8" fontSize="12px" mb="20px">
-                  <LuCalendar size={13}/> Berakhir: {policy.periodeEnd}
-                </Flex>
-                <Flex flexDir="column" gap="8px">
-                  <Button w="100%" variant="outline" borderColor="#3B82F6" color="#3B82F6" fontSize="13px" gap="6px" _hover={{ bg:"#EFF6FF" }}>
-                    <LuCreditCard size={13}/> Catat Pembayaran
-                  </Button>
-                  <Button w="100%" bg="#16A34A" color="white" fontSize="13px" gap="6px" _hover={{ bg:"#15803D" }}>
-                    <LuCircleCheck size={13}/> Tandai Sudah Diperbarui
-                  </Button>
-                  <Button w="100%" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px" gap="6px">
-                    <LuMessageSquare size={13}/> Catat Follow-up
-                  </Button>
-                </Flex>
-              </Box>
-
-              {/* Dokumen */}
-              <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
-                <Flex justify="space-between" align="center" mb="16px">
-                  <Text color="#1C2833" fontSize="14px" fontWeight="semibold">Dokumen</Text>
-                  <Flex align="center" gap="4px" color="#3B82F6" fontSize="12px" cursor="pointer">
-                    <LuUpload size={12}/> Upload
-                  </Flex>
-                </Flex>
-                <Flex flexDir="column" gap="10px">
-                  {documents.map(({ name, meta }) => (
-                    <Flex key={name} align="center" gap="10px" p="10px" bg="#F8FAFC" borderRadius="8px" border="1px solid" borderColor="#F1F5F9">
-                      <Box p="8px" bg="#FEE2E2" borderRadius="6px" color="#DC2626" flexShrink={0}><LuFileText size={14}/></Box>
-                      <Flex flexDir="column" gap="2px">
-                        <Text color="#1C2833" fontSize="12px" fontWeight="medium">{name}</Text>
-                        <Text color="#94A3B8" fontSize="11px">{meta}</Text>
-                      </Flex>
-                    </Flex>
-                  ))}
-                </Flex>
-              </Box>
-
-              {/* Agen Penanggung Jawab */}
-              <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
-                <Text color="#1C2833" fontSize="14px" fontWeight="semibold" mb="14px">Agen Penanggung Jawab</Text>
-                <Flex align="center" gap="10px" mb="14px">
-                  <Avatar.Root w="36px" h="36px" bg="#1D4ED8" borderRadius="full">
-                    <Avatar.Fallback color="white" fontSize="12px" fontWeight="bold">AP</Avatar.Fallback>
-                  </Avatar.Root>
-                  <Flex flexDir="column">
-                    <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Agus Pratama</Text>
-                    <Text color="#94A3B8" fontSize="11px">Agent Code: AG-5001</Text>
-                  </Flex>
-                </Flex>
-                <Flex gap="8px">
-                  <Button flex="1" size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="12px" gap="4px">
-                    <LuUser size={12}/> Hubungi
-                  </Button>
-                  <Button flex="1" size="sm" bg="#25D366" color="white" fontSize="12px" gap="4px">
-                    <FaWhatsapp size={12}/> WhatsApp
-                  </Button>
-                </Flex>
-              </Box>
-            </Flex>
-          </Flex>
+          {/* Notes */}
+          {policy.notes && (
+            <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
+              <Text color="#1C2833" fontSize="14px" fontWeight="semibold" mb="8px">Catatan Internal</Text>
+              <Text color="#64748B" fontSize="13px" lineHeight="1.6">{policy.notes}</Text>
+            </Box>
+          )}
         </Flex>
-      </Box>
-
-      <MobileBottomNav />
-    </Box>
+      </Flex>
+    </Flex>
   )
 }

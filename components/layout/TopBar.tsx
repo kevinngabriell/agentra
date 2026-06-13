@@ -1,6 +1,7 @@
 "use client"
 
 import { Box, Flex, Separator, Text } from "@chakra-ui/react"
+import { useRouter } from "next/navigation"
 import { FiBell, FiSettings } from "react-icons/fi"
 
 interface TopBarProps {
@@ -12,6 +13,12 @@ interface TopBarProps {
 export function TopBar({ title, userName, userRole = "Agen" }: TopBarProps) {
   const displayName = userName || "Agent"
   const initials = displayName.slice(0, 2).toUpperCase()
+
+  const router = useRouter();
+    
+  const handleSettings = () => {
+    router.push('/agentra/settings');
+  };
 
   return (
     <Flex align="center" justify="space-between" paddingX="24px" paddingY="9px" borderBottom="1px solid" borderColor="#E2E8F0" bgColor="#FFFFFF">
@@ -29,7 +36,7 @@ export function TopBar({ title, userName, userRole = "Agen" }: TopBarProps) {
           align="center" justify="center"
           cursor="pointer" _hover={{ bg: "#F1F5F9" }}
         >
-          <FiSettings size={16} color="#64748B" />
+          <FiSettings size={16} color="#64748B" onClick={handleSettings}/>
         </Flex>
         <Separator orientation="vertical" h="24px" />
         <Box display={{ base: "none", md: "block" }}>

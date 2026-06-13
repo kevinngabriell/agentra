@@ -77,7 +77,14 @@ export default function Login() {
                     </Flex>
 
                     {alert && (
-                        <Alert.Root status={alert.status} mb="20px" borderRadius="8px" w="100%">
+                        <Alert.Root
+                            status={alert.status}
+                            mb="20px"
+                            borderRadius="8px"
+                            w="100%"
+                            backgroundColor={alert.status === "error" ? "#FEE2E2" : "#DCFCE7"}
+                            color={alert.status === "error" ? "#991B1B" : "#166534"}
+                        >
                             <Alert.Indicator />
                             <Alert.Description fontSize="14px">{alert.message}</Alert.Description>
                         </Alert.Root>
@@ -94,6 +101,7 @@ export default function Login() {
                                 borderColor="#DDE1E7"
                                 borderRadius={8}
                                 fontSize="14px"
+                                color="#1C2833"
                                 value={email}
                                 onChange={(e) => { setEmail(e.target.value); clearFieldError("email") }}
                                 disabled={loading}
@@ -120,6 +128,7 @@ export default function Login() {
                                 size="md"
                                 rounded="lg"
                                 fontSize="14px"
+                                color="#1C2833"
                                 value={password}
                                 onChange={(e) => { setPassword(e.target.value); clearFieldError("password") }}
                                 disabled={loading}
