@@ -33,7 +33,7 @@ function formatCommission(amount: number): string {
     return `${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}jt`
   }
   if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}rb`
-  return amount.toLocaleString("id-ID")
+  return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
 }
 
 function formatActivityTime(iso: string): string {
@@ -204,7 +204,7 @@ function StatusPerpanjangan({ breakdown }: { breakdown: RenewalBreakdown }) {
           Omzet Perpanjangan Tercapai
         </Text>
         <Flex justify="space-between" align="center" mb="12px">
-          <Text color="white" fontSize="18px" fontWeight="bold">Rp {breakdown.achieved_omzet.toLocaleString("id-ID")}</Text>
+          <Text color="white" fontSize="18px" fontWeight="bold">Rp {Math.round(breakdown.achieved_omzet).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</Text>
           <Text color="#BAE6FD" fontSize="12px">{breakdown.renewed} Polis</Text>
         </Flex>
         <Box h="4px" bg="rgba(255,255,255,0.2)" borderRadius="full" overflow="hidden">

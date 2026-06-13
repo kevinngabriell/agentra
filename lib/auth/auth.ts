@@ -115,6 +115,17 @@ export async function RefreshToken(refreshToken: string): Promise<AuthTokens> {
     return json.data
 }
 
+export async function Logout(accessToken?: string): Promise<void> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL
+    await fetch(`${baseUrl}/api/v1/auth/logout`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+    }).catch(() => {})
+}
+
 export async function LoginAgent(input: LoginPayload): Promise<AuthTokens> {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
