@@ -179,7 +179,7 @@ export async function createPolicy(
     token: string,
     data: CreatePolicyPayload,
 ): Promise<{ policy_id: string }> {
-    return req<{ policy_id: string }>('POST', '/policies', token, data as Record<string, unknown>)
+    return req<{ policy_id: string }>('POST', '/policies', token, data as unknown as Record<string, unknown>)
 }
 
 export async function updatePolicy(
@@ -187,7 +187,7 @@ export async function updatePolicy(
     policyId: string,
     data: Partial<CreatePolicyPayload>,
 ): Promise<void> {
-    await req<unknown>('PUT', `/policies/${policyId}`, token, data as Record<string, unknown>)
+    await req<unknown>('PUT', `/policies/${policyId}`, token, data as unknown as Record<string, unknown>)
 }
 
 export async function updateRenewalStatus(
@@ -215,7 +215,7 @@ export async function addPolicyFollowUp(
         'POST',
         `/policies/${policyId}/follow-ups`,
         token,
-        data as Record<string, unknown>,
+        data as unknown as Record<string, unknown>,
     )
 }
 
@@ -285,7 +285,7 @@ export async function addCoverage(
     data: AddCoveragePayload,
 ): Promise<{ coverage_id: string; premium_amount: number }> {
     return req<{ coverage_id: string; premium_amount: number }>(
-        'POST', `/policies/${policyId}/coverages`, token, data as Record<string, unknown>,
+        'POST', `/policies/${policyId}/coverages`, token, data as unknown as Record<string, unknown>,
     )
 }
 
@@ -296,7 +296,7 @@ export async function updateCoverage(
     data: UpdateCoveragePayload,
 ): Promise<{ premium_amount: number }> {
     return req<{ premium_amount: number }>(
-        'PUT', `/policies/${policyId}/coverages/${coverageId}`, token, data as Record<string, unknown>,
+        'PUT', `/policies/${policyId}/coverages/${coverageId}`, token, data as unknown as Record<string, unknown>,
     )
 }
 
@@ -306,4 +306,38 @@ export async function deleteCoverage(
     coverageId: string,
 ): Promise<void> {
     await req<unknown>('DELETE', `/policies/${policyId}/coverages/${coverageId}`, token)
+}
+
+// ── Policy Logs ───────────────────────────────────────────────────────────
+
+export interface ApiPolicyLog {
+    log_id: string
+    event_type: string
+    reference_type: string | null
+    reference_id: string | null
+    old_value: string | null
+    new_value: string | null
+    description: string
+    metadata: Record<string, unknown> | null
+    created_by: string
+    created_at: string
+}
+
+export interface PolicyLogsResponse {
+    data: ApiPolicyLog[]
+    pagination: {
+        total: number
+        page: number
+        limit: number
+        total_pages: number
+    }
+}
+
+export async function getPolicyLogs(
+    token: string,
+    policyId: string,
+    page = 1,
+    limit = 20,
+): Promise<PolicyLogsResponse> {
+    return req<PolicyLogsResponse>('GET', `/policies/${policyId}/logs?page=${page}&limit=${limit}`, token)
 }

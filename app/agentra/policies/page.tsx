@@ -393,7 +393,8 @@ export default function Policies() {
                               onClick={() => router.push(`/agentra/policies/${p.policy_id}`)}>
                               <LuEye size={14} />
                             </IconButton>
-                            <IconButton size="sm" variant="ghost" aria-label="edit" color="#64748B" _hover={{ bg: "#F1F5F9", color: "#1A3557" }}>
+                            <IconButton size="sm" variant="ghost" aria-label="edit" color="#64748B" _hover={{ bg: "#F1F5F9", color: "#1A3557" }}
+                              onClick={() => router.push(`/agentra/policies/${p.policy_id}`)}>
                               <LuPencil size={14} />
                             </IconButton>
                           </Flex>

@@ -42,7 +42,7 @@ export interface UpdateProfilePayload {
 }
 
 export async function updateProfile(token: string, data: UpdateProfilePayload): Promise<UserProfile> {
-    return apiReq<UserProfile>('PUT', '/users/me', token, data as Record<string, unknown>)
+    return apiReq<UserProfile>('PUT', '/users/me', token, data as unknown as Record<string, unknown>)
 }
 
 export async function changePassword(
@@ -70,5 +70,5 @@ export async function updateNotificationSettings(
     token: string,
     data: NotificationSettingsPayload,
 ): Promise<void> {
-    await apiReq<unknown>('PUT', '/users/me/notification-settings', token, data as Record<string, unknown>)
+    await apiReq<unknown>('PUT', '/users/me/notification-settings', token, data as unknown as Record<string, unknown>)
 }

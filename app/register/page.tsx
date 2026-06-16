@@ -15,7 +15,6 @@ function Stepper({ currentStep }: { currentStep: number }) {
     { label: "Akun" },
     { label: "Profil" },
     { label: "Paket" },
-    { label: "Bayar" },
   ]
 
   return (
@@ -353,11 +352,13 @@ function Step3Form({
   onNext,
   plans,
   loadingPlans,
+  submitting,
 }: {
   onBack: () => void
   onNext: (plan: Plan) => void
   plans: Plan[]
   loadingPlans: boolean
+  submitting?: boolean
 }) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
 
@@ -461,6 +462,9 @@ function Step3Form({
                   borderColor="#0D1B3E"
                   _hover={{ bg: isFeatured ? "#1a2f5c" : "#EFF6FF" }}
                   fontSize="14px"
+                  disabled={submitting}
+                  loading={submitting && selectedPlanId === plan.plan_id}
+                  loadingText="Mendaftarkan..."
                   onClick={(e) => { e.stopPropagation(); setSelectedPlanId(plan.plan_id); onNext(plan) }}
                 >
                   Pilih Paket
@@ -893,7 +897,8 @@ export default function Register() {
     return Object.keys(errs).length === 0
   }
 
-  const onRegister = async () => {
+  const onRegister = async (planOverride?: Plan) => {
+    const planToUse = planOverride ?? selectedPlan
     try {
       setLoading(true)
       setAlert(null)
@@ -906,13 +911,14 @@ export default function Register() {
         whatsapp_number: formData.phone,
         business_name: formData.business_name,
         city: formData.city,
-        plan: selectedPlan?.plan_id ?? "",
+        plan: planToUse?.plan_id ?? "",
       })
       setAlert({ status: "success", message: "Akun berhasil dibuat! Anda akan diarahkan ke halaman login..." })
       setTimeout(() => router.push("/login"), 2500)
     } catch (err: any) {
       if (err.errors && Object.keys(err.errors).length > 0) {
         setFieldErrors(err.errors)
+        setCurrentStep(0)
       }
       setAlert({ status: "error", message: err.message || "Pendaftaran gagal. Silakan coba lagi." })
     } finally {
@@ -1086,6 +1092,7 @@ export default function Register() {
                       _hover={{ bg: "#F9FAFB" }}
                       fontSize="14px"
                       px="24px"
+                      onClick={() => router.push("/login")}
                     >
                       Batal
                     </Button>
@@ -1128,19 +1135,11 @@ export default function Register() {
               onBack={() => setCurrentStep(1)}
               onNext={(plan) => {
                 setSelectedPlan(plan)
-                setCurrentStep(3)
+                onRegister(plan)
               }}
               plans={plans}
               loadingPlans={loadingPlans}
-            />
-          )}
-
-          {currentStep === 3 && selectedPlan && (
-            <Step4Form
-              onBack={() => setCurrentStep(2)}
-              selectedPlan={selectedPlan}
-              onSubmit={onRegister}
-              loading={loading}
+              submitting={loading}
             />
           )}
         </Flex>

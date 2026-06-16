@@ -2,11 +2,11 @@
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
-  Box, Button, Field, Flex, Input, NativeSelect, Skeleton, Switch, Tabs, Text,
+  Box, Button, Dialog, Field, Flex, Input, NativeSelect, Skeleton, Switch, Tabs, Text,
 } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { LuUser, LuLock, LuBell, LuCheck, LuBuilding2, LuChevronDown, LuChevronUp, LuPencil, LuTrash2, LuPlus, LuX, LuCircle } from "react-icons/lu"
+import { LuUser, LuLock, LuBell, LuCheck, LuBuilding2, LuChevronDown, LuChevronUp, LuPencil, LuTrash2, LuPlus, LuX, LuCircle, LuPackage } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
 import { getMyProfile, updateProfile, changePassword, updateNotificationSettings, type UserProfile } from "@/lib/api/user"
 import {
@@ -14,6 +14,10 @@ import {
   getInsurerProducts, upsertInsurerProduct,
   type ApiInsurer, type ApiInsurerProduct, type ApiInsurerProductType,
 } from "@/lib/api/insurers"
+import {
+  getMasterProducts, createMasterProduct, updateMasterProduct, deleteMasterProduct,
+  type ApiMasterProduct,
+} from "@/lib/api/master-products"
 
 const lbl = { color: "#5D6D7E", fontSize: "12px", fontWeight: "semibold" } as const
 
@@ -777,6 +781,275 @@ function InsurersTab() {
   )
 }
 
+// ─── Master Products Tab ──────────────────────────────────────────────────────
+
+const EMPTY_PRODUCT_FORM = { product_code: "", product_name: "", commission_rate: "", policy_prefixes: "" }
+
+function ProductFormFields({
+  form,
+  onChange,
+}: {
+  form: typeof EMPTY_PRODUCT_FORM
+  onChange: (f: typeof EMPTY_PRODUCT_FORM) => void
+}) {
+  return (
+    <Flex flexDir="column" gap="16px">
+      <Flex gap="12px">
+        <Field.Root flex="1">
+          <Field.Label {...lbl}>KODE PRODUK *</Field.Label>
+          <Input fontSize="14px" placeholder="kebakaran" value={form.product_code}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, product_code: e.target.value.toLowerCase() })} />
+          <Field.HelperText fontSize="11px" color="#94A3B8">Lowercase, unik per perusahaan</Field.HelperText>
+        </Field.Root>
+        <Field.Root w="120px">
+          <Field.Label {...lbl}>KOMISI (%) *</Field.Label>
+          <Input fontSize="14px" type="number" min={0} max={100} step="0.5" placeholder="15" value={form.commission_rate}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, commission_rate: e.target.value })} />
+        </Field.Root>
+      </Flex>
+      <Field.Root>
+        <Field.Label {...lbl}>NAMA PRODUK *</Field.Label>
+        <Input fontSize="14px" placeholder="Asuransi Kebakaran" value={form.product_name}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, product_name: e.target.value })} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label {...lbl}>PREFIKS POLIS</Field.Label>
+        <Input fontSize="14px" placeholder="01,08,88" value={form.policy_prefixes}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, policy_prefixes: e.target.value })} />
+        <Field.HelperText fontSize="11px" color="#94A3B8">Pisahkan dengan koma — dipakai untuk auto-deteksi komisi saat membuat polis</Field.HelperText>
+      </Field.Root>
+    </Flex>
+  )
+}
+
+function MasterProductsTab() {
+  const [products, setProducts]     = useState<ApiMasterProduct[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [addOpen, setAddOpen]       = useState(false)
+  const [addForm, setAddForm]       = useState(EMPTY_PRODUCT_FORM)
+  const [adding, setAdding]         = useState(false)
+  const [editTarget, setEditTarget] = useState<ApiMasterProduct | null>(null)
+  const [editForm, setEditForm]     = useState(EMPTY_PRODUCT_FORM)
+  const [saving, setSaving]         = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [feedback, setFeedback]     = useState<{ type: "success" | "error"; msg: string } | null>(null)
+
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!token) return
+    getMasterProducts(token)
+      .then(setProducts)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleAdd() {
+    const token = getAccessToken()
+    if (!token || !addForm.product_code || !addForm.product_name || !addForm.commission_rate) {
+      setFeedback({ type: "error", msg: "Kode produk, nama, dan komisi wajib diisi" })
+      return
+    }
+    setAdding(true)
+    setFeedback(null)
+    try {
+      const { product_id } = await createMasterProduct(token, {
+        product_code: addForm.product_code,
+        product_name: addForm.product_name,
+        commission_rate: parseFloat(addForm.commission_rate) || 0,
+        policy_prefixes: addForm.policy_prefixes || undefined,
+      })
+      setProducts((prev) => [{
+        product_id,
+        product_code: addForm.product_code,
+        product_name: addForm.product_name,
+        commission_rate: addForm.commission_rate,
+        policy_prefixes: addForm.policy_prefixes || null,
+        is_active: 1,
+      }, ...prev])
+      setAddForm(EMPTY_PRODUCT_FORM)
+      setAddOpen(false)
+      setFeedback({ type: "success", msg: `${addForm.product_name} berhasil ditambahkan.` })
+    } catch (err: any) {
+      setFeedback({ type: "error", msg: err.message ?? "Gagal menambahkan produk" })
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  function openEdit(p: ApiMasterProduct) {
+    setEditTarget(p)
+    setEditForm({
+      product_code: p.product_code,
+      product_name: p.product_name,
+      commission_rate: p.commission_rate,
+      policy_prefixes: p.policy_prefixes ?? "",
+    })
+  }
+
+  async function handleSaveEdit() {
+    if (!editTarget) return
+    const token = getAccessToken()
+    if (!token) return
+    setSaving(true)
+    try {
+      await updateMasterProduct(token, editTarget.product_id, {
+        product_code: editForm.product_code,
+        product_name: editForm.product_name,
+        commission_rate: parseFloat(editForm.commission_rate) || 0,
+        policy_prefixes: editForm.policy_prefixes || "",
+      })
+      setProducts((prev) => prev.map((p) =>
+        p.product_id === editTarget.product_id
+          ? { ...p, ...editForm, commission_rate: editForm.commission_rate }
+          : p
+      ))
+      setEditTarget(null)
+    } catch (err: any) {
+      setFeedback({ type: "error", msg: err.message ?? "Gagal menyimpan" })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function toggleActive(p: ApiMasterProduct) {
+    const token = getAccessToken()
+    if (!token) return
+    const next = p.is_active ? 0 : 1
+    setProducts((prev) => prev.map((prod) => prod.product_id === p.product_id ? { ...prod, is_active: next } : prod))
+    try {
+      await updateMasterProduct(token, p.product_id, { is_active: Boolean(next) })
+    } catch {
+      setProducts((prev) => prev.map((prod) => prod.product_id === p.product_id ? { ...prod, is_active: p.is_active } : prod))
+    }
+  }
+
+  async function handleDelete(productId: string) {
+    const token = getAccessToken()
+    if (!token) return
+    setDeletingId(productId)
+    try {
+      await deleteMasterProduct(token, productId)
+      setProducts((prev) => prev.filter((p) => p.product_id !== productId))
+    } catch (err: any) {
+      setFeedback({ type: "error", msg: err.message ?? "Gagal menghapus produk" })
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <Flex flexDir="column" gap="16px">
+      {/* Header */}
+      <Flex justify="space-between" align="center">
+        <Flex flexDir="column" gap="2px">
+          <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Produk & Komisi</Text>
+          <Text color="#64748B" fontSize="13px">Kelola katalog produk asuransi dan tarif komisi default</Text>
+        </Flex>
+        <Button
+          bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold" gap="6px"
+          onClick={() => { setAddOpen(true); setFeedback(null) }}
+        >
+          <LuPlus size={14} /> Tambah Produk
+        </Button>
+      </Flex>
+
+      {feedback && <Toast type={feedback.type} message={feedback.msg} />}
+
+      {/* Product list */}
+      {loading
+        ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} h="64px" borderRadius="12px" />)
+        : products.length === 0
+          ? (
+            <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="40px" textAlign="center">
+              <Text color="#94A3B8" fontSize="14px">Belum ada produk. Klik "Tambah Produk" untuk mulai.</Text>
+            </Box>
+          )
+          : products.map((p) => {
+            const isActive = Boolean(p.is_active)
+            return (
+              <Box key={p.product_id} bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0">
+                <Flex p="16px" align="center" gap="12px" flexWrap="wrap">
+                  <Box px="8px" py="2px" borderRadius="6px" bg="#1A3557" color="white" fontSize="11px" fontWeight="bold" flexShrink={0}>
+                    {p.product_code}
+                  </Box>
+                  <Text color="#1C2833" fontSize="14px" fontWeight="semibold" flex="1" minW={0}>{p.product_name}</Text>
+                  <Box px="8px" py="2px" borderRadius="6px" bg="#DBEAFE" fontSize="12px" fontWeight="bold" color="#1D4ED8" flexShrink={0}>
+                    {parseFloat(p.commission_rate).toFixed(1)}%
+                  </Box>
+                  {p.policy_prefixes && (
+                    <Box px="8px" py="2px" borderRadius="6px" bg="#F1F5F9" fontSize="11px" color="#64748B" flexShrink={0}>
+                      Prefiks: {p.policy_prefixes}
+                    </Box>
+                  )}
+                  <Flex align="center" gap="10px" flexShrink={0}>
+                    <Flex align="center" gap="6px">
+                      <Text fontSize="11px" color="#94A3B8">{isActive ? "Aktif" : "Nonaktif"}</Text>
+                      <Switch.Root checked={isActive} onCheckedChange={() => toggleActive(p)} colorPalette="blue" size="sm">
+                        <Switch.HiddenInput /><Switch.Control />
+                      </Switch.Root>
+                    </Flex>
+                    <Button size="sm" variant="ghost" color="#64748B" gap="4px" fontSize="12px" onClick={() => openEdit(p)}>
+                      <LuPencil size={12} /> Edit
+                    </Button>
+                    <Button size="sm" variant="ghost" color="#EF4444" px="2" loading={deletingId === p.product_id} onClick={() => handleDelete(p.product_id)}>
+                      <LuTrash2 size={14} />
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Box>
+            )
+          })
+      }
+
+      {/* Add dialog */}
+      <Dialog.Root open={addOpen} onOpenChange={({ open }) => { setAddOpen(open); if (!open) setAddForm(EMPTY_PRODUCT_FORM) }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="16px" maxW="480px" mx="16px">
+            <Dialog.Header borderBottom="1px solid" borderColor="#E2E8F0" pb="16px">
+              <Dialog.Title fontSize="16px" fontWeight="semibold" color="#1C2833">Tambah Produk Baru</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body py="20px">
+              <ProductFormFields form={addForm} onChange={setAddForm} />
+            </Dialog.Body>
+            <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
+              <Dialog.ActionTrigger asChild>
+                <Button variant="ghost" color="#64748B" fontSize="14px">Batal</Button>
+              </Dialog.ActionTrigger>
+              <Button bg="#1A3557" color="white" fontSize="14px" loading={adding} onClick={handleAdd}>
+                Simpan
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* Edit dialog */}
+      <Dialog.Root open={!!editTarget} onOpenChange={({ open }) => { if (!open) setEditTarget(null) }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="16px" maxW="480px" mx="16px">
+            <Dialog.Header borderBottom="1px solid" borderColor="#E2E8F0" pb="16px">
+              <Dialog.Title fontSize="16px" fontWeight="semibold" color="#1C2833">Edit Produk</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body py="20px">
+              <ProductFormFields form={editForm} onChange={setEditForm} />
+            </Dialog.Body>
+            <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
+              <Dialog.ActionTrigger asChild>
+                <Button variant="ghost" color="#64748B" fontSize="14px">Batal</Button>
+              </Dialog.ActionTrigger>
+              <Button bg="#1A3557" color="white" fontSize="14px" loading={saving} onClick={handleSaveEdit}>
+                Simpan Perubahan
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+    </Flex>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -823,6 +1096,7 @@ export default function SettingsPage() {
                   { value: "security",      label: "Keamanan",    Icon: LuLock },
                   { value: "notifications", label: "Notifikasi",  Icon: LuBell },
                   { value: "insurers",      label: "Asuransi",    Icon: LuBuilding2 },
+                  { value: "products",      label: "Produk",      Icon: LuPackage },
                 ].map(({ value, label, Icon }) => (
                   <Tabs.Trigger key={value} value={value}
                     px="20px" py="8px" borderRadius="8px" fontSize="14px"
@@ -844,6 +1118,9 @@ export default function SettingsPage() {
               </Tabs.Content>
               <Tabs.Content value="insurers">
                 <InsurersTab />
+              </Tabs.Content>
+              <Tabs.Content value="products">
+                <MasterProductsTab />
               </Tabs.Content>
             </Tabs.Root>
           ) : null}

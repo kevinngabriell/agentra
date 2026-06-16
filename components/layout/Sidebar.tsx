@@ -4,7 +4,8 @@ import { Box, Flex, Text } from "@chakra-ui/react"
 import { FiHome, FiUsers, FiRefreshCw, FiDollarSign, FiUserCheck, FiFolder, FiBarChart2, FiLogOut, FiShield } from "react-icons/fi"
 import { MdOutlinePolicy } from "react-icons/md"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { clearTokens } from "@/lib/auth/session"
 
 const mainMenuItems = [
   { icon: <FiHome size={18} />, label: "Dashboard", href: "/agentra/dashboard" },
@@ -46,6 +47,12 @@ function NavItem({ icon, label, href, active }: { icon: React.ReactNode; label: 
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  function handleLogout() {
+    clearTokens()
+    router.push("/login")
+  }
 
   return (
     <Flex display={{ base: "none", md: "flex" }} flexDir="column" w="200px" minH="100vh" bg="#F8FAFC" borderRight="1px solid" borderColor="#E2E8F0" py="24px" px="16px" position="fixed" top={0} left={0} zIndex={10}>
@@ -76,7 +83,7 @@ export function Sidebar() {
         ))}
       </Flex>
 
-      <Flex align="center" gap="10px" px="10px" py="9px" borderRadius="8px" cursor="pointer" _hover={{ bg: "#FEE2E2" }} mt="8px">
+      <Flex align="center" gap="10px" px="10px" py="9px" borderRadius="8px" cursor="pointer" _hover={{ bg: "#FEE2E2" }} mt="8px" onClick={handleLogout}>
         <Box color="#EF4444"><FiLogOut size={18} /></Box>
         <Text fontSize="13px" color="#EF4444">Logout</Text>
       </Flex>

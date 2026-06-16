@@ -1,8 +1,11 @@
 "use client"
 
 import { Box, Flex, Separator, Text } from "@chakra-ui/react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { FiBell, FiSettings } from "react-icons/fi"
+import { getAccessToken } from "@/lib/auth/session"
+import { getMyProfile } from "@/lib/api/user"
 
 interface TopBarProps {
   title: string
@@ -10,15 +13,21 @@ interface TopBarProps {
   userRole?: string
 }
 
-export function TopBar({ title, userName, userRole = "Agen" }: TopBarProps) {
+export function TopBar({ title, userName: userNameProp, userRole = "Agen" }: TopBarProps) {
+  const [userName, setUserName] = useState(userNameProp ?? "")
+  const router = useRouter()
+
+  useEffect(() => {
+    if (userNameProp) { setUserName(userNameProp); return }
+    const token = getAccessToken()
+    if (!token) return
+    getMyProfile(token)
+      .then((u) => setUserName(u.first_name || u.username || "Agent"))
+      .catch(() => {})
+  }, [userNameProp])
+
   const displayName = userName || "Agent"
   const initials = displayName.slice(0, 2).toUpperCase()
-
-  const router = useRouter();
-    
-  const handleSettings = () => {
-    router.push('/agentra/settings');
-  };
 
   return (
     <Flex align="center" justify="space-between" paddingX="24px" paddingY="9px" borderBottom="1px solid" borderColor="#E2E8F0" bgColor="#FFFFFF">
@@ -35,8 +44,9 @@ export function TopBar({ title, userName, userRole = "Agen" }: TopBarProps) {
           w="36px" h="36px" borderRadius="full"
           align="center" justify="center"
           cursor="pointer" _hover={{ bg: "#F1F5F9" }}
+          onClick={() => router.push("/agentra/settings")}
         >
-          <FiSettings size={16} color="#64748B" onClick={handleSettings}/>
+          <FiSettings size={16} color="#64748B" />
         </Flex>
         <Separator orientation="vertical" h="24px" />
         <Box display={{ base: "none", md: "block" }}>
