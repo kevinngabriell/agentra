@@ -458,7 +458,10 @@ export default function Customer() {
                         >
                           <FaEye size={14} />
                         </IconButton>
-                        <IconButton size="sm" variant="ghost" aria-label="Tambah polis" color="#64748B" _hover={{ bg: "#F1F5F9" }}>
+                        <IconButton
+                          size="sm" variant="ghost" aria-label="Tambah polis" color="#64748B" _hover={{ bg: "#F1F5F9" }}
+                          onClick={() => router.push(`/agentra/policies/new?customer_id=${c.customer_id}`)}
+                        >
                           <FaPlus size={14} />
                         </IconButton>
                         <IconButton

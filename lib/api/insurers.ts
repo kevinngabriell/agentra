@@ -62,7 +62,7 @@ export async function createInsurer(
     token: string,
     data: CreateInsurerPayload,
 ): Promise<{ insurer_id: string }> {
-    return req<{ insurer_id: string }>('POST', '/insurers', token, data as Record<string, unknown>)
+    return req<{ insurer_id: string }>('POST', '/insurers', token, data as unknown as Record<string, unknown>)
 }
 
 export async function updateInsurer(
@@ -70,7 +70,7 @@ export async function updateInsurer(
     insurerId: string,
     data: Partial<CreateInsurerPayload>,
 ): Promise<void> {
-    await req<unknown>('PUT', `/insurers/${insurerId}`, token, data as Record<string, unknown>)
+    await req<unknown>('PUT', `/insurers/${insurerId}`, token, data as unknown as Record<string, unknown>)
 }
 
 export async function deleteInsurer(token: string, insurerId: string): Promise<void> {
@@ -86,5 +86,5 @@ export async function upsertInsurerProduct(
     insurerId: string,
     data: { product_type: ApiInsurerProductType; commission_rate: number; is_active: boolean },
 ): Promise<void> {
-    await req<unknown>('POST', `/insurers/${insurerId}/products`, token, data as Record<string, unknown>)
+    await req<unknown>('POST', `/insurers/${insurerId}/products`, token, data as unknown as Record<string, unknown>)
 }

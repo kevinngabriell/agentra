@@ -98,11 +98,12 @@ function StatCard({ stat }: { stat: StatCardData }) {
 }
 
 function AksiHariIni({ actions }: { actions: TodayAction[] }) {
+  const router = useRouter()
   return (
     <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" overflow="hidden">
       <Flex justify="space-between" align="center" paddingX="24px" paddingY="16px" borderBottom="1px solid" borderColor="#DDE1E7">
         <Text color="#001F40" fontWeight="semibold" fontSize="18px">Aksi Hari Ini</Text>
-        <Text color="#006397" fontSize="14px" cursor="pointer">Lihat Semua</Text>
+        <Text color="#006397" fontSize="14px" cursor="pointer" onClick={() => router.push("/agentra/renewals")}>Lihat Semua</Text>
       </Flex>
 
       <Grid templateColumns="1fr 160px 140px" borderBottom="1px solid" borderColor="#DDE1E7">
@@ -149,6 +150,7 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
                     px="16px"
                     py="10px"
                     _hover={{ bg: "#0a3060" }}
+                    onClick={() => router.push(`/agentra/policies/${a.policy_id}`)}
                   >
                     <Flex align="center" gap="6px">
                       <FiMessageSquare size={14} />
@@ -438,6 +440,7 @@ export default function DashboardPage() {
         zIndex={19}
         boxShadow="0 4px 12px rgba(0,0,0,0.25)"
         _hover={{ bg: "#1a2f4a" }}
+        onClick={() => router.push("/agentra/policies/new")}
       >
         <FiPlus size={22} color="white" />
       </Flex>
