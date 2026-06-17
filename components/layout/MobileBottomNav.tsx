@@ -34,17 +34,14 @@ export function MobileBottomNav() {
       {mobileNav.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/")
         return (
+          <Link key={item.label} href={item.href} style={{ flex: 1, textDecoration: "none" }}>
           <Flex
-            key={item.label}
-            as={Link}
-            href={item.href}
-            flex={1}
             flexDir="column"
             align="center"
             gap="4px"
             py="4px"
             cursor="pointer"
-            textDecoration="none"
+            width="100%"
           >
             <Box
               px="16px"
@@ -63,6 +60,7 @@ export function MobileBottomNav() {
               {item.label}
             </Text>
           </Flex>
+          </Link>
         )
       })}
     </Flex>
