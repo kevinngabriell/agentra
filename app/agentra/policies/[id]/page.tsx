@@ -15,8 +15,10 @@ import {
   getPolicyDetail, updateRenewalStatus, updatePaymentStatus, addPolicyFollowUp,
   updatePolicy, getPolicyLogs,
   getCoverages, addCoverage, updateCoverage, deleteCoverage,
+  getCoassurance,
   type ApiPolicyDetail, type ApiFollowUp, type ApiPolicyLog,
   type ApiCoverageItem, type ApiCoverageType, COVERAGE_TYPE_LABELS,
+  type ApiCoassurance,
 } from "@/lib/api/policies"
 
 const PRODUCT_LABELS: Record<string, string> = {
@@ -106,6 +108,10 @@ export default function PolicyDetail() {
   const [covToDelete, setCovToDelete]       = useState<ApiCoverageItem | null>(null)
   const [covDeleting, setCovDeleting]       = useState(false)
 
+  // Co-assurance state
+  const [coassurances, setCoassurances]     = useState<ApiCoassurance[]>([])
+  const [caLoading, setCaLoading]           = useState(false)
+
   // Logs state
   const [logs, setLogs]               = useState<ApiPolicyLog[]>([])
   const [logsLoading, setLogsLoading] = useState(false)
@@ -113,8 +119,9 @@ export default function PolicyDetail() {
   // Endorsement dialog state
   const [endorseDialog, setEndorseDialog] = useState(false)
   const [endorseForm, setEndorseForm]     = useState({
-    sum_insured: '', premium_amount: '', commission_rate: '', coverage_end: '',
-    object_insured: '', coverage_notes: '', notes: '',
+    sum_insured: '', premium_amount: '', materai_amount: '',
+    commission_rate: '', commission_tax_rate: '',
+    coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
   })
   const [endorseSaving, setEndorseSaving] = useState(false)
   const [endorseError, setEndorseError]   = useState<string | null>(null)
@@ -143,13 +150,27 @@ export default function PolicyDetail() {
     setLoading(true)
     setError(null)
     getPolicyDetail(token, id)
-      .then((p) => { setPolicy(p); })
+      .then((p) => {
+        setPolicy(p)
+        if (p.is_coassurance) loadCoassurance()
+      })
       .catch((err) => setError(err.message ?? "Gagal memuat detail polis"))
       .finally(() => setLoading(false))
 
     loadCoverages()
     loadLogs()
   }, [id])
+
+  async function loadCoassurance() {
+    const token = getAccessToken()
+    if (!token) return
+    setCaLoading(true)
+    try {
+      const res = await getCoassurance(token, id)
+      setCoassurances(Array.isArray(res.data) ? res.data : [])
+    } catch {}
+    finally { setCaLoading(false) }
+  }
 
   async function markRenewed() {
     const token = getAccessToken()
@@ -215,13 +236,15 @@ export default function PolicyDetail() {
   function openEndorseDialog() {
     if (!policy) return
     setEndorseForm({
-      sum_insured:    String(policy.sum_insured),
-      premium_amount: String(policy.premium_amount),
-      commission_rate: String(policy.commission_rate),
-      coverage_end:   policy.coverage_end,
-      object_insured: policy.object_insured ?? '',
-      coverage_notes: policy.coverage_notes ?? '',
-      notes:          '',
+      sum_insured:         String(policy.sum_insured),
+      premium_amount:      String(policy.premium_amount),
+      materai_amount:      String(policy.materai_amount ?? 0),
+      commission_rate:     String(policy.commission_rate),
+      commission_tax_rate: String((policy.commission_tax_rate ?? 0) * 100),
+      coverage_end:        policy.coverage_end,
+      object_insured:      policy.object_insured ?? '',
+      coverage_notes:      policy.coverage_notes ?? '',
+      notes:               '',
     })
     setEndorseError(null)
     setEndorseDialog(true)
@@ -233,14 +256,17 @@ export default function PolicyDetail() {
     setEndorseSaving(true)
     setEndorseError(null)
     try {
+      const taxRatePct = parseFloat(endorseForm.commission_tax_rate) || 0
       await updatePolicy(token, policy.policy_id, {
-        sum_insured:    Number(endorseForm.sum_insured),
-        premium_amount: Number(endorseForm.premium_amount),
-        commission_rate: Number(endorseForm.commission_rate),
-        coverage_end:   endorseForm.coverage_end,
-        object_insured: endorseForm.object_insured || undefined,
-        coverage_notes: endorseForm.coverage_notes || undefined,
-        notes:          endorseForm.notes || undefined,
+        sum_insured:         Number(endorseForm.sum_insured),
+        premium_amount:      Number(endorseForm.premium_amount),
+        materai_amount:      Number(endorseForm.materai_amount) || undefined,
+        commission_rate:     Number(endorseForm.commission_rate),
+        commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
+        coverage_end:        endorseForm.coverage_end,
+        object_insured:      endorseForm.object_insured || undefined,
+        coverage_notes:      endorseForm.coverage_notes || undefined,
+        notes:               endorseForm.notes || undefined,
       })
       const updated = await getPolicyDetail(token, id)
       setPolicy(updated)
@@ -580,6 +606,31 @@ export default function PolicyDetail() {
                   </Flex>
                   <Flex gap="12px">
                     <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Materai (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(endorseForm.materai_amount)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setEndorseForm((f) => ({ ...f, materai_amount: raw }))
+                        }}
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Akhir Perlindungan</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="date"
+                        value={endorseForm.coverage_end}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setEndorseForm((f) => ({ ...f, coverage_end: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                  </Flex>
+                  <Flex gap="12px">
+                    <Flex flexDir="column" gap="4px" flex="1">
                       <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Komisi (%)</Text>
                       <Input
                         bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
@@ -591,13 +642,13 @@ export default function PolicyDetail() {
                       />
                     </Flex>
                     <Flex flexDir="column" gap="4px" flex="1">
-                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Akhir Perlindungan</Text>
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">PPh / Pajak (%)</Text>
                       <Input
                         bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                        fontSize="13px" color="#1C2833" type="date"
-                        value={endorseForm.coverage_end}
+                        fontSize="13px" color="#1C2833" type="number" min={0} max={100} step="0.01"
+                        value={endorseForm.commission_tax_rate}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setEndorseForm((f) => ({ ...f, coverage_end: e.target.value }))
+                          setEndorseForm((f) => ({ ...f, commission_tax_rate: e.target.value }))
                         }
                       />
                     </Flex>
@@ -766,6 +817,8 @@ export default function PolicyDetail() {
 
   const effectivePremium = coverageTotals.total_premium > 0 ? coverageTotals.total_premium : policy.premium_amount
   const commissionAmount = policy.commission_amount ?? Math.round(effectivePremium * policy.commission_rate / 100)
+  const commissionTaxAmount = policy.commission_tax_amount ?? 0
+  const netCommissionAmount = policy.net_commission_amount ?? (commissionAmount - commissionTaxAmount)
 
   return shell(
     <Flex flexDir="column" gap="24px" p="32px">
@@ -785,6 +838,11 @@ export default function PolicyDetail() {
             <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg={renewalStatusCfg.bg} color={renewalStatusCfg.color}>
               {renewalStatusCfg.label}
             </Badge>
+            {Boolean(policy.is_coassurance) && (
+              <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" bg="#F3E8FF" color="#7C3AED">
+                Ko-Asuransi
+              </Badge>
+            )}
           </Flex>
         </Flex>
       </Flex>
@@ -904,11 +962,27 @@ export default function PolicyDetail() {
                 </Flex>
               )}
 
-              {/* KOMISI */}
+              {/* KOMISI breakdown */}
               <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
-                <Text color="#64748B" fontSize="13px">KOMISI ({policy.commission_rate}%)</Text>
+                <Text color="#64748B" fontSize="12px">Gross Komisi ({policy.commission_rate}%)</Text>
                 <Text color="#1C2833" fontSize="13px">{fmt(commissionAmount)}</Text>
               </Flex>
+              {commissionTaxAmount > 0 && (
+                <Flex px="16px" py="8px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
+                  <Text color="#64748B" fontSize="12px">PPh / Pajak ({((policy.commission_tax_rate ?? 0) * 100).toFixed(1)}%)</Text>
+                  <Text color="#DC2626" fontSize="12px">−{fmt(commissionTaxAmount)}</Text>
+                </Flex>
+              )}
+              <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="#F0FDF4">
+                <Text color="#15803D" fontSize="13px" fontWeight="semibold">Net Komisi (Agen)</Text>
+                <Text color="#15803D" fontSize="14px" fontWeight="bold">{fmt(netCommissionAmount)}</Text>
+              </Flex>
+              {policy.materai_amount > 0 && (
+                <Flex px="16px" py="8px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
+                  <Text color="#64748B" fontSize="12px">Materai</Text>
+                  <Text color="#1C2833" fontSize="12px">{fmt(policy.materai_amount)}</Text>
+                </Flex>
+              )}
 
               {/* STATUS PEMBAYARAN */}
               <Flex px="16px" py="12px" justify="space-between" align="center" bg="#EFF6FF">
@@ -1105,6 +1179,54 @@ export default function PolicyDetail() {
             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
               <Text color="#1C2833" fontSize="14px" fontWeight="semibold" mb="8px">Catatan Internal</Text>
               <Text color="#64748B" fontSize="13px" lineHeight="1.6">{policy.notes}</Text>
+            </Box>
+          )}
+
+          {/* Ko-Asuransi card */}
+          {Boolean(policy.is_coassurance) && (
+            <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E9D5FF" p="20px">
+              <Flex align="center" gap="6px" mb="14px">
+                <Box px="6px" py="1px" borderRadius="4px" bg="#F3E8FF" fontSize="10px" fontWeight="bold" color="#7C3AED">KO-ASURANSI</Box>
+                <Text color="#1C2833" fontSize="14px" fontWeight="semibold">Peserta Ko-Asuransi</Text>
+              </Flex>
+              {caLoading ? (
+                <Text color="#94A3B8" fontSize="12px">Memuat...</Text>
+              ) : coassurances.length === 0 ? (
+                <Text color="#94A3B8" fontSize="12px">Tidak ada data ko-insurer.</Text>
+              ) : (
+                <Flex flexDir="column" gap="8px">
+                  {coassurances.map(ca => (
+                    <Box key={ca.coassurance_id} p="10px" bg="#FAF5FF" borderRadius="8px" border="1px solid" borderColor="#E9D5FF">
+                      <Flex justify="space-between" align="center" mb="4px">
+                        <Flex align="center" gap="6px">
+                          <Text fontSize="12px" color="#1C2833" fontWeight="semibold">{ca.co_insurer_name}</Text>
+                          {Boolean(ca.is_leader) && (
+                            <Box px="5px" py="1px" borderRadius="3px" bg="#DBEAFE" fontSize="9px" fontWeight="bold" color="#1D4ED8">LEADER</Box>
+                          )}
+                        </Flex>
+                        <Text fontSize="13px" color="#7C3AED" fontWeight="bold">{parseFloat(ca.share_percent).toFixed(1)}%</Text>
+                      </Flex>
+                      {ca.premium_share != null && ca.premium_share > 0 && (
+                        <Text fontSize="11px" color="#64748B">Premi: {fmt(ca.premium_share)}</Text>
+                      )}
+                      {ca.commission_amount > 0 && (
+                        <Text fontSize="11px" color="#64748B">Komisi: {fmt(ca.commission_amount)}</Text>
+                      )}
+                    </Box>
+                  ))}
+                  {coassurances.length > 0 && (
+                    <Flex justify="flex-end" mt="4px">
+                      <Box
+                        px="8px" py="2px" borderRadius="full" fontSize="11px" fontWeight="semibold"
+                        bg={Math.abs(coassurances.reduce((s, c) => s + parseFloat(c.share_percent), 0) - 100) < 0.01 ? "#DCFCE7" : "#FEF3C7"}
+                        color={Math.abs(coassurances.reduce((s, c) => s + parseFloat(c.share_percent), 0) - 100) < 0.01 ? "#16A34A" : "#D97706"}
+                      >
+                        Total: {coassurances.reduce((s, c) => s + parseFloat(c.share_percent), 0).toFixed(1)}%
+                      </Box>
+                    </Flex>
+                  )}
+                </Flex>
+              )}
             </Box>
           )}
         </Flex>

@@ -25,6 +25,7 @@ export interface ApiMasterProduct {
     product_code: string
     product_name: string
     commission_rate: string
+    default_tax_rate: number | null
     policy_prefixes: string | null
     is_active: number
     created_at?: string
@@ -35,6 +36,7 @@ export interface CreateMasterProductPayload {
     product_code: string
     product_name: string
     commission_rate: number
+    default_tax_rate?: number
     policy_prefixes?: string
 }
 

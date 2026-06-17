@@ -381,7 +381,14 @@ export default function Commissions() {
                         {/* Komisi */}
                         <Table.Cell px="16px" py="12px">
                           <Text color="#1C2833" fontSize="13px" fontWeight="semibold">{formatRp(c.expected_amount)}</Text>
-                          <Text color="#94A3B8" fontSize="11px" mt="1px">Rate: {Number(c.commission_rate).toFixed(1)}%</Text>
+                          {c.commission_tax_amount != null && c.commission_tax_amount > 0 ? (
+                            <>
+                              <Text color="#DC2626" fontSize="11px" mt="1px">PPh: −{formatRp(c.commission_tax_amount)}</Text>
+                              <Text color="#16A34A" fontSize="12px" fontWeight="semibold">Net: {formatRp(c.net_expected_amount ?? 0)}</Text>
+                            </>
+                          ) : (
+                            <Text color="#94A3B8" fontSize="11px" mt="1px">Rate: {Number(c.commission_rate).toFixed(1)}%</Text>
+                          )}
                         </Table.Cell>
 
                         {/* Diterima */}
@@ -459,14 +466,28 @@ export default function Commissions() {
             <Dialog.Body px="24px" py="20px">
               <Flex flexDir="column" gap="16px">
 
-                {/* Expected amount info */}
+                {/* Expected amount breakdown */}
                 {selected && (
                   <Box bg="#EFF6FF" borderRadius="10px" p="12px" border="1px solid" borderColor="#BFDBFE">
-                    <Text fontSize="12px" color="#1D4ED8" fontWeight="semibold" mb="4px">Komisi Diharapkan</Text>
-                    <Text fontSize="18px" color="#1D4ED8" fontWeight="bold">{formatRp(selected.expected_amount)}</Text>
-                    <Text fontSize="11px" color="#64748B" mt="2px">
-                      Premi {formatRp(selected.premium_amount)} × Rate {Number(selected.commission_rate).toFixed(1)}%
-                    </Text>
+                    <Text fontSize="12px" color="#1D4ED8" fontWeight="semibold" mb="8px">Rincian Komisi</Text>
+                    <Flex justify="space-between" align="center" mb="4px">
+                      <Text fontSize="12px" color="#64748B">Gross ({Number(selected.commission_rate).toFixed(1)}%)</Text>
+                      <Text fontSize="14px" color="#1D4ED8" fontWeight="semibold">{formatRp(selected.expected_amount)}</Text>
+                    </Flex>
+                    {selected.commission_tax_amount != null && selected.commission_tax_amount > 0 && (
+                      <Flex justify="space-between" align="center" mb="4px">
+                        <Text fontSize="12px" color="#64748B">PPh ({((selected.commission_tax_rate ?? 0) * 100).toFixed(1)}%)</Text>
+                        <Text fontSize="13px" color="#DC2626">−{formatRp(selected.commission_tax_amount)}</Text>
+                      </Flex>
+                    )}
+                    <Box borderTop="1px solid" borderColor="#BFDBFE" pt="6px" mt="4px">
+                      <Flex justify="space-between" align="center">
+                        <Text fontSize="12px" color="#1D4ED8" fontWeight="bold">Net (yang diterima)</Text>
+                        <Text fontSize="16px" color="#1D4ED8" fontWeight="bold">
+                          {formatRp(selected.net_expected_amount ?? selected.expected_amount)}
+                        </Text>
+                      </Flex>
+                    </Box>
                   </Box>
                 )}
 
