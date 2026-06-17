@@ -31,6 +31,9 @@ export interface ApiCommission {
     premium_amount: number
     commission_rate: number | string
     expected_amount: number
+    commission_tax_rate: number | null
+    commission_tax_amount: number | null
+    net_expected_amount: number | null
     received_amount: number
     status: CommissionStatus
     expected_date: string | null

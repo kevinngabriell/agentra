@@ -3,14 +3,14 @@
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
   Box, Button, Combobox, createListCollection, Dialog, Flex, IconButton,
-  Input, NativeSelect, Switch, Text, Textarea,
+  Input, NativeSelect, Switch, Table, Text, Textarea,
 } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { LuArrowLeft, LuFileText, LuZap, LuPlus, LuPencil, LuTrash2, LuX } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
 import {
-  createPolicy, addCoverage,
+  createPolicy, addCoverage, addCoassuranceParticipant,
   type CreatePolicyPayload, type ApiCoverageType, COVERAGE_TYPE_LABELS,
 } from "@/lib/api/policies"
 import { getCustomers, type ApiCustomer } from "@/lib/api/customers"
@@ -85,6 +85,21 @@ interface LocalCoverage {
   premium_amount: number
 }
 
+interface LocalCoassurance {
+  _id:               string
+  co_insurer_name:   string
+  is_leader:         boolean
+  share_percent:     string
+  sum_insured_share: string
+  premium_share:     string
+  commission_rate:   string
+}
+
+const EMPTY_CA: LocalCoassurance = {
+  _id: "", co_insurer_name: "", is_leader: false,
+  share_percent: "", sum_insured_share: "", premium_share: "", commission_rate: "",
+}
+
 const EMPTY_COV_FORM = {
   coverage_type: "bangunan" as ApiCoverageType,
   coverage_label: "",
@@ -108,9 +123,12 @@ const FALLBACK_PRODUCTS = [
 const EMPTY = {
   insurer_id: "", customer_id: "", policy_number: "", product_type: "",
   coverage_start: "", coverage_end: "",
-  sum_insured: "",     // formatted IDR string
-  premium_amount: "",  // formatted IDR string
-  commission_rate: "", policy_year: "1", object_insured: "", coverage_notes: "", notes: "",
+  sum_insured: "",        // formatted IDR string
+  premium_amount: "",     // formatted IDR string
+  materai_amount: "",     // formatted IDR string
+  commission_rate: "",
+  commission_tax_rate: "2.5",  // displayed as %, stored as decimal on submit
+  policy_year: "1", object_insured: "", coverage_notes: "", notes: "",
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -132,6 +150,14 @@ export default function NewPolicy() {
   const [endDateAuto, setEndDateAuto] = useState(true)
 
   const [isEndorsement, setIsEndorsement] = useState(false)
+
+  // Co-assurance state
+  const [isCoassurance, setIsCoassurance]   = useState(false)
+  const [coassurances, setCoassurances]     = useState<LocalCoassurance[]>([])
+  const [caDialog, setCaDialog]             = useState(false)
+  const [editingCa, setEditingCa]           = useState<LocalCoassurance | null>(null)
+  const [caForm, setCaForm]                 = useState<LocalCoassurance>({ ...EMPTY_CA, _id: "" })
+  const [caError, setCaError]               = useState<string | null>(null)
 
   const [localCoverages, setLocalCoverages] = useState<LocalCoverage[]>([])
   const [covDialogOpen, setCovDialogOpen]   = useState(false)
@@ -189,6 +215,13 @@ export default function NewPolicy() {
     return Math.round(p * r / 100)
   }, [hasAutoFill, covTotalPremium, form.premium_amount, form.commission_rate])
 
+  const commissionTaxAmount = useMemo(() => {
+    const taxRate = parseFloat(form.commission_tax_rate) || 0
+    return Math.round(commissionAmount * taxRate / 100)
+  }, [commissionAmount, form.commission_tax_rate])
+
+  const netCommissionAmount = commissionAmount - commissionTaxAmount
+
   const duration = useMemo(() => {
     if (!form.coverage_start || !form.coverage_end) return null
     const days = Math.round(
@@ -221,6 +254,9 @@ export default function NewPolicy() {
     const match = masterProducts.find(p => p.product_code === code)
     if (match) {
       set("commission_rate", parseFloat(match.commission_rate).toString())
+      if (match.default_tax_rate != null) {
+        set("commission_tax_rate", String(match.default_tax_rate * 100))
+      }
       setCommissionSource({ kind: "product", name: match.product_name })
     } else {
       setCommissionSource(null)
@@ -259,9 +295,47 @@ export default function NewPolicy() {
     if (!prefixHint) return
     set("product_type", prefixHint.product_code)
     set("commission_rate", parseFloat(prefixHint.commission_rate).toString())
+    if (prefixHint.default_tax_rate != null) {
+      set("commission_tax_rate", String(prefixHint.default_tax_rate * 100))
+    }
     setCommissionSource({ kind: "product", name: prefixHint.product_name })
     setPrefixHint(null)
   }
+
+  // ── Co-assurance handlers ─────────────────────────────────────────────────
+
+  function openAddCa() {
+    setEditingCa(null)
+    setCaForm({ ...EMPTY_CA, _id: "" })
+    setCaError(null)
+    setCaDialog(true)
+  }
+
+  function openEditCa(ca: LocalCoassurance) {
+    setEditingCa(ca)
+    setCaForm({ ...ca })
+    setCaError(null)
+    setCaDialog(true)
+  }
+
+  function saveCa() {
+    if (!caForm.co_insurer_name.trim() || !caForm.share_percent) {
+      setCaError("Nama ko-insurer dan share % wajib diisi")
+      return
+    }
+    if (editingCa) {
+      setCoassurances(prev => prev.map(c => c._id === editingCa._id ? { ...caForm } : c))
+    } else {
+      setCoassurances(prev => [...prev, { ...caForm, _id: crypto.randomUUID() }])
+    }
+    setCaDialog(false)
+  }
+
+  function deleteCa(id: string) {
+    setCoassurances(prev => prev.filter(c => c._id !== id))
+  }
+
+  const caTotalPct = coassurances.reduce((s, c) => s + (parseFloat(c.share_percent) || 0), 0)
 
   // ── Coverage item handlers ────────────────────────────────────────────────
 
@@ -336,20 +410,24 @@ export default function NewPolicy() {
     const finalPremium = hasAutoFill ? covTotalPremium  : rawIDR(form.premium_amount)
 
     try {
+      const taxRatePct = parseFloat(form.commission_tax_rate) || 0
+
       const payload: CreatePolicyPayload = {
-        insurer_id:      form.insurer_id,
-        customer_id:     form.customer_id,
-        policy_number:   form.policy_number,
-        product_type:    form.product_type as any,
-        coverage_start:  form.coverage_start,
-        coverage_end:    form.coverage_end,
-        sum_insured:     finalSI,
-        premium_amount:  finalPremium,
-        commission_rate: form.commission_rate ? Number(form.commission_rate) : (undefined as any),
-        policy_year:     Number(form.policy_year) || 1,
-        object_insured:  form.object_insured  || undefined,
-        coverage_notes:  form.coverage_notes  || undefined,
-        notes:           form.notes           || undefined,
+        insurer_id:          form.insurer_id,
+        customer_id:         form.customer_id,
+        policy_number:       form.policy_number,
+        product_type:        form.product_type as any,
+        coverage_start:      form.coverage_start,
+        coverage_end:        form.coverage_end,
+        sum_insured:         finalSI,
+        premium_amount:      finalPremium,
+        materai_amount:      rawIDR(form.materai_amount) || undefined,
+        commission_rate:     form.commission_rate ? Number(form.commission_rate) : (undefined as any),
+        commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
+        policy_year:         Number(form.policy_year) || 1,
+        object_insured:      form.object_insured  || undefined,
+        coverage_notes:      form.coverage_notes  || undefined,
+        notes:               form.notes           || undefined,
       }
 
       const { policy_id } = await createPolicy(token, payload)
@@ -361,6 +439,19 @@ export default function NewPolicy() {
             coverage_label: cov.coverage_label || undefined,
             sum_insured:    cov.sum_insured,
             rate_permille:  cov.rate_permille,
+          })
+        }
+      }
+
+      if (isCoassurance && coassurances.length > 0) {
+        for (const ca of coassurances) {
+          await addCoassuranceParticipant(token, policy_id, {
+            co_insurer_name:   ca.co_insurer_name,
+            is_leader:         ca.is_leader,
+            share_percent:     parseFloat(ca.share_percent) || 0,
+            sum_insured_share: rawIDR(ca.sum_insured_share) || undefined,
+            premium_share:     rawIDR(ca.premium_share) || undefined,
+            commission_rate:   parseFloat(ca.commission_rate) || undefined,
           })
         }
       }
@@ -662,6 +753,16 @@ export default function NewPolicy() {
                             }
                           />
                         </FField>
+                        <FField label="Materai (IDR)">
+                          <Input
+                            {...INPUT_LG} w="140px"
+                            inputMode="numeric" placeholder="0"
+                            value={form.materai_amount}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              set("materai_amount", toIDR(e.target.value))
+                            }
+                          />
+                        </FField>
                       </Flex>
 
                       {/* Commission */}
@@ -683,30 +784,64 @@ export default function NewPolicy() {
                             <Text fontSize="10px" color="#94A3B8">Pilih produk untuk auto-isi</Text>
                           )}
                         </Flex>
-                        <Flex gap="12px" align="center" flexWrap="wrap">
-                          <Flex align="center" gap="8px">
-                            <Input
-                              bg="white" border="1px solid" borderColor="#E2E8F0"
-                              borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
-                              h="44px" w="100px" type="number" min={0} max={100} step="0.01"
-                              placeholder="0"
-                              value={form.commission_rate}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                set("commission_rate", e.target.value)
-                                setCommissionSource({ kind: "manual" })
-                              }}
-                            />
-                            <Text fontSize="16px" color="#64748B">%</Text>
+                        <Flex gap="16px" align="flex-start" flexWrap="wrap">
+                          {/* Rate inputs */}
+                          <Flex align="center" gap="16px" flexWrap="wrap">
+                            <Flex flexDir="column" gap="4px">
+                              <Text fontSize="10px" color="#64748B">Rate Komisi</Text>
+                              <Flex align="center" gap="6px">
+                                <Input
+                                  bg="white" border="1px solid" borderColor="#E2E8F0"
+                                  borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
+                                  h="40px" w="90px" type="number" min={0} max={100} step="0.01"
+                                  placeholder="0"
+                                  value={form.commission_rate}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    set("commission_rate", e.target.value)
+                                    setCommissionSource({ kind: "manual" })
+                                  }}
+                                />
+                                <Text fontSize="14px" color="#64748B">%</Text>
+                              </Flex>
+                            </Flex>
+                            <Flex flexDir="column" gap="4px">
+                              <Text fontSize="10px" color="#64748B">PPh / Pajak</Text>
+                              <Flex align="center" gap="6px">
+                                <Input
+                                  bg="white" border="1px solid" borderColor="#E2E8F0"
+                                  borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
+                                  h="40px" w="90px" type="number" min={0} max={100} step="0.01"
+                                  placeholder="2.5"
+                                  value={form.commission_tax_rate}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                    set("commission_tax_rate", e.target.value)
+                                  }
+                                />
+                                <Text fontSize="14px" color="#64748B">%</Text>
+                              </Flex>
+                            </Flex>
                           </Flex>
+
+                          {/* Breakdown preview */}
                           {commissionAmount > 0 && (
-                            <Box px="14px" py="8px" borderRadius="10px" bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0">
-                              <Text fontSize="10px" color="#64748B" mb="1px">Estimasi Komisi</Text>
-                              <Text fontSize="17px" fontWeight="bold" color="#16A34A" lineHeight="1.1">
-                                {fmt(commissionAmount)}
-                              </Text>
-                              <Text fontSize="10px" color="#86EFAC" mt="2px">
-                                Rp {displayPremium} × {form.commission_rate}%
-                              </Text>
+                            <Box px="14px" py="10px" borderRadius="10px" bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0" minW="180px">
+                              <Text fontSize="10px" color="#64748B" mb="6px" fontWeight="semibold">ESTIMASI KOMISI</Text>
+                              <Flex justify="space-between" align="center" mb="2px">
+                                <Text fontSize="11px" color="#64748B">Gross</Text>
+                                <Text fontSize="13px" fontWeight="semibold" color="#16A34A">{fmt(commissionAmount)}</Text>
+                              </Flex>
+                              {commissionTaxAmount > 0 && (
+                                <Flex justify="space-between" align="center" mb="2px">
+                                  <Text fontSize="11px" color="#64748B">PPh ({form.commission_tax_rate}%)</Text>
+                                  <Text fontSize="12px" color="#DC2626">−{fmt(commissionTaxAmount)}</Text>
+                                </Flex>
+                              )}
+                              <Box borderTop="1px solid" borderColor="#BBF7D0" pt="4px" mt="4px">
+                                <Flex justify="space-between" align="center">
+                                  <Text fontSize="11px" color="#15803D" fontWeight="semibold">Net</Text>
+                                  <Text fontSize="14px" fontWeight="bold" color="#15803D">{fmt(netCommissionAmount)}</Text>
+                                </Flex>
+                              </Box>
                             </Box>
                           )}
                         </Flex>
@@ -807,6 +942,104 @@ export default function NewPolicy() {
                       )}
                     </Box>
                   )}
+
+                  {/* Co-assurance */}
+                  <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
+                    <Flex
+                      px="20px" py="14px" justify="space-between" align="center"
+                      borderBottom={isCoassurance ? "1px solid" : undefined}
+                      borderColor="#E2E8F0"
+                    >
+                      <Flex flexDir="column" gap="2px">
+                        <Box borderLeft="3px solid #1A3557" pl="10px">
+                          <Text color="#1A3557" fontSize="14px" fontWeight="semibold">Ko-Asuransi</Text>
+                        </Box>
+                        <Text fontSize="11px" color="#94A3B8" pl="13px">Aktifkan jika ada ko-penanggung pada polis ini</Text>
+                      </Flex>
+                      <Switch.Root
+                        checked={isCoassurance}
+                        onCheckedChange={(e) => { setIsCoassurance(e.checked); if (!e.checked) setCoassurances([]) }}
+                        colorPalette="blue" size="sm"
+                      >
+                        <Switch.HiddenInput />
+                        <Switch.Control />
+                      </Switch.Root>
+                    </Flex>
+
+                    {isCoassurance && (
+                      <Box px="20px" pb="16px">
+                        <Flex justify="space-between" align="center" py="12px">
+                          <Flex gap="8px" align="center">
+                            {coassurances.length > 0 && (
+                              <Box
+                                px="8px" py="2px" borderRadius="full" fontSize="11px" fontWeight="semibold"
+                                bg={Math.abs(caTotalPct - 100) < 0.01 ? "#DCFCE7" : "#FEF3C7"}
+                                color={Math.abs(caTotalPct - 100) < 0.01 ? "#16A34A" : "#D97706"}
+                              >
+                                Total: {caTotalPct.toFixed(1)}%
+                                {Math.abs(caTotalPct - 100) < 0.01 ? " ✓" : " (harus 100%)"}
+                              </Box>
+                            )}
+                          </Flex>
+                          <Button
+                            size="sm" bg="#1A3557" color="white" fontSize="12px" gap="4px"
+                            borderRadius="6px" _hover={{ bg: "#162C47" }} onClick={openAddCa}
+                          >
+                            <LuPlus size={12} /> Tambah Ko-Insurer
+                          </Button>
+                        </Flex>
+
+                        {coassurances.length > 0 && (
+                          <Box borderRadius="8px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
+                            <Table.Root size="sm">
+                              <Table.Header>
+                                <Table.Row bg="#F8FAFC">
+                                  {["NAMA", "LEADER", "SHARE %", "AKSI"].map(h => (
+                                    <Table.ColumnHeader key={h} px="10px" py="8px" fontSize="10px" color="#64748B" fontWeight="bold" letterSpacing="0.05em">{h}</Table.ColumnHeader>
+                                  ))}
+                                </Table.Row>
+                              </Table.Header>
+                              <Table.Body>
+                                {coassurances.map(ca => (
+                                  <Table.Row key={ca._id} borderBottom="1px solid" borderColor="#F1F5F9">
+                                    <Table.Cell px="10px" py="8px">
+                                      <Text fontSize="12px" color="#1C2833" fontWeight="medium">{ca.co_insurer_name}</Text>
+                                    </Table.Cell>
+                                    <Table.Cell px="10px" py="8px">
+                                      {ca.is_leader && (
+                                        <Box px="6px" py="1px" borderRadius="4px" bg="#DBEAFE" fontSize="10px" fontWeight="bold" color="#1D4ED8" display="inline-block">
+                                          Leader
+                                        </Box>
+                                      )}
+                                    </Table.Cell>
+                                    <Table.Cell px="10px" py="8px">
+                                      <Text fontSize="12px" color="#1C2833">{ca.share_percent}%</Text>
+                                    </Table.Cell>
+                                    <Table.Cell px="10px" py="8px">
+                                      <Flex gap="4px">
+                                        <IconButton size="xs" variant="ghost" color="#64748B" _hover={{ bg: "#EFF6FF", color: "#1D4ED8" }} aria-label="Edit" onClick={() => openEditCa(ca)}>
+                                          <LuPencil size={11} />
+                                        </IconButton>
+                                        <IconButton size="xs" variant="ghost" color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }} aria-label="Hapus" onClick={() => deleteCa(ca._id)}>
+                                          <LuTrash2 size={11} />
+                                        </IconButton>
+                                      </Flex>
+                                    </Table.Cell>
+                                  </Table.Row>
+                                ))}
+                              </Table.Body>
+                            </Table.Root>
+                          </Box>
+                        )}
+
+                        {coassurances.length === 0 && (
+                          <Flex py="16px" align="center" justify="center">
+                            <Text color="#94A3B8" fontSize="12px">Belum ada ko-insurer. Klik &quot;Tambah Ko-Insurer&quot;.</Text>
+                          </Flex>
+                        )}
+                      </Box>
+                    )}
+                  </Box>
 
                   {/* Notes */}
                   <Section title="Catatan (Opsional)">
@@ -986,6 +1219,110 @@ export default function NewPolicy() {
               <Button flex="1" bg="#DC2626" color="white" fontSize="14px"
                 onClick={() => deletingCov && deleteCov(deletingCov)}>
                 Ya, Hapus
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* ── Co-assurance add/edit dialog ───────────────────────────────────── */}
+      <Dialog.Root
+        open={caDialog}
+        onOpenChange={({ open }) => { if (!open) { setCaDialog(false); setCaError(null) } }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.45)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="16px" maxW="440px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                {editingCa ? "Edit Ko-Insurer" : "Tambah Ko-Insurer"}
+              </Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Flex flexDir="column" gap="14px">
+
+                <FField label="Nama Perusahaan Asuransi" required>
+                  <Input
+                    {...INPUT}
+                    placeholder="PT Asuransi Wahana Tata"
+                    value={caForm.co_insurer_name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setCaForm(f => ({ ...f, co_insurer_name: e.target.value }))
+                    }
+                  />
+                </FField>
+
+                <Flex gap="12px">
+                  <FField label="Share (%)" required>
+                    <Input
+                      {...INPUT}
+                      type="number" min={0} max={100} step="0.01" placeholder="60"
+                      value={caForm.share_percent}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setCaForm(f => ({ ...f, share_percent: e.target.value }))
+                      }
+                    />
+                  </FField>
+                  <FField label="Rate Komisi (%)">
+                    <Input
+                      {...INPUT}
+                      type="number" min={0} max={100} step="0.01" placeholder="15"
+                      value={caForm.commission_rate}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setCaForm(f => ({ ...f, commission_rate: e.target.value }))
+                      }
+                    />
+                  </FField>
+                </Flex>
+
+                <Flex gap="12px">
+                  <FField label="UP Share (IDR)">
+                    <Input
+                      {...INPUT}
+                      inputMode="numeric" placeholder="300.000.000"
+                      value={caForm.sum_insured_share}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setCaForm(f => ({ ...f, sum_insured_share: toIDR(e.target.value) }))
+                      }
+                    />
+                  </FField>
+                  <FField label="Premi Share (IDR)">
+                    <Input
+                      {...INPUT}
+                      inputMode="numeric" placeholder="3.000.000"
+                      value={caForm.premium_share}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setCaForm(f => ({ ...f, premium_share: toIDR(e.target.value) }))
+                      }
+                    />
+                  </FField>
+                </Flex>
+
+                <Flex align="center" gap="10px" px="14px" py="10px" bg="#F8FAFC" borderRadius="8px" border="1px solid" borderColor="#E2E8F0">
+                  <Switch.Root
+                    checked={caForm.is_leader}
+                    onCheckedChange={(e) => setCaForm(f => ({ ...f, is_leader: e.checked }))}
+                    colorPalette="blue" size="sm"
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control />
+                  </Switch.Root>
+                  <Flex flexDir="column" gap="1px">
+                    <Text fontSize="13px" color="#1C2833" fontWeight="medium">Leader</Text>
+                    <Text fontSize="11px" color="#94A3B8">Tandai sebagai insurer leader</Text>
+                  </Flex>
+                </Flex>
+
+                {caError && <Text fontSize="12px" color="#DC2626">{caError}</Text>}
+
+              </Flex>
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Dialog.ActionTrigger asChild>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px">Batal</Button>
+              </Dialog.ActionTrigger>
+              <Button flex="1" bg="#1A3557" color="white" fontSize="14px" onClick={saveCa}>
+                Simpan
               </Button>
             </Dialog.Footer>
           </Dialog.Content>

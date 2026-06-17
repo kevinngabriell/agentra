@@ -783,7 +783,7 @@ function InsurersTab() {
 
 // ─── Master Products Tab ──────────────────────────────────────────────────────
 
-const EMPTY_PRODUCT_FORM = { product_code: "", product_name: "", commission_rate: "", policy_prefixes: "" }
+const EMPTY_PRODUCT_FORM = { product_code: "", product_name: "", commission_rate: "", default_tax_rate: "2.5", policy_prefixes: "" }
 
 function ProductFormFields({
   form,
@@ -797,24 +797,30 @@ function ProductFormFields({
       <Flex gap="12px">
         <Field.Root flex="1">
           <Field.Label {...lbl}>KODE PRODUK *</Field.Label>
-          <Input fontSize="14px" placeholder="kebakaran" value={form.product_code}
+          <Input fontSize="14px" color="#1C2833" placeholder="kebakaran" value={form.product_code}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, product_code: e.target.value.toLowerCase() })} />
           <Field.HelperText fontSize="11px" color="#94A3B8">Lowercase, unik per perusahaan</Field.HelperText>
         </Field.Root>
         <Field.Root w="120px">
           <Field.Label {...lbl}>KOMISI (%) *</Field.Label>
-          <Input fontSize="14px" type="number" min={0} max={100} step="0.5" placeholder="15" value={form.commission_rate}
+          <Input fontSize="14px" color="#1C2833" type="number" min={0} max={100} step="0.5" placeholder="15" value={form.commission_rate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, commission_rate: e.target.value })} />
+        </Field.Root>
+        <Field.Root w="120px">
+          <Field.Label {...lbl}>PPh / PAJAK (%)</Field.Label>
+          <Input fontSize="14px" color="#1C2833" type="number" min={0} max={100} step="0.5" placeholder="2.5" value={form.default_tax_rate}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, default_tax_rate: e.target.value })} />
+          <Field.HelperText fontSize="11px" color="#94A3B8">Default untuk polis baru</Field.HelperText>
         </Field.Root>
       </Flex>
       <Field.Root>
         <Field.Label {...lbl}>NAMA PRODUK *</Field.Label>
-        <Input fontSize="14px" placeholder="Asuransi Kebakaran" value={form.product_name}
+        <Input fontSize="14px" color="#1C2833" placeholder="Asuransi Kebakaran" value={form.product_name}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, product_name: e.target.value })} />
       </Field.Root>
       <Field.Root>
         <Field.Label {...lbl}>PREFIKS POLIS</Field.Label>
-        <Input fontSize="14px" placeholder="01,08,88" value={form.policy_prefixes}
+        <Input fontSize="14px" color="#1C2833" placeholder="01,08,88" value={form.policy_prefixes}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, policy_prefixes: e.target.value })} />
         <Field.HelperText fontSize="11px" color="#94A3B8">Pisahkan dengan koma — dipakai untuk auto-deteksi komisi saat membuat polis</Field.HelperText>
       </Field.Root>
@@ -852,20 +858,23 @@ function MasterProductsTab() {
     setAdding(true)
     setFeedback(null)
     try {
+      const taxRate = parseFloat(addForm.default_tax_rate) || 0
       const { product_id } = await createMasterProduct(token, {
         product_code: addForm.product_code,
         product_name: addForm.product_name,
         commission_rate: parseFloat(addForm.commission_rate) || 0,
+        default_tax_rate: taxRate / 100,
         policy_prefixes: addForm.policy_prefixes || undefined,
       })
       setProducts((prev) => [{
         product_id,
-        product_code: addForm.product_code,
-        product_name: addForm.product_name,
-        commission_rate: addForm.commission_rate,
-        policy_prefixes: addForm.policy_prefixes || null,
-        is_active: 1,
-      }, ...prev])
+        product_code:     addForm.product_code,
+        product_name:     addForm.product_name,
+        commission_rate:  addForm.commission_rate,
+        default_tax_rate: taxRate / 100,
+        policy_prefixes:  addForm.policy_prefixes || null,
+        is_active:        1,
+      } as import("@/lib/api/master-products").ApiMasterProduct, ...prev])
       setAddForm(EMPTY_PRODUCT_FORM)
       setAddOpen(false)
       setFeedback({ type: "success", msg: `${addForm.product_name} berhasil ditambahkan.` })
@@ -882,6 +891,7 @@ function MasterProductsTab() {
       product_code: p.product_code,
       product_name: p.product_name,
       commission_rate: p.commission_rate,
+      default_tax_rate: p.default_tax_rate != null ? String(p.default_tax_rate * 100) : "2.5",
       policy_prefixes: p.policy_prefixes ?? "",
     })
   }
@@ -892,15 +902,24 @@ function MasterProductsTab() {
     if (!token) return
     setSaving(true)
     try {
+      const taxRate = parseFloat(editForm.default_tax_rate) || 0
       await updateMasterProduct(token, editTarget.product_id, {
         product_code: editForm.product_code,
         product_name: editForm.product_name,
         commission_rate: parseFloat(editForm.commission_rate) || 0,
+        default_tax_rate: taxRate / 100,
         policy_prefixes: editForm.policy_prefixes || "",
       })
       setProducts((prev) => prev.map((p) =>
         p.product_id === editTarget.product_id
-          ? { ...p, ...editForm, commission_rate: editForm.commission_rate }
+          ? {
+              ...p,
+              product_code:     editForm.product_code,
+              product_name:     editForm.product_name,
+              commission_rate:  editForm.commission_rate,
+              default_tax_rate: taxRate / 100,
+              policy_prefixes:  editForm.policy_prefixes || null,
+            }
           : p
       ))
       setEditTarget(null)
@@ -976,6 +995,11 @@ function MasterProductsTab() {
                   <Box px="8px" py="2px" borderRadius="6px" bg="#DBEAFE" fontSize="12px" fontWeight="bold" color="#1D4ED8" flexShrink={0}>
                     {parseFloat(p.commission_rate).toFixed(1)}%
                   </Box>
+                  {p.default_tax_rate != null && (
+                    <Box px="8px" py="2px" borderRadius="6px" bg="#FEF3C7" fontSize="11px" color="#D97706" flexShrink={0}>
+                      PPh {(p.default_tax_rate * 100).toFixed(1)}%
+                    </Box>
+                  )}
                   {p.policy_prefixes && (
                     <Box px="8px" py="2px" borderRadius="6px" bg="#F1F5F9" fontSize="11px" color="#64748B" flexShrink={0}>
                       Prefiks: {p.policy_prefixes}

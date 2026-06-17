@@ -32,8 +32,14 @@ export interface ApiPolicy {
     coverage_end: string
     sum_insured: number
     premium_amount: number
+    materai_amount: number
     commission_rate: number
     commission_amount: number
+    commission_tax_rate: number
+    commission_tax_amount: number
+    net_commission_amount: number
+    customer_premium_amount: number
+    is_coassurance: 0 | 1
     renewal_status: ApiRenewalStatus
     payment_status: ApiPaymentStatus
     customer_id: string
@@ -114,13 +120,93 @@ export interface CreatePolicyPayload {
     coverage_end: string
     sum_insured: number
     premium_amount: number
+    materai_amount?: number
     commission_rate: number
+    commission_tax_rate?: number
     policy_year?: number
     issuing_agent_id?: string
     previous_policy_id?: string
     object_insured?: string
     coverage_notes?: string
     notes?: string
+}
+
+// ── Co-assurance ──────────────────────────────────────────────────────────────
+
+export interface ApiCoassurance {
+    coassurance_id: string
+    policy_id: string
+    co_insurer_id: string | null
+    co_insurer_name: string
+    co_insurer_short_name: string | null
+    is_leader: 0 | 1
+    share_percent: string
+    sum_insured_share: number | null
+    premium_share: number | null
+    commission_rate: string
+    commission_amount: number
+    notes: string | null
+    created_by?: string
+    created_at?: string
+    updated_at?: string
+}
+
+export interface AddCoassurancePayload {
+    co_insurer_name: string
+    co_insurer_id?: string
+    is_leader?: boolean
+    share_percent: number
+    sum_insured_share?: number
+    premium_share?: number
+    commission_rate?: number
+    notes?: string
+}
+
+export interface UpdateCoassurancePayload {
+    co_insurer_name?: string
+    co_insurer_id?: string | null
+    is_leader?: boolean
+    share_percent?: number
+    sum_insured_share?: number
+    premium_share?: number
+    commission_rate?: number
+    notes?: string
+}
+
+export async function getCoassurance(
+    token: string,
+    policyId: string,
+): Promise<{ data: ApiCoassurance[] }> {
+    return req<{ data: ApiCoassurance[] }>('GET', `/policies/${policyId}/coassurance`, token)
+}
+
+export async function addCoassuranceParticipant(
+    token: string,
+    policyId: string,
+    data: AddCoassurancePayload,
+): Promise<{ coassurance_id: string }> {
+    return req<{ coassurance_id: string }>(
+        'POST', `/policies/${policyId}/coassurance`, token, data as unknown as Record<string, unknown>,
+    )
+}
+
+export async function updateCoassuranceParticipant(
+    token: string,
+    policyId: string,
+    coassuranceId: string,
+    data: UpdateCoassurancePayload,
+): Promise<void> {
+    await req<unknown>(
+        'PUT', `/policies/${policyId}/coassurance/${coassuranceId}`, token, data as unknown as Record<string, unknown>,
+    )
+}
+
+export async function removeCoassuranceParticipant(
+    token: string,
+    policyId: string,
+    coassuranceId: string,
+): Promise<void> {
+    await req<unknown>('DELETE', `/policies/${policyId}/coassurance/${coassuranceId}`, token)
 }
 
 export interface AddFollowUpPayload {
