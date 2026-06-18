@@ -280,6 +280,21 @@ export async function updatePolicy(
     await req<unknown>('PUT', `/policies/${policyId}`, token, data as unknown as Record<string, unknown>)
 }
 
+export async function directUpdatePolicy(
+    token: string,
+    policyId: string,
+    data: Partial<CreatePolicyPayload>,
+): Promise<void> {
+    await req<unknown>('PATCH', `/policies/${policyId}`, token, data as unknown as Record<string, unknown>)
+}
+
+export async function deletePolicy(
+    token: string,
+    policyId: string,
+): Promise<void> {
+    await req<unknown>('DELETE', `/policies/${policyId}`, token)
+}
+
 export async function updateRenewalStatus(
     token: string,
     policyId: string,

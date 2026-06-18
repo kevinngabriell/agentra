@@ -13,7 +13,7 @@ import { FaWhatsapp } from "react-icons/fa"
 import { getAccessToken } from "@/lib/auth/session"
 import {
   getPolicyDetail, updateRenewalStatus, updatePaymentStatus, addPolicyFollowUp,
-  updatePolicy, getPolicyLogs,
+  updatePolicy, directUpdatePolicy, deletePolicy, getPolicyLogs,
   getCoverages, addCoverage, updateCoverage, deleteCoverage,
   getCoassurance,
   type ApiPolicyDetail, type ApiFollowUp, type ApiPolicyLog,
@@ -115,6 +115,22 @@ export default function PolicyDetail() {
   // Logs state
   const [logs, setLogs]               = useState<ApiPolicyLog[]>([])
   const [logsLoading, setLogsLoading] = useState(false)
+
+  // Koreksi (direct update / PATCH) dialog state
+  const [koreksiDialog, setKoreksiDialog] = useState(false)
+  const [koreksiFo, setKoreksiFo]         = useState({
+    sum_insured: '', premium_amount: '', materai_amount: '',
+    commission_rate: '', commission_tax_rate: '',
+    coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
+    construction_class: '',
+  })
+  const [koreksiSaving, setKoreksiSaving] = useState(false)
+  const [koreksiyError, setKoreksiyError] = useState<string | null>(null)
+
+  // Delete dialog state
+  const [deleteDialog, setDeleteDialog]   = useState(false)
+  const [deleting, setDeleting]           = useState(false)
+  const [deleteError, setDeleteError]     = useState<string | null>(null)
 
   // Endorsement dialog state
   const [endorseDialog, setEndorseDialog] = useState(false)
@@ -282,6 +298,75 @@ export default function PolicyDetail() {
       setEndorseError(err.message ?? 'Gagal menyimpan endosemen')
     } finally {
       setEndorseSaving(false)
+    }
+  }
+
+  // ── Koreksi (direct update without endorsement) ───────────────────────────
+
+  function openKoreksiDialog() {
+    if (!policy) return
+    setKoreksiFo({
+      sum_insured:         String(policy.sum_insured),
+      premium_amount:      String(policy.premium_amount),
+      materai_amount:      String(policy.materai_amount ?? 0),
+      commission_rate:     String(policy.commission_rate),
+      commission_tax_rate: String((policy.commission_tax_rate ?? 0) * 100),
+      coverage_end:        policy.coverage_end,
+      object_insured:      policy.object_insured ?? '',
+      coverage_notes:      policy.coverage_notes ?? '',
+      notes:               '',
+      construction_class:  policy.construction_class ?? '',
+    })
+    setKoreksiyError(null)
+    setKoreksiDialog(true)
+  }
+
+  async function handleKoreksi() {
+    const token = getAccessToken()
+    if (!token || !policy) return
+    setKoreksiSaving(true)
+    setKoreksiyError(null)
+    try {
+      const taxRatePct = parseFloat(koreksiFo.commission_tax_rate) || 0
+      const isFireProduct = new Set(["fire", "kebakaran"]).has(policy.product_type)
+      await directUpdatePolicy(token, policy.policy_id, {
+        sum_insured:         Number(koreksiFo.sum_insured),
+        premium_amount:      Number(koreksiFo.premium_amount),
+        materai_amount:      Number(koreksiFo.materai_amount) || undefined,
+        commission_rate:     Number(koreksiFo.commission_rate),
+        commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
+        construction_class:  isFireProduct
+          ? (koreksiFo.construction_class as "I" | "II" | "III" | null) || null
+          : null,
+        coverage_end:        koreksiFo.coverage_end,
+        object_insured:      koreksiFo.object_insured || undefined,
+        coverage_notes:      koreksiFo.coverage_notes || undefined,
+        notes:               koreksiFo.notes || undefined,
+      })
+      const updated = await getPolicyDetail(token, id)
+      setPolicy(updated)
+      await loadLogs()
+      setKoreksiDialog(false)
+    } catch (err: any) {
+      setKoreksiyError(err.message ?? 'Gagal menyimpan koreksi')
+    } finally {
+      setKoreksiSaving(false)
+    }
+  }
+
+  // ── Delete policy ─────────────────────────────────────────────────────────
+
+  async function handleDeletePolicy() {
+    const token = getAccessToken()
+    if (!token || !policy) return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deletePolicy(token, policy.policy_id)
+      router.push('/agentra/policies')
+    } catch (err: any) {
+      setDeleteError(err.message ?? 'Gagal menghapus polis')
+      setDeleting(false)
     }
   }
 
@@ -784,6 +869,252 @@ export default function PolicyDetail() {
         </Dialog.Positioner>
       </Dialog.Root>
 
+      {/* ── Koreksi dialog (PATCH – without endorsement) ─────────────────── */}
+      <Dialog.Root
+        open={koreksiDialog}
+        onOpenChange={(d) => { if (!d.open && !koreksiSaving) { setKoreksiDialog(false); setKoreksiyError(null) } }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" maxW="680px" w="95vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0" borderBottom="1px solid" borderColor="#E2E8F0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold" pb="16px">
+                Koreksi Data Polis
+              </Dialog.Title>
+            </Dialog.Header>
+
+            <Dialog.Body px="24px" py="20px" maxH="68vh" overflowY="auto">
+              <Flex flexDir="column" gap="18px">
+
+                {/* Warning banner */}
+                <Box bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE" borderRadius="8px" px="14px" py="10px">
+                  <Text fontSize="12px" color="#1D4ED8" fontWeight="semibold" mb="2px">Koreksi tanpa endosemen</Text>
+                  <Text fontSize="12px" color="#1D4ED8" lineHeight="1.6">
+                    Perubahan ini akan dicatat sebagai <Text as="span" fontWeight="bold">koreksi (policy_updated)</Text>, bukan endosemen resmi.
+                    Gunakan hanya untuk memperbaiki kesalahan input data, bukan untuk perubahan polis yang disepakati.
+                  </Text>
+                </Box>
+
+                {/* Nilai & Periode */}
+                <Box>
+                  <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Nilai & Periode</Text>
+                  <Flex gap="12px" mb="10px">
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Uang Pertanggungan (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(koreksiFo.sum_insured)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setKoreksiFo((f) => ({ ...f, sum_insured: raw }))
+                        }}
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Premi (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(koreksiFo.premium_amount)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setKoreksiFo((f) => ({ ...f, premium_amount: raw }))
+                        }}
+                      />
+                    </Flex>
+                  </Flex>
+                  <Flex gap="12px" mb="10px">
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Materai (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(koreksiFo.materai_amount)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setKoreksiFo((f) => ({ ...f, materai_amount: raw }))
+                        }}
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Akhir Perlindungan</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="date"
+                        value={koreksiFo.coverage_end}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, coverage_end: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                  </Flex>
+                  <Flex gap="12px">
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Komisi (%)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="number" min={0} max={100} step="0.1"
+                        value={koreksiFo.commission_rate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, commission_rate: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">PPh / Pajak (%)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="number" min={0} max={100} step="0.01"
+                        value={koreksiFo.commission_tax_rate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, commission_tax_rate: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                  </Flex>
+                </Box>
+
+                <Box h="1px" bg="#E2E8F0" />
+
+                {/* Detail Objek */}
+                <Box>
+                  <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Detail Objek & Keterangan</Text>
+                  <Flex flexDir="column" gap="10px">
+                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                      <Flex flexDir="column" gap="4px">
+                        <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kelas Konstruksi Bangunan</Text>
+                        <NativeSelect.Root>
+                          <NativeSelect.Field
+                            bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                            fontSize="13px" color="#1C2833"
+                            value={koreksiFo.construction_class}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                              setKoreksiFo((f) => ({ ...f, construction_class: e.target.value }))
+                            }
+                          >
+                            <option value="">Tidak ditentukan</option>
+                            <option value="I">Kelas I – Konstruksi Keras (beton, bata, besi/baja)</option>
+                            <option value="II">Kelas II – Semi Keras (campuran beton & kayu)</option>
+                            <option value="III">Kelas III – Konstruksi Ringan (kayu, seng/genteng)</option>
+                          </NativeSelect.Field>
+                          <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                      </Flex>
+                    )}
+                    <Flex flexDir="column" gap="4px">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Objek Pertanggungan</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833"
+                        value={koreksiFo.object_insured}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, object_insured: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Catatan Coverage</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833"
+                        value={koreksiFo.coverage_notes}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, coverage_notes: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Alasan Koreksi (opsional)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833"
+                        placeholder="Contoh: Salah input premi, typo nomor polis..."
+                        value={koreksiFo.notes}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, notes: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                  </Flex>
+                </Box>
+
+                {koreksiyError && <Text fontSize="12px" color="#DC2626">{koreksiyError}</Text>}
+              </Flex>
+            </Dialog.Body>
+
+            <Dialog.Footer px="24px" pb="24px" pt="12px" gap="8px" borderTop="1px solid" borderColor="#E2E8F0">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" _hover={{ bg: "#F1F5F9" }}
+                disabled={koreksiSaving}
+                onClick={() => { setKoreksiDialog(false); setKoreksiyError(null) }}
+              >
+                Batal
+              </Button>
+              <Button
+                flex="1" bg="#1D4ED8" color="white" fontSize="14px" borderRadius="8px"
+                loading={koreksiSaving} loadingText="Menyimpan..."
+                _hover={{ bg: "#1E40AF" }}
+                onClick={handleKoreksi}
+              >
+                Simpan Koreksi
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* ── Delete policy dialog ──────────────────────────────────────────── */}
+      <Dialog.Root
+        open={deleteDialog}
+        onOpenChange={(d) => { if (!d.open && !deleting) { setDeleteDialog(false); setDeleteError(null) } }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" maxW="420px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#DC2626" fontSize="16px" fontWeight="bold">Hapus Polis</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Flex flexDir="column" gap="12px">
+                <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="8px" px="14px" py="10px">
+                  <Text fontSize="12px" color="#DC2626" fontWeight="semibold" mb="2px">Tindakan tidak dapat dibatalkan</Text>
+                  <Text fontSize="12px" color="#DC2626" lineHeight="1.6">
+                    Semua data terkait (komisi, coverage, ko-asuransi, follow-up, riwayat audit) akan dihapus permanen.
+                  </Text>
+                </Box>
+                <Text color="#5D6D7E" fontSize="13px" lineHeight="1.7">
+                  Anda yakin ingin menghapus polis{" "}
+                  <Text as="span" fontWeight="bold" color="#1C2833">{policy?.policy_number}</Text>?{" "}
+                  Untuk polis yang dibatalkan atau lapse, gunakan{" "}
+                  <Text as="span" fontWeight="semibold">Ubah Status Perpanjangan → Dibatalkan</Text> sebagai gantinya.
+                </Text>
+                {deleteError && <Text fontSize="12px" color="#DC2626">{deleteError}</Text>}
+              </Flex>
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" _hover={{ bg: "#F1F5F9" }}
+                disabled={deleting}
+                onClick={() => { setDeleteDialog(false); setDeleteError(null) }}
+              >
+                Batal
+              </Button>
+              <Button
+                flex="1" bg="#DC2626" color="white" fontSize="14px" borderRadius="8px"
+                loading={deleting} loadingText="Menghapus..."
+                _hover={{ bg: "#B91C1C" }}
+                onClick={handleDeletePolicy}
+              >
+                Ya, Hapus Polis
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
       {/* ── Delete coverage dialog ────────────────────────────────────────── */}
       <Dialog.Root
         open={covToDelete !== null}
@@ -1213,6 +1544,23 @@ export default function PolicyDetail() {
                 onClick={logFollowUp}
               >
                 <LuMessageSquare size={13} /> Catat Follow-up
+              </Button>
+
+              <Box h="1px" bg="#E2E8F0" my="4px" />
+
+              <Button
+                w="100%" variant="outline" borderColor="#93C5FD" color="#1D4ED8" fontSize="13px" gap="6px"
+                _hover={{ bg: "#EFF6FF" }}
+                onClick={openKoreksiDialog}
+              >
+                <LuPencil size={13} /> Koreksi Data Polis
+              </Button>
+              <Button
+                w="100%" variant="outline" borderColor="#FECACA" color="#DC2626" fontSize="13px" gap="6px"
+                _hover={{ bg: "#FEF2F2" }}
+                onClick={() => { setDeleteError(null); setDeleteDialog(true) }}
+              >
+                <LuTrash2 size={13} /> Hapus Polis
               </Button>
             </Flex>
           </Box>
