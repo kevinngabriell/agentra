@@ -83,6 +83,7 @@ interface LocalCoverage {
   sum_insured:    number
   rate_permille:  number
   premium_amount: number
+  count_in_tsi:   boolean
 }
 
 interface LocalCoassurance {
@@ -101,10 +102,11 @@ const EMPTY_CA: LocalCoassurance = {
 }
 
 const EMPTY_COV_FORM = {
-  coverage_type: "bangunan" as ApiCoverageType,
+  coverage_type:  "bangunan" as ApiCoverageType,
   coverage_label: "",
-  sum_insured: "",   // formatted IDR string e.g. "400.000.000"
-  rate_permille: "",
+  sum_insured:    "",   // formatted IDR string e.g. "400.000.000"
+  rate_permille:  "",
+  count_in_tsi:   true,
 }
 
 // ─── Fallback products ────────────────────────────────────────────────────────
@@ -120,6 +122,13 @@ const FALLBACK_PRODUCTS = [
   { product_code: "other",      product_name: "Lainnya" },
 ]
 
+const FIRE_PRODUCT_TYPES = new Set(["fire", "kebakaran"])
+const CONSTRUCTION_CLASS_LABELS: Record<string, string> = {
+  "I":   "Kelas I – Konstruksi Keras (beton, bata, besi/baja)",
+  "II":  "Kelas II – Semi Keras (campuran beton & kayu)",
+  "III": "Kelas III – Konstruksi Ringan (kayu, seng/genteng)",
+}
+
 const EMPTY = {
   insurer_id: "", customer_id: "", policy_number: "", product_type: "",
   coverage_start: "", coverage_end: "",
@@ -128,6 +137,7 @@ const EMPTY = {
   materai_amount: "",     // formatted IDR string
   commission_rate: "",
   commission_tax_rate: "2.5",  // displayed as %, stored as decimal on submit
+  construction_class: "",
   policy_year: "1", object_insured: "", coverage_notes: "", notes: "",
 }
 
@@ -200,7 +210,7 @@ export default function NewPolicy() {
   const selectedCustomer = customers.find(c => c.customer_id === form.customer_id)
 
   // Coverage totals
-  const covTotalSI      = localCoverages.reduce((s, c) => s + c.sum_insured, 0)
+  const covTotalSI      = localCoverages.filter(c => c.count_in_tsi).reduce((s, c) => s + c.sum_insured, 0)
   const covTotalPremium = localCoverages.reduce((s, c) => s + c.premium_amount, 0)
 
   const hasAutoFill = localCoverages.length > 0
@@ -251,6 +261,7 @@ export default function NewPolicy() {
 
   function handleProductChange(code: string) {
     set("product_type", code)
+    if (!FIRE_PRODUCT_TYPES.has(code)) set("construction_class", "")
     const match = masterProducts.find(p => p.product_code === code)
     if (match) {
       set("commission_rate", parseFloat(match.commission_rate).toString())
@@ -351,8 +362,9 @@ export default function NewPolicy() {
     setCovForm({
       coverage_type:  cov.coverage_type,
       coverage_label: cov.coverage_label,
-      sum_insured:    cov.sum_insured.toLocaleString("id-ID"),  // format for display
+      sum_insured:    cov.sum_insured.toLocaleString("id-ID"),
       rate_permille:  String(cov.rate_permille),
+      count_in_tsi:   cov.count_in_tsi,
     })
     setCovError(null)
     setCovDialogOpen(true)
@@ -369,17 +381,18 @@ export default function NewPolicy() {
     if (editingCov) {
       setLocalCoverages(prev => prev.map(c =>
         c._id === editingCov._id
-          ? { ...c, coverage_type: covForm.coverage_type, coverage_label: covForm.coverage_label, sum_insured: si, rate_permille: rp, premium_amount: premium }
+          ? { ...c, coverage_type: covForm.coverage_type, coverage_label: covForm.coverage_label, sum_insured: si, rate_permille: rp, premium_amount: premium, count_in_tsi: covForm.count_in_tsi }
           : c
       ))
     } else {
       setLocalCoverages(prev => [...prev, {
         _id: crypto.randomUUID(),
-        coverage_type: covForm.coverage_type,
+        coverage_type:  covForm.coverage_type,
         coverage_label: covForm.coverage_label,
-        sum_insured: si,
-        rate_permille: rp,
+        sum_insured:    si,
+        rate_permille:  rp,
         premium_amount: premium,
+        count_in_tsi:   covForm.count_in_tsi,
       }])
     }
     setCovDialogOpen(false)
@@ -424,6 +437,9 @@ export default function NewPolicy() {
         materai_amount:      rawIDR(form.materai_amount) || undefined,
         commission_rate:     form.commission_rate ? Number(form.commission_rate) : (undefined as any),
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
+        construction_class:  FIRE_PRODUCT_TYPES.has(form.product_type) && form.construction_class
+          ? form.construction_class as "I" | "II" | "III"
+          : null,
         policy_year:         Number(form.policy_year) || 1,
         object_insured:      form.object_insured  || undefined,
         coverage_notes:      form.coverage_notes  || undefined,
@@ -439,6 +455,7 @@ export default function NewPolicy() {
             coverage_label: cov.coverage_label || undefined,
             sum_insured:    cov.sum_insured,
             rate_permille:  cov.rate_permille,
+            count_in_tsi:   cov.count_in_tsi,
           })
         }
       }
@@ -671,6 +688,26 @@ export default function NewPolicy() {
                         </FField>
                       </Flex>
 
+                      {FIRE_PRODUCT_TYPES.has(form.product_type) && (
+                        <FField label="Kelas Konstruksi Bangunan" hint="Wajib untuk produk kebakaran">
+                          <NativeSelect.Root>
+                            <NativeSelect.Field
+                              {...INPUT}
+                              value={form.construction_class}
+                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                set("construction_class", e.target.value)
+                              }
+                            >
+                              <option value="">Pilih kelas konstruksi</option>
+                              {Object.entries(CONSTRUCTION_CLASS_LABELS).map(([val, label]) => (
+                                <option key={val} value={val}>{label}</option>
+                              ))}
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                          </NativeSelect.Root>
+                        </FField>
+                      )}
+
                       <FField label="Objek Pertanggungan">
                         <Input
                           {...INPUT}
@@ -763,6 +800,20 @@ export default function NewPolicy() {
                             }
                           />
                         </FField>
+                      </Flex>
+
+                      <Flex justify="flex-end">
+                        <Flex
+                          align="center" justify="space-between"
+                          px="14px" py="8px" borderRadius="8px"
+                          bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE"
+                          minW="240px" gap="16px"
+                        >
+                          <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold">Total Premi</Text>
+                          <Text fontSize="14px" color="#1D4ED8" fontWeight="bold">
+                            Rp {(rawIDR(displayPremium) + rawIDR(form.materai_amount)).toLocaleString("id-ID")}
+                          </Text>
+                        </Flex>
                       </Flex>
 
                       {/* Commission */}
@@ -920,6 +971,14 @@ export default function NewPolicy() {
                                 <Text color="#64748B" fontSize="12px">
                                   Rate: <Text as="span" color="#1C2833" fontWeight="medium">{cov.rate_permille}‰</Text>
                                 </Text>
+                                {!cov.count_in_tsi && (
+                                  <Text
+                                    fontSize="10px" fontWeight="semibold" color="#92400E"
+                                    bg="#FEF3C7" px="6px" py="2px" borderRadius="4px"
+                                  >
+                                    UP tidak dihitung
+                                  </Text>
+                                )}
                                 <Text color="#64748B" fontSize="12px">
                                   Premi: <Text as="span" color="#1A3557" fontWeight="semibold">
                                     Rp {cov.premium_amount.toLocaleString("id-ID")}
@@ -1173,6 +1232,30 @@ export default function NewPolicy() {
                     </Flex>
                   )}
                 </FField>
+
+                <Flex
+                  align="center" gap="10px" px="12px" py="10px"
+                  borderRadius="8px" border="1px solid" borderColor="#E2E8F0"
+                  cursor="pointer"
+                  onClick={() => setCovForm(f => ({ ...f, count_in_tsi: !f.count_in_tsi }))}
+                >
+                  <Box
+                    w="16px" h="16px" borderRadius="4px" flexShrink={0}
+                    border="2px solid" borderColor={covForm.count_in_tsi ? "#1A3557" : "#CBD5E1"}
+                    bg={covForm.count_in_tsi ? "#1A3557" : "white"}
+                    display="flex" alignItems="center" justifyContent="center"
+                  >
+                    {covForm.count_in_tsi && <Box w="8px" h="8px" borderRadius="2px" bg="white" />}
+                  </Box>
+                  <Flex flexDir="column">
+                    <Text fontSize="13px" color="#1C2833" fontWeight="medium">Hitung UP dalam Total TSI</Text>
+                    <Text fontSize="11px" color="#64748B">
+                      {covForm.count_in_tsi
+                        ? "UP item ini menambah total uang pertanggungan polis"
+                        : "Premi tetap dihitung, tapi UP tidak dihitung ganda (misal: klausula RSMD, OTHERS)"}
+                    </Text>
+                  </Flex>
+                </Flex>
 
                 {covError && <Text fontSize="12px" color="#DC2626">{covError}</Text>}
 

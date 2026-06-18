@@ -40,6 +40,7 @@ export interface ApiPolicy {
     net_commission_amount: number
     customer_premium_amount: number
     is_coassurance: 0 | 1
+    construction_class: ApiConstructionClass | null
     renewal_status: ApiRenewalStatus
     payment_status: ApiPaymentStatus
     customer_id: string
@@ -111,6 +112,8 @@ export interface PoliciesListParams {
     agent_id?: string
 }
 
+export type ApiConstructionClass = "I" | "II" | "III"
+
 export interface CreatePolicyPayload {
     insurer_id: string
     customer_id: string
@@ -123,6 +126,7 @@ export interface CreatePolicyPayload {
     materai_amount?: number
     commission_rate: number
     commission_tax_rate?: number
+    construction_class?: ApiConstructionClass | null
     policy_year?: number
     issuing_agent_id?: string
     previous_policy_id?: string
@@ -334,6 +338,7 @@ export interface ApiCoverageItem {
     sum_insured:    number
     rate_permille:  string   // decimal string from API e.g. "0.3280"
     premium_amount: number
+    count_in_tsi:   0 | 1   // 1 = UP counted toward policy TSI; 0 = premium-only row
     created_at:     string
     updated_at:     string
 }
@@ -349,6 +354,7 @@ export interface AddCoveragePayload {
     coverage_label?: string
     sum_insured:     number
     rate_permille:   number
+    count_in_tsi?:   boolean  // default true; set false for secondary clauses (RSMD, OTHERS) to avoid double-counting TSI
 }
 
 export interface UpdateCoveragePayload {
@@ -356,6 +362,7 @@ export interface UpdateCoveragePayload {
     coverage_label?: string
     sum_insured?:    number
     rate_permille?:  number
+    count_in_tsi?:   boolean
 }
 
 export async function getCoverages(
