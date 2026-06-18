@@ -102,7 +102,7 @@ export default function PolicyDetail() {
   const [coverageTotals, setCoverageTotals] = useState({ total_sum_insured: 0, total_premium: 0 })
   const [coverageLoading, setCoverageLoading] = useState(false)
   const [covDialog, setCovDialog]           = useState<{ open: boolean; editing: ApiCoverageItem | null }>({ open: false, editing: null })
-  const [covForm, setCovForm]               = useState({ coverage_type: 'bangunan' as ApiCoverageType, coverage_label: '', sum_insured: '', rate_permille: '' })
+  const [covForm, setCovForm]               = useState({ coverage_type: 'bangunan' as ApiCoverageType, coverage_label: '', sum_insured: '', rate_permille: '', count_in_tsi: true })
   const [covSaving, setCovSaving]           = useState(false)
   const [covError, setCovError]             = useState<string | null>(null)
   const [covToDelete, setCovToDelete]       = useState<ApiCoverageItem | null>(null)
@@ -122,6 +122,7 @@ export default function PolicyDetail() {
     sum_insured: '', premium_amount: '', materai_amount: '',
     commission_rate: '', commission_tax_rate: '',
     coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
+    construction_class: '',
   })
   const [endorseSaving, setEndorseSaving] = useState(false)
   const [endorseError, setEndorseError]   = useState<string | null>(null)
@@ -245,6 +246,7 @@ export default function PolicyDetail() {
       object_insured:      policy.object_insured ?? '',
       coverage_notes:      policy.coverage_notes ?? '',
       notes:               '',
+      construction_class:  policy.construction_class ?? '',
     })
     setEndorseError(null)
     setEndorseDialog(true)
@@ -257,12 +259,16 @@ export default function PolicyDetail() {
     setEndorseError(null)
     try {
       const taxRatePct = parseFloat(endorseForm.commission_tax_rate) || 0
+      const isFireProduct = new Set(["fire", "kebakaran"]).has(policy.product_type)
       await updatePolicy(token, policy.policy_id, {
         sum_insured:         Number(endorseForm.sum_insured),
         premium_amount:      Number(endorseForm.premium_amount),
         materai_amount:      Number(endorseForm.materai_amount) || undefined,
         commission_rate:     Number(endorseForm.commission_rate),
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
+        construction_class:  isFireProduct
+          ? (endorseForm.construction_class as "I" | "II" | "III" | null) || null
+          : null,
         coverage_end:        endorseForm.coverage_end,
         object_insured:      endorseForm.object_insured || undefined,
         coverage_notes:      endorseForm.coverage_notes || undefined,
@@ -311,6 +317,7 @@ export default function PolicyDetail() {
           coverage_label: covForm.coverage_label || undefined,
           sum_insured:    sumInsured,
           rate_permille:  ratePermille,
+          count_in_tsi:   covForm.count_in_tsi,
         })
       } else {
         await addCoverage(token, id, {
@@ -318,11 +325,12 @@ export default function PolicyDetail() {
           coverage_label: covForm.coverage_label || undefined,
           sum_insured:    sumInsured,
           rate_permille:  ratePermille,
+          count_in_tsi:   covForm.count_in_tsi,
         })
       }
       await loadCoverages()
       setCovDialog({ open: false, editing: null })
-      setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '' })
+      setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '', count_in_tsi: true })
     } catch (err: any) {
       setCovError(err.message ?? 'Gagal menyimpan')
     } finally {
@@ -438,6 +446,30 @@ export default function PolicyDetail() {
                   )}
                 </Flex>
 
+                <Flex
+                  align="center" gap="10px" px="12px" py="10px"
+                  borderRadius="8px" border="1px solid" borderColor="#E2E8F0"
+                  cursor="pointer"
+                  onClick={() => setCovForm(f => ({ ...f, count_in_tsi: !f.count_in_tsi }))}
+                >
+                  <Box
+                    w="16px" h="16px" borderRadius="4px" flexShrink={0}
+                    border="2px solid" borderColor={covForm.count_in_tsi ? "#1A3557" : "#CBD5E1"}
+                    bg={covForm.count_in_tsi ? "#1A3557" : "white"}
+                    display="flex" alignItems="center" justifyContent="center"
+                  >
+                    {covForm.count_in_tsi && <Box w="8px" h="8px" borderRadius="2px" bg="white" />}
+                  </Box>
+                  <Flex flexDir="column">
+                    <Text fontSize="13px" color="#1C2833" fontWeight="medium">Hitung UP dalam Total TSI</Text>
+                    <Text fontSize="11px" color="#64748B">
+                      {covForm.count_in_tsi
+                        ? "UP item ini menambah total uang pertanggungan polis"
+                        : "Premi tetap dihitung, tapi UP tidak dihitung ganda (misal: klausula RSMD, OTHERS)"}
+                    </Text>
+                  </Flex>
+                </Flex>
+
                 {covError && (
                   <Text fontSize="12px" color="#DC2626">{covError}</Text>
                 )}
@@ -490,7 +522,7 @@ export default function PolicyDetail() {
                       size="xs" bg="#1A3557" color="white" fontSize="11px" gap="4px" borderRadius="6px"
                       _hover={{ bg: "#162C47" }}
                       onClick={() => {
-                        setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '' })
+                        setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '', count_in_tsi: true })
                         setCovError(null)
                         setCovDialog({ open: true, editing: null })
                       }}
@@ -523,6 +555,11 @@ export default function PolicyDetail() {
                             <Flex flexDir="column" flex="1.5" gap="1px">
                               <Text color="#1C2833" fontSize="12px">{COVERAGE_TYPE_LABELS[cov.coverage_type]}</Text>
                               {cov.coverage_label && <Text color="#94A3B8" fontSize="11px">{cov.coverage_label}</Text>}
+                              {cov.count_in_tsi === 0 && (
+                                <Text fontSize="10px" fontWeight="semibold" color="#92400E" bg="#FEF3C7" px="5px" py="1px" borderRadius="4px" w="fit-content">
+                                  UP tidak dihitung
+                                </Text>
+                              )}
                             </Flex>
                             <Text flex="1" color="#64748B" fontSize="12px" fontFamily="mono" textAlign="right">
                               {fmt(cov.sum_insured)}
@@ -543,6 +580,7 @@ export default function PolicyDetail() {
                                     coverage_label: cov.coverage_label ?? '',
                                     sum_insured:    String(cov.sum_insured),
                                     rate_permille:  String(parseFloat(cov.rate_permille)),
+                                    count_in_tsi:   cov.count_in_tsi === 1,
                                   })
                                   setCovError(null)
                                   setCovDialog({ open: true, editing: cov })
@@ -661,6 +699,27 @@ export default function PolicyDetail() {
                 <Box>
                   <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Detail Objek & Keterangan</Text>
                   <Flex flexDir="column" gap="10px">
+                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                      <Flex flexDir="column" gap="4px">
+                        <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kelas Konstruksi Bangunan</Text>
+                        <NativeSelect.Root>
+                          <NativeSelect.Field
+                            bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                            fontSize="13px" color="#1C2833"
+                            value={endorseForm.construction_class}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                              setEndorseForm((f) => ({ ...f, construction_class: e.target.value }))
+                            }
+                          >
+                            <option value="">Tidak ditentukan</option>
+                            <option value="I">Kelas I – Konstruksi Keras (beton, bata, besi/baja)</option>
+                            <option value="II">Kelas II – Semi Keras (campuran beton & kayu)</option>
+                            <option value="III">Kelas III – Konstruksi Ringan (kayu, seng/genteng)</option>
+                          </NativeSelect.Field>
+                          <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                      </Flex>
+                    )}
                     <Flex flexDir="column" gap="4px">
                       <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Objek Pertanggungan</Text>
                       <Input
@@ -815,10 +874,10 @@ export default function PolicyDetail() {
     confirmed: { bg: "#DCFCE7", color: "#16A34A", label: "Terkonfirmasi" },
   }[policy.payment_status] ?? { bg: "#F1F5F9", color: "#64748B", label: policy.payment_status }
 
-  const effectivePremium = coverageTotals.total_premium > 0 ? coverageTotals.total_premium : policy.premium_amount
-  const commissionAmount = policy.commission_amount ?? Math.round(effectivePremium * policy.commission_rate / 100)
-  const commissionTaxAmount = policy.commission_tax_amount ?? 0
-  const netCommissionAmount = policy.net_commission_amount ?? (commissionAmount - commissionTaxAmount)
+  const effectivePremium = coverageTotals.total_premium > 0 ? coverageTotals.total_premium : Number(policy.premium_amount)
+  const commissionAmount = policy.commission_amount != null ? Number(policy.commission_amount) : Math.round(effectivePremium * Number(policy.commission_rate) / 100)
+  const commissionTaxAmount = policy.commission_tax_amount != null ? Number(policy.commission_tax_amount) : 0
+  const netCommissionAmount = policy.net_commission_amount != null ? Number(policy.net_commission_amount) : (commissionAmount - commissionTaxAmount)
 
   return shell(
     <Flex flexDir="column" gap="24px" p="32px">
@@ -883,6 +942,21 @@ export default function PolicyDetail() {
                 <Text {...lbl}>JENIS PRODUK</Text>
                 <Text color="#1C2833" fontSize="14px">{PRODUCT_LABELS[policy.product_type] ?? policy.product_type}</Text>
               </Flex>
+              {policy.construction_class && (
+                <Flex flexDir="column" gap="4px" flex="1" minW="160px">
+                  <Text {...lbl}>KELAS KONSTRUKSI</Text>
+                  <Flex align="center" gap="6px">
+                    <Box px="7px" py="2px" borderRadius="5px" bg="#FEF3C7" fontSize="12px" fontWeight="bold" color="#D97706">
+                      Kelas {policy.construction_class}
+                    </Box>
+                    <Text color="#64748B" fontSize="12px">
+                      {policy.construction_class === "I" ? "Konstruksi Keras"
+                        : policy.construction_class === "II" ? "Semi Keras"
+                        : "Konstruksi Ringan"}
+                    </Text>
+                  </Flex>
+                </Flex>
+              )}
               {policy.object_insured && (
                 <Flex flexDir="column" gap="4px" flex="1" minW="160px">
                   <Text {...lbl}>OBJEK PERTANGGUNGAN</Text>
@@ -983,6 +1057,12 @@ export default function PolicyDetail() {
                   <Text color="#1C2833" fontSize="12px">{fmt(policy.materai_amount)}</Text>
                 </Flex>
               )}
+              <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#BFDBFE" bg="#EFF6FF">
+                <Text color="#1D4ED8" fontSize="13px" fontWeight="semibold">Total Premi</Text>
+                <Text color="#1D4ED8" fontSize="14px" fontWeight="bold">
+                  {fmt((coverages.length > 0 ? coverageTotals.total_premium : Number(policy.premium_amount)) + Number(policy.materai_amount ?? 0))}
+                </Text>
+              </Flex>
 
               {/* STATUS PEMBAYARAN */}
               <Flex px="16px" py="12px" justify="space-between" align="center" bg="#EFF6FF">
