@@ -33,6 +33,8 @@ export interface ApiPolicy {
     sum_insured: number
     premium_amount: number
     materai_amount: number
+    biaya_polis: number
+    diskon: number
     commission_rate: number
     commission_amount: number
     commission_tax_rate: number
@@ -124,6 +126,8 @@ export interface CreatePolicyPayload {
     sum_insured: number
     premium_amount: number
     materai_amount?: number
+    biaya_polis?: number
+    diskon?: number
     commission_rate: number
     commission_tax_rate?: number
     construction_class?: ApiConstructionClass | null

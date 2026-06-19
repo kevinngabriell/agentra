@@ -118,8 +118,10 @@ export default function PolicyDetail() {
 
   // Koreksi (direct update / PATCH) dialog state
   const [koreksiDialog, setKoreksiDialog] = useState(false)
+  const [koreksiKey, setKoreksiKey]       = useState(0)
   const [koreksiFo, setKoreksiFo]         = useState({
     sum_insured: '', premium_amount: '', materai_amount: '',
+    biaya_polis: '', diskon: '',
     commission_rate: '', commission_tax_rate: '',
     coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
     construction_class: '',
@@ -136,6 +138,7 @@ export default function PolicyDetail() {
   const [endorseDialog, setEndorseDialog] = useState(false)
   const [endorseForm, setEndorseForm]     = useState({
     sum_insured: '', premium_amount: '', materai_amount: '',
+    biaya_polis: '', diskon: '',
     commission_rate: '', commission_tax_rate: '',
     coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
     construction_class: '',
@@ -256,6 +259,8 @@ export default function PolicyDetail() {
       sum_insured:         String(policy.sum_insured),
       premium_amount:      String(policy.premium_amount),
       materai_amount:      String(policy.materai_amount ?? 0),
+      biaya_polis:         String(policy.biaya_polis ?? 0),
+      diskon:              String(policy.diskon ?? 0),
       commission_rate:     String(policy.commission_rate),
       commission_tax_rate: String((policy.commission_tax_rate ?? 0) * 100),
       coverage_end:        policy.coverage_end,
@@ -280,6 +285,8 @@ export default function PolicyDetail() {
         sum_insured:         Number(endorseForm.sum_insured),
         premium_amount:      Number(endorseForm.premium_amount),
         materai_amount:      Number(endorseForm.materai_amount) || undefined,
+        biaya_polis:         Number(endorseForm.biaya_polis) || undefined,
+        diskon:              Number(endorseForm.diskon) || undefined,
         commission_rate:     Number(endorseForm.commission_rate),
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
         construction_class:  isFireProduct
@@ -309,6 +316,8 @@ export default function PolicyDetail() {
       sum_insured:         String(policy.sum_insured),
       premium_amount:      String(policy.premium_amount),
       materai_amount:      String(policy.materai_amount ?? 0),
+      biaya_polis:         String(policy.biaya_polis ?? 0),
+      diskon:              String(policy.diskon ?? 0),
       commission_rate:     String(policy.commission_rate),
       commission_tax_rate: String((policy.commission_tax_rate ?? 0) * 100),
       coverage_end:        policy.coverage_end,
@@ -318,6 +327,7 @@ export default function PolicyDetail() {
       construction_class:  policy.construction_class ?? '',
     })
     setKoreksiyError(null)
+    setKoreksiKey(k => k + 1)
     setKoreksiDialog(true)
   }
 
@@ -333,6 +343,8 @@ export default function PolicyDetail() {
         sum_insured:         Number(koreksiFo.sum_insured),
         premium_amount:      Number(koreksiFo.premium_amount),
         materai_amount:      Number(koreksiFo.materai_amount) || undefined,
+        biaya_polis:         Number(koreksiFo.biaya_polis) || undefined,
+        diskon:              Number(koreksiFo.diskon) || undefined,
         commission_rate:     Number(koreksiFo.commission_rate),
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
         construction_class:  isFireProduct
@@ -754,6 +766,32 @@ export default function PolicyDetail() {
                   </Flex>
                   <Flex gap="12px">
                     <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Biaya Polis (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(endorseForm.biaya_polis)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setEndorseForm((f) => ({ ...f, biaya_polis: raw }))
+                        }}
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Diskon (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(endorseForm.diskon)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setEndorseForm((f) => ({ ...f, diskon: raw }))
+                        }}
+                      />
+                    </Flex>
+                  </Flex>
+                  <Flex gap="12px">
+                    <Flex flexDir="column" gap="4px" flex="1">
                       <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Komisi (%)</Text>
                       <Input
                         bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
@@ -871,6 +909,7 @@ export default function PolicyDetail() {
 
       {/* ── Koreksi dialog (PATCH – without endorsement) ─────────────────── */}
       <Dialog.Root
+        key={koreksiKey}
         open={koreksiDialog}
         onOpenChange={(d) => { if (!d.open && !koreksiSaving) { setKoreksiDialog(false); setKoreksiyError(null) } }}
       >
@@ -946,6 +985,32 @@ export default function PolicyDetail() {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setKoreksiFo((f) => ({ ...f, coverage_end: e.target.value }))
                         }
+                      />
+                    </Flex>
+                  </Flex>
+                  <Flex gap="12px" mb="10px">
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Biaya Polis (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(koreksiFo.biaya_polis)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setKoreksiFo((f) => ({ ...f, biaya_polis: raw }))
+                        }}
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px" flex="1">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Diskon (IDR)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833" type="text" inputMode="numeric"
+                        value={formatIDR(koreksiFo.diskon)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          setKoreksiFo((f) => ({ ...f, diskon: raw }))
+                        }}
                       />
                     </Flex>
                   </Flex>
@@ -1388,10 +1453,22 @@ export default function PolicyDetail() {
                   <Text color="#1C2833" fontSize="12px">{fmt(policy.materai_amount)}</Text>
                 </Flex>
               )}
+              {(policy.biaya_polis ?? 0) > 0 && (
+                <Flex px="16px" py="8px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
+                  <Text color="#64748B" fontSize="12px">Biaya Polis</Text>
+                  <Text color="#1C2833" fontSize="12px">{fmt(policy.biaya_polis!)}</Text>
+                </Flex>
+              )}
+              {(policy.diskon ?? 0) > 0 && (
+                <Flex px="16px" py="8px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#F1F5F9" bg="white">
+                  <Text color="#64748B" fontSize="12px">Diskon</Text>
+                  <Text color="#DC2626" fontSize="12px">−{fmt(policy.diskon!)}</Text>
+                </Flex>
+              )}
               <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#BFDBFE" bg="#EFF6FF">
-                <Text color="#1D4ED8" fontSize="13px" fontWeight="semibold">Total Premi</Text>
+                <Text color="#1D4ED8" fontSize="13px" fontWeight="semibold">Tagihan Nasabah</Text>
                 <Text color="#1D4ED8" fontSize="14px" fontWeight="bold">
-                  {fmt((coverages.length > 0 ? coverageTotals.total_premium : Number(policy.premium_amount)) + Number(policy.materai_amount ?? 0))}
+                  {fmt(Number(policy.customer_premium_amount ?? 0))}
                 </Text>
               </Flex>
 
