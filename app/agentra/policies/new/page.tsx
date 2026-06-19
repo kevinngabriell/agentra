@@ -135,6 +135,8 @@ const EMPTY = {
   sum_insured: "",        // formatted IDR string
   premium_amount: "",     // formatted IDR string
   materai_amount: "",     // formatted IDR string
+  biaya_polis: "",        // formatted IDR string
+  diskon: "",             // formatted IDR string
   commission_rate: "",
   commission_tax_rate: "2.5",  // displayed as %, stored as decimal on submit
   construction_class: "",
@@ -231,6 +233,11 @@ export default function NewPolicy() {
   }, [commissionAmount, form.commission_tax_rate])
 
   const netCommissionAmount = commissionAmount - commissionTaxAmount
+
+  const customerPremiumAmount = useMemo(() => {
+    const premium = hasAutoFill ? covTotalPremium : rawIDR(form.premium_amount)
+    return premium + rawIDR(form.materai_amount) + rawIDR(form.biaya_polis) - commissionAmount - rawIDR(form.diskon)
+  }, [hasAutoFill, covTotalPremium, form.premium_amount, form.materai_amount, form.biaya_polis, form.diskon, commissionAmount])
 
   const duration = useMemo(() => {
     if (!form.coverage_start || !form.coverage_end) return null
@@ -435,6 +442,8 @@ export default function NewPolicy() {
         sum_insured:         finalSI,
         premium_amount:      finalPremium,
         materai_amount:      rawIDR(form.materai_amount) || undefined,
+        biaya_polis:         rawIDR(form.biaya_polis) || undefined,
+        diskon:              rawIDR(form.diskon) || undefined,
         commission_rate:     form.commission_rate ? Number(form.commission_rate) : (undefined as any),
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
         construction_class:  FIRE_PRODUCT_TYPES.has(form.product_type) && form.construction_class
@@ -800,6 +809,26 @@ export default function NewPolicy() {
                             }
                           />
                         </FField>
+                        <FField label="Biaya Polis (IDR)">
+                          <Input
+                            {...INPUT_LG} w="140px"
+                            inputMode="numeric" placeholder="0"
+                            value={form.biaya_polis}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              set("biaya_polis", toIDR(e.target.value))
+                            }
+                          />
+                        </FField>
+                        <FField label="Diskon (IDR)">
+                          <Input
+                            {...INPUT_LG} w="140px"
+                            inputMode="numeric" placeholder="0"
+                            value={form.diskon}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              set("diskon", toIDR(e.target.value))
+                            }
+                          />
+                        </FField>
                       </Flex>
 
                       <Flex justify="flex-end">
@@ -809,9 +838,9 @@ export default function NewPolicy() {
                           bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE"
                           minW="240px" gap="16px"
                         >
-                          <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold">Total Premi</Text>
+                          <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold">Tagihan Nasabah</Text>
                           <Text fontSize="14px" color="#1D4ED8" fontWeight="bold">
-                            Rp {(rawIDR(displayPremium) + rawIDR(form.materai_amount)).toLocaleString("id-ID")}
+                            Rp {customerPremiumAmount.toLocaleString("id-ID")}
                           </Text>
                         </Flex>
                       </Flex>
