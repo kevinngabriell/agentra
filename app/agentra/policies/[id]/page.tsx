@@ -1,7 +1,7 @@
 "use client"
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
-import { Avatar, Badge, Box, Button, Dialog, Flex, IconButton, Input, NativeSelect, Skeleton, Table, Text } from "@chakra-ui/react"
+import { Avatar, Badge, Box, Button, Dialog, Flex, IconButton, Input, NativeSelect, Skeleton, Switch, Table, Text } from "@chakra-ui/react"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -15,7 +15,7 @@ import {
   getPolicyDetail, updateRenewalStatus, updatePaymentStatus, addPolicyFollowUp,
   updatePolicy, directUpdatePolicy, deletePolicy, getPolicyLogs,
   getCoverages, addCoverage, updateCoverage, deleteCoverage,
-  getCoassurance,
+  getCoassurance, addCoassuranceParticipant, updateCoassuranceParticipant, removeCoassuranceParticipant,
   type ApiPolicyDetail, type ApiFollowUp, type ApiPolicyLog,
   type ApiCoverageItem, type ApiCoverageType, COVERAGE_TYPE_LABELS,
   type ApiCoassurance,
@@ -111,6 +111,16 @@ export default function PolicyDetail() {
   // Co-assurance state
   const [coassurances, setCoassurances]     = useState<ApiCoassurance[]>([])
   const [caLoading, setCaLoading]           = useState(false)
+  const [caEditDialog, setCaEditDialog]     = useState(false)
+  const [caEditForm, setCaEditForm]         = useState({
+    co_insurer_name: '', share_percent: '', is_leader: false,
+    sum_insured_share: '', premium_share: '', commission_rate: '',
+  })
+  const [editingCaItem, setEditingCaItem]   = useState<ApiCoassurance | null>(null)
+  const [caEditError, setCaEditError]       = useState<string | null>(null)
+  const [caEditSaving, setCaEditSaving]     = useState(false)
+  const [caToDelete, setCaToDelete]         = useState<ApiCoassurance | null>(null)
+  const [caDeleting, setCaDeleting]         = useState(false)
 
   // Logs state
   const [logs, setLogs]               = useState<ApiPolicyLog[]>([])
@@ -162,6 +172,15 @@ export default function PolicyDetail() {
       premium_amount: String(coverageTotals.total_premium),
     }))
   }, [coverageTotals, endorseDialog])
+
+  useEffect(() => {
+    if (!koreksiDialog || coverages.length === 0) return
+    setKoreksiFo((f) => ({
+      ...f,
+      sum_insured: String(coverageTotals.total_sum_insured),
+      premium_amount: String(coverageTotals.total_premium),
+    }))
+  }, [coverageTotals, koreksiDialog])
 
   useEffect(() => {
     const token = getAccessToken()
@@ -446,6 +465,74 @@ export default function PolicyDetail() {
       setCovToDelete(null)
     } catch {}
     finally { setCovDeleting(false) }
+  }
+
+  // ── Coassurance edit handlers ─────────────────────────────────────────────
+
+  function openAddCoassurance() {
+    setEditingCaItem(null)
+    setCaEditForm({ co_insurer_name: '', share_percent: '', is_leader: false, sum_insured_share: '', premium_share: '', commission_rate: '' })
+    setCaEditError(null)
+    setCaEditDialog(true)
+  }
+
+  function openEditCoassurance(ca: ApiCoassurance) {
+    setEditingCaItem(ca)
+    setCaEditForm({
+      co_insurer_name:   ca.co_insurer_name,
+      share_percent:     String(parseFloat(ca.share_percent)),
+      is_leader:         Boolean(ca.is_leader),
+      sum_insured_share: ca.sum_insured_share != null ? String(ca.sum_insured_share) : '',
+      premium_share:     ca.premium_share != null ? String(ca.premium_share) : '',
+      commission_rate:   ca.commission_rate ? String(parseFloat(ca.commission_rate)) : '',
+    })
+    setCaEditError(null)
+    setCaEditDialog(true)
+  }
+
+  async function handleSaveCoassurance() {
+    if (!caEditForm.co_insurer_name.trim() || !caEditForm.share_percent) {
+      setCaEditError('Nama ko-insurer dan share % wajib diisi')
+      return
+    }
+    const token = getAccessToken()
+    if (!token) return
+    setCaEditSaving(true)
+    setCaEditError(null)
+    try {
+      const payload = {
+        co_insurer_name:   caEditForm.co_insurer_name,
+        share_percent:     parseFloat(caEditForm.share_percent),
+        is_leader:         caEditForm.is_leader,
+        sum_insured_share: caEditForm.sum_insured_share ? Number(caEditForm.sum_insured_share.replace(/\./g, '')) : undefined,
+        premium_share:     caEditForm.premium_share ? Number(caEditForm.premium_share.replace(/\./g, '')) : undefined,
+        commission_rate:   caEditForm.commission_rate ? parseFloat(caEditForm.commission_rate) : undefined,
+      }
+      if (editingCaItem) {
+        await updateCoassuranceParticipant(token, id, editingCaItem.coassurance_id, payload)
+      } else {
+        await addCoassuranceParticipant(token, id, payload)
+      }
+      await loadCoassurance()
+      setCaEditDialog(false)
+    } catch (err: any) {
+      setCaEditError(err.message ?? 'Gagal menyimpan')
+    } finally {
+      setCaEditSaving(false)
+    }
+  }
+
+  async function handleDeleteCoassurance() {
+    if (!caToDelete) return
+    const token = getAccessToken()
+    if (!token) return
+    setCaDeleting(true)
+    try {
+      await removeCoassuranceParticipant(token, id, caToDelete.coassurance_id)
+      await loadCoassurance()
+      setCaToDelete(null)
+    } catch {}
+    finally { setCaDeleting(false) }
   }
 
   const shell = (children: React.ReactNode) => (
@@ -934,6 +1021,105 @@ export default function PolicyDetail() {
                   </Text>
                 </Box>
 
+                {/* ── Item Pertanggungan ── */}
+                <Box>
+                  <Flex justify="space-between" align="center" mb="10px">
+                    <Text fontSize="13px" fontWeight="semibold" color="#1C2833">Item Pertanggungan</Text>
+                    <Button
+                      size="xs" bg="#1A3557" color="white" fontSize="11px" gap="4px" borderRadius="6px"
+                      _hover={{ bg: "#162C47" }}
+                      onClick={() => {
+                        setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '', count_in_tsi: true })
+                        setCovError(null)
+                        setCovDialog({ open: true, editing: null })
+                      }}
+                    >
+                      <LuPlus size={10} /> Tambah Item
+                    </Button>
+                  </Flex>
+
+                  <Box borderRadius="8px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
+                    {coverageLoading ? (
+                      <Flex px="12px" py="16px" align="center" justify="center">
+                        <Text color="#94A3B8" fontSize="13px">Memuat...</Text>
+                      </Flex>
+                    ) : coverages.length === 0 ? (
+                      <Flex px="12px" py="20px" align="center" justify="center" flexDir="column" gap="6px">
+                        <Text color="#94A3B8" fontSize="13px">Belum ada item pertanggungan.</Text>
+                        <Text color="#94A3B8" fontSize="12px">Klik "+ Tambah Item" untuk menambahkan.</Text>
+                      </Flex>
+                    ) : (
+                      <>
+                        <Flex px="12px" py="6px" gap="8px" bg="#F8FAFC" borderBottom="1px solid" borderColor="#E2E8F0">
+                          <Text flex="1.5" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em">KATEGORI</Text>
+                          <Text flex="1" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em" textAlign="right">UP (IDR)</Text>
+                          <Text w="60px" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em" textAlign="right">RATE ‰</Text>
+                          <Text w="90px" color="#94A3B8" fontSize="10px" fontWeight="bold" letterSpacing="0.05em" textAlign="right">PREMI</Text>
+                          <Box w="74px" />
+                        </Flex>
+                        {coverages.map((cov) => (
+                          <Flex key={cov.coverage_id} px="12px" py="9px" gap="8px" align="center" borderBottom="1px solid" borderColor="#F1F5F9">
+                            <Flex flexDir="column" flex="1.5" gap="1px">
+                              <Text color="#1C2833" fontSize="12px">{COVERAGE_TYPE_LABELS[cov.coverage_type]}</Text>
+                              {cov.coverage_label && <Text color="#94A3B8" fontSize="11px">{cov.coverage_label}</Text>}
+                              {cov.count_in_tsi === 0 && (
+                                <Text fontSize="10px" fontWeight="semibold" color="#92400E" bg="#FEF3C7" px="5px" py="1px" borderRadius="4px" w="fit-content">
+                                  UP tidak dihitung
+                                </Text>
+                              )}
+                            </Flex>
+                            <Text flex="1" color="#64748B" fontSize="12px" fontFamily="mono" textAlign="right">
+                              {fmt(cov.sum_insured)}
+                            </Text>
+                            <Text w="60px" color="#64748B" fontSize="12px" textAlign="right">
+                              {parseFloat(cov.rate_permille)}‰
+                            </Text>
+                            <Text w="90px" color="#1C2833" fontSize="12px" fontWeight="medium" textAlign="right">
+                              {fmt(cov.premium_amount)}
+                            </Text>
+                            <Flex w="74px" justify="flex-end" gap="2px">
+                              <IconButton
+                                size="xs" variant="ghost" aria-label="Edit"
+                                color="#64748B" _hover={{ bg: "#EFF6FF", color: "#1D4ED8" }}
+                                onClick={() => {
+                                  setCovForm({
+                                    coverage_type:  cov.coverage_type,
+                                    coverage_label: cov.coverage_label ?? '',
+                                    sum_insured:    String(cov.sum_insured),
+                                    rate_permille:  String(parseFloat(cov.rate_permille)),
+                                    count_in_tsi:   cov.count_in_tsi === 1,
+                                  })
+                                  setCovError(null)
+                                  setCovDialog({ open: true, editing: cov })
+                                }}
+                              >
+                                <LuPencil size={11} />
+                              </IconButton>
+                              <IconButton
+                                size="xs" variant="ghost" aria-label="Hapus"
+                                color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
+                                onClick={() => setCovToDelete(cov)}
+                              >
+                                <LuTrash2 size={11} />
+                              </IconButton>
+                            </Flex>
+                          </Flex>
+                        ))}
+                        <Flex px="12px" py="8px" justify="space-between" bg="#F8FAFC">
+                          <Text color="#64748B" fontSize="12px" fontWeight="semibold">
+                            Total UP: {fmt(coverageTotals.total_sum_insured)}
+                          </Text>
+                          <Text color="#1C2833" fontSize="12px" fontWeight="semibold">
+                            Total Premi: {fmt(coverageTotals.total_premium)}
+                          </Text>
+                        </Flex>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+
+                <Box h="1px" bg="#E2E8F0" />
+
                 {/* Nilai & Periode */}
                 <Box>
                   <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Nilai & Periode</Text>
@@ -1216,6 +1402,177 @@ export default function PolicyDetail() {
                 loading={covDeleting} loadingText="Menghapus..."
                 _hover={{ bg: "#B91C1C" }}
                 onClick={handleDeleteCoverage}
+              >
+                Ya, Hapus
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* ── Coassurance add/edit dialog ───────────────────────────────────── */}
+      <Dialog.Root
+        open={caEditDialog}
+        onOpenChange={(d) => { if (!d.open && !caEditSaving) { setCaEditDialog(false); setCaEditError(null) } }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" maxW="440px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                {editingCaItem ? 'Edit Ko-Insurer' : 'Tambah Ko-Insurer'}
+              </Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Flex flexDir="column" gap="14px">
+
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                    Nama Perusahaan Asuransi <Text as="span" color="#DC2626">*</Text>
+                  </Text>
+                  <Input
+                    bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                    fontSize="13px" color="#1C2833"
+                    placeholder="PT Asuransi Wahana Tata"
+                    value={caEditForm.co_insurer_name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setCaEditForm(f => ({ ...f, co_insurer_name: e.target.value }))
+                    }
+                  />
+                </Flex>
+
+                <Flex gap="12px">
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                      Share (%) <Text as="span" color="#DC2626">*</Text>
+                    </Text>
+                    <Input
+                      bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                      fontSize="13px" color="#1C2833"
+                      type="number" min={0} max={100} step="0.01" placeholder="60"
+                      value={caEditForm.share_percent}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setCaEditForm(f => ({ ...f, share_percent: e.target.value }))
+                      }
+                    />
+                  </Flex>
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Rate Komisi (%)</Text>
+                    <Input
+                      bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                      fontSize="13px" color="#1C2833"
+                      type="number" min={0} max={100} step="0.01" placeholder="15"
+                      value={caEditForm.commission_rate}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setCaEditForm(f => ({ ...f, commission_rate: e.target.value }))
+                      }
+                    />
+                  </Flex>
+                </Flex>
+
+                <Flex gap="12px">
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">UP Share (IDR)</Text>
+                    <Input
+                      bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                      fontSize="13px" color="#1C2833"
+                      type="text" inputMode="numeric" placeholder="300.000.000"
+                      value={formatIDR(caEditForm.sum_insured_share)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value.replace(/\D/g, '')
+                        setCaEditForm(f => ({ ...f, sum_insured_share: raw }))
+                      }}
+                    />
+                  </Flex>
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Premi Share (IDR)</Text>
+                    <Input
+                      bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                      fontSize="13px" color="#1C2833"
+                      type="text" inputMode="numeric" placeholder="3.000.000"
+                      value={formatIDR(caEditForm.premium_share)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value.replace(/\D/g, '')
+                        setCaEditForm(f => ({ ...f, premium_share: raw }))
+                      }}
+                    />
+                  </Flex>
+                </Flex>
+
+                <Flex align="center" gap="10px" px="14px" py="10px" bg="#F8FAFC" borderRadius="8px" border="1px solid" borderColor="#E2E8F0">
+                  <Switch.Root
+                    checked={caEditForm.is_leader}
+                    onCheckedChange={(e) => setCaEditForm(f => ({ ...f, is_leader: e.checked }))}
+                    colorPalette="blue" size="sm"
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control />
+                  </Switch.Root>
+                  <Flex flexDir="column" gap="1px">
+                    <Text fontSize="13px" color="#1C2833" fontWeight="medium">Leader</Text>
+                    <Text fontSize="11px" color="#94A3B8">Tandai sebagai insurer leader</Text>
+                  </Flex>
+                </Flex>
+
+                {caEditError && <Text fontSize="12px" color="#DC2626">{caEditError}</Text>}
+              </Flex>
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" _hover={{ bg: "#F1F5F9" }}
+                disabled={caEditSaving}
+                onClick={() => { setCaEditDialog(false); setCaEditError(null) }}
+              >
+                Batal
+              </Button>
+              <Button
+                flex="1" bg="#7C3AED" color="white" fontSize="14px" borderRadius="8px"
+                loading={caEditSaving} loadingText="Menyimpan..."
+                _hover={{ bg: "#6D28D9" }}
+                onClick={handleSaveCoassurance}
+              >
+                Simpan
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* ── Coassurance delete confirm dialog ────────────────────────────── */}
+      <Dialog.Root
+        open={caToDelete !== null}
+        onOpenChange={(d) => { if (!d.open && !caDeleting) setCaToDelete(null) }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" maxW="400px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Hapus Ko-Insurer</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Text color="#5D6D7E" fontSize="14px" lineHeight="1.6">
+                Hapus{" "}
+                <Text as="span" fontWeight="semibold" color="#1C2833">
+                  {caToDelete?.co_insurer_name ?? ''}
+                </Text>{" "}
+                ({caToDelete ? parseFloat(caToDelete.share_percent).toFixed(1) : 0}%) dari ko-asuransi polis ini?
+              </Text>
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" _hover={{ bg: "#F1F5F9" }}
+                disabled={caDeleting}
+                onClick={() => setCaToDelete(null)}
+              >
+                Batal
+              </Button>
+              <Button
+                flex="1" bg="#DC2626" color="white" fontSize="14px" borderRadius="8px"
+                loading={caDeleting} loadingText="Menghapus..."
+                _hover={{ bg: "#B91C1C" }}
+                onClick={handleDeleteCoassurance}
               >
                 Ya, Hapus
               </Button>
@@ -1690,9 +2047,17 @@ export default function PolicyDetail() {
           {/* Ko-Asuransi card */}
           {Boolean(policy.is_coassurance) && (
             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E9D5FF" p="20px">
-              <Flex align="center" gap="6px" mb="14px">
-                <Box px="6px" py="1px" borderRadius="4px" bg="#F3E8FF" fontSize="10px" fontWeight="bold" color="#7C3AED">KO-ASURANSI</Box>
-                <Text color="#1C2833" fontSize="14px" fontWeight="semibold">Peserta Ko-Asuransi</Text>
+              <Flex align="center" justify="space-between" mb="14px">
+                <Flex align="center" gap="6px">
+                  <Box px="6px" py="1px" borderRadius="4px" bg="#F3E8FF" fontSize="10px" fontWeight="bold" color="#7C3AED">KO-ASURANSI</Box>
+                  <Text color="#1C2833" fontSize="14px" fontWeight="semibold">Peserta Ko-Asuransi</Text>
+                </Flex>
+                <Button
+                  size="xs" bg="#7C3AED" color="white" fontSize="11px" gap="3px" borderRadius="6px"
+                  _hover={{ bg: "#6D28D9" }} onClick={openAddCoassurance}
+                >
+                  <LuPlus size={10} /> Tambah
+                </Button>
               </Flex>
               {caLoading ? (
                 <Text color="#94A3B8" fontSize="12px">Memuat...</Text>
@@ -1702,14 +2067,30 @@ export default function PolicyDetail() {
                 <Flex flexDir="column" gap="8px">
                   {coassurances.map(ca => (
                     <Box key={ca.coassurance_id} p="10px" bg="#FAF5FF" borderRadius="8px" border="1px solid" borderColor="#E9D5FF">
-                      <Flex justify="space-between" align="center" mb="4px">
-                        <Flex align="center" gap="6px">
+                      <Flex justify="space-between" align="flex-start" mb="4px">
+                        <Flex align="center" gap="6px" flexWrap="wrap">
                           <Text fontSize="12px" color="#1C2833" fontWeight="semibold">{ca.co_insurer_name}</Text>
                           {Boolean(ca.is_leader) && (
                             <Box px="5px" py="1px" borderRadius="3px" bg="#DBEAFE" fontSize="9px" fontWeight="bold" color="#1D4ED8">LEADER</Box>
                           )}
                         </Flex>
-                        <Text fontSize="13px" color="#7C3AED" fontWeight="bold">{parseFloat(ca.share_percent).toFixed(1)}%</Text>
+                        <Flex align="center" gap="4px">
+                          <Text fontSize="13px" color="#7C3AED" fontWeight="bold">{parseFloat(ca.share_percent).toFixed(1)}%</Text>
+                          <IconButton
+                            size="xs" variant="ghost" aria-label="Edit"
+                            color="#64748B" _hover={{ bg: "#EDE9FE", color: "#7C3AED" }}
+                            onClick={() => openEditCoassurance(ca)}
+                          >
+                            <LuPencil size={11} />
+                          </IconButton>
+                          <IconButton
+                            size="xs" variant="ghost" aria-label="Hapus"
+                            color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
+                            onClick={() => setCaToDelete(ca)}
+                          >
+                            <LuTrash2 size={11} />
+                          </IconButton>
+                        </Flex>
                       </Flex>
                       {ca.premium_share != null && ca.premium_share > 0 && (
                         <Text fontSize="11px" color="#64748B">Premi: {fmt(ca.premium_share)}</Text>
