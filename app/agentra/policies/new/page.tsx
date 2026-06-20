@@ -236,8 +236,8 @@ export default function NewPolicy() {
 
   const customerPremiumAmount = useMemo(() => {
     const premium = hasAutoFill ? covTotalPremium : rawIDR(form.premium_amount)
-    return premium + rawIDR(form.materai_amount) + rawIDR(form.biaya_polis) - commissionAmount - rawIDR(form.diskon)
-  }, [hasAutoFill, covTotalPremium, form.premium_amount, form.materai_amount, form.biaya_polis, form.diskon, commissionAmount])
+    return premium + rawIDR(form.materai_amount) + rawIDR(form.biaya_polis) - rawIDR(form.diskon)
+  }, [hasAutoFill, covTotalPremium, form.premium_amount, form.materai_amount, form.biaya_polis, form.diskon])
 
   const duration = useMemo(() => {
     if (!form.coverage_start || !form.coverage_end) return null
