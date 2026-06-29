@@ -508,16 +508,15 @@ export default function Policies() {
                   <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
                     Bulan (opsional)
                   </Text>
-                  <Input
+                  <input
                     type="month"
-                    fontSize="13px"
-                    color="#1C2833"
-                    border="1px solid"
-                    borderColor="#E2E8F0"
-                    borderRadius="8px"
-                    px="12px"
                     value={exportMonth}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExportMonth(e.target.value)}
+                    onChange={(e) => setExportMonth(e.target.value)}
+                    style={{
+                      fontSize: "13px", color: "#1C2833", border: "1px solid #E2E8F0",
+                      borderRadius: "8px", padding: "8px 12px", width: "100%",
+                      outline: "none", background: "white",
+                    }}
                   />
                   <Text fontSize="11px" color="#94A3B8">
                     Kosongkan untuk mengekspor semua polis
