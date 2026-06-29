@@ -420,6 +420,52 @@ export async function deleteCoverage(
     await req<unknown>('DELETE', `/policies/${policyId}/coverages/${coverageId}`, token)
 }
 
+// ── Export ────────────────────────────────────────────────────────────────
+
+export interface ExportPoliciesParams {
+    month?: string
+    expiry_month?: string
+    search?: string
+    customer_id?: string
+    product_type?: ApiProductType
+    insurer_id?: string
+    renewal_status?: ApiRenewalStatus
+    agent_id?: string
+}
+
+export async function exportPolicies(
+    token: string,
+    params: ExportPoliciesParams = {},
+): Promise<{ blob: Blob; filename: string }> {
+    const qs = new URLSearchParams()
+    if (params.month) qs.set('month', params.month)
+    if (params.expiry_month) qs.set('expiry_month', params.expiry_month)
+    if (params.search) qs.set('search', params.search)
+    if (params.customer_id) qs.set('customer_id', params.customer_id)
+    if (params.product_type) qs.set('product_type', params.product_type)
+    if (params.insurer_id) qs.set('insurer_id', params.insurer_id)
+    if (params.renewal_status) qs.set('renewal_status', params.renewal_status)
+    if (params.agent_id) qs.set('agent_id', params.agent_id)
+
+    const res = await fetch(`${BASE_URL}/api/v1/policies/export?${qs.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        const err: any = new Error((json as any).status_message || 'Export failed')
+        err.status = res.status
+        throw err
+    }
+
+    const blob = await res.blob()
+    const disposition = res.headers.get('Content-Disposition') ?? ''
+    const match = disposition.match(/filename="?([^";\r\n]+)"?/)
+    const filename = match?.[1] ?? (params.month ? `${params.month}.xlsx` : 'DAFTAR POLIS.xlsx')
+
+    return { blob, filename }
+}
+
 // ── Policy Logs ───────────────────────────────────────────────────────────
 
 export interface ApiPolicyLog {
