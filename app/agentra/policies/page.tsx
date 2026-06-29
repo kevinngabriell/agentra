@@ -2,7 +2,7 @@
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
-  Avatar, Badge, Box, Button, ButtonGroup, Flex, IconButton, Input,
+  Avatar, Badge, Box, Button, ButtonGroup, Checkbox, Dialog, Flex, IconButton, Input,
   NativeSelect, Pagination, Skeleton, Table, Text,
 } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
@@ -10,10 +10,13 @@ import { useEffect, useRef, useState } from "react"
 import {
   LuEye, LuPencil, LuFlame, LuCar, LuSettings, LuHospital, LuPlus,
   LuChevronLeft, LuChevronRight, LuFileStack, LuTrendingUp, LuTriangleAlert, LuSearch, LuX,
-  LuShip, LuPlane,
+  LuShip, LuPlane, LuDownload,
 } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
-import { getPolicies, type ApiPolicy, type ApiProductType, type ApiRenewalStatus } from "@/lib/api/policies"
+import {
+  getPolicies, exportPolicies,
+  type ApiPolicy, type ApiProductType, type ApiRenewalStatus,
+} from "@/lib/api/policies"
 
 const PAGE_SIZE = 10
 const SKELETON_ROWS = 6
@@ -142,6 +145,38 @@ export default function Policies() {
   const [error, setError]       = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
 
+  const [exportOpen, setExportOpen]           = useState(false)
+  const [exportMonth, setExportMonth]         = useState("")
+  const [exportApplyFilters, setExportApplyFilters] = useState(true)
+  const [exporting, setExporting]             = useState(false)
+  const [exportError, setExportError]         = useState<string | null>(null)
+
+  async function handleExport() {
+    const token = getAccessToken()
+    if (!token) return
+    setExporting(true)
+    setExportError(null)
+    try {
+      const { blob, filename } = await exportPolicies(token, {
+        ...(exportMonth ? { month: exportMonth } : {}),
+        ...(exportApplyFilters && debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(exportApplyFilters && productFilter ? { product_type: productFilter } : {}),
+        ...(exportApplyFilters && statusFilter ? { renewal_status: statusFilter } : {}),
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+      setExportOpen(false)
+    } catch (err: any) {
+      setExportError(err.message ?? "Gagal mengekspor data")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -252,13 +287,22 @@ export default function Policies() {
               </NativeSelect.Root>
             </Flex>
 
-            <Button
-              bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold" borderRadius="8px"
-              gap="6px" px="16px" ml="auto"
-              onClick={() => router.push("/agentra/policies/new")}
-            >
-              <LuPlus size={14} /> Tambah Polis Baru
-            </Button>
+            <Flex gap="8px" ml="auto">
+              <Button
+                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px"
+                fontWeight="semibold" borderRadius="8px" gap="6px" px="16px"
+                onClick={() => { setExportError(null); setExportOpen(true) }}
+              >
+                <LuDownload size={14} /> Export Excel
+              </Button>
+              <Button
+                bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold" borderRadius="8px"
+                gap="6px" px="16px"
+                onClick={() => router.push("/agentra/policies/new")}
+              >
+                <LuPlus size={14} /> Tambah Polis Baru
+              </Button>
+            </Flex>
           </Flex>
 
           {/* Stats */}
@@ -442,6 +486,86 @@ export default function Policies() {
       </Box>
 
       <MobileBottomNav />
+
+      {/* ── Export Dialog ──────────────────────────────────────────────────── */}
+      <Dialog.Root
+        open={exportOpen}
+        onOpenChange={({ open }) => { if (!open) { setExportOpen(false); setExportError(null) } }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.45)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="16px" maxW="400px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                Export Polis ke Excel
+              </Dialog.Title>
+            </Dialog.Header>
+
+            <Dialog.Body px="24px" py="16px">
+              <Flex flexDir="column" gap="16px">
+
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                    Bulan (opsional)
+                  </Text>
+                  <Input
+                    type="month"
+                    fontSize="13px"
+                    color="#1C2833"
+                    border="1px solid"
+                    borderColor="#E2E8F0"
+                    borderRadius="8px"
+                    px="12px"
+                    value={exportMonth}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExportMonth(e.target.value)}
+                  />
+                  <Text fontSize="11px" color="#94A3B8">
+                    Kosongkan untuk mengekspor semua polis
+                  </Text>
+                </Flex>
+
+                <Flex align="center" gap="8px">
+                  <Checkbox.Root
+                    checked={exportApplyFilters}
+                    onCheckedChange={({ checked }) => setExportApplyFilters(!!checked)}
+                  >
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control
+                      w="16px" h="16px" borderRadius="4px" borderColor="#CBD5E1"
+                      bg={exportApplyFilters ? "#1A3557" : "white"}
+                    >
+                      <Checkbox.Indicator color="white" />
+                    </Checkbox.Control>
+                    <Checkbox.Label fontSize="13px" color="#374151">
+                      Terapkan filter aktif (produk, status)
+                    </Checkbox.Label>
+                  </Checkbox.Root>
+                </Flex>
+
+                {exportError && (
+                  <Text fontSize="13px" color="#DC2626">{exportError}</Text>
+                )}
+              </Flex>
+            </Dialog.Body>
+
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px"
+                borderRadius="8px" onClick={() => setExportOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button
+                bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold"
+                borderRadius="8px" gap="6px" loading={exporting}
+                onClick={handleExport}
+              >
+                <LuDownload size={14} /> Download
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
     </Box>
   )
 }
