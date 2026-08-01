@@ -64,6 +64,25 @@ export interface NotificationSettingsPayload {
     monthly_digest_day?: number
     monthly_digest_time?: string
     whatsapp_target_number?: string
+    renewal_reminder_days?: number
+    renewal_wa_message_template?: string
+}
+
+export interface NotificationSettings {
+    setting_id: string
+    company_id: string
+    user_id: string
+    daily_digest_enabled: boolean
+    daily_digest_time: string | null
+    daily_days_of_week: string | null
+    monthly_digest_enabled: boolean
+    monthly_digest_day: number | null
+    monthly_digest_time: string | null
+    whatsapp_target_number: string | null
+    renewal_reminder_days: number
+    renewal_wa_message_template: string | null
+    updated_by?: string
+    updated_at?: string
 }
 
 export async function updateNotificationSettings(
@@ -71,4 +90,18 @@ export async function updateNotificationSettings(
     data: NotificationSettingsPayload,
 ): Promise<void> {
     await apiReq<unknown>('PUT', '/users/me/notification-settings', token, data as unknown as Record<string, unknown>)
+}
+
+export async function getNotificationSettings(token: string): Promise<NotificationSettings | null> {
+    const res = await fetch(`${BASE_URL}/api/v1/users/me/notification-settings`, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    })
+    const json = await res.json()
+    if (res.status === 404) return null
+    if (!res.ok) {
+        const err: any = new Error(json.status_message || 'Request failed')
+        err.status = res.status
+        throw err
+    }
+    return json.data as NotificationSettings
 }

@@ -2,13 +2,13 @@
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
-  Box, Button, Dialog, Field, Flex, Input, NativeSelect, Skeleton, Switch, Tabs, Text,
+  Box, Button, Dialog, Field, Flex, Input, NativeSelect, Skeleton, Switch, Tabs, Text, Textarea,
 } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LuUser, LuLock, LuBell, LuCheck, LuBuilding2, LuChevronDown, LuChevronUp, LuPencil, LuTrash2, LuPlus, LuX, LuCircle, LuPackage } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
-import { getMyProfile, updateProfile, changePassword, updateNotificationSettings, type UserProfile } from "@/lib/api/user"
+import { getMyProfile, updateProfile, changePassword, updateNotificationSettings, getNotificationSettings, type UserProfile } from "@/lib/api/user"
 import {
   getInsurers, createInsurer, updateInsurer, deleteInsurer,
   getInsurerProducts, upsertInsurerProduct,
@@ -225,8 +225,31 @@ function NotificationsTab() {
   const [monthlyEnabled, setMonthlyEnabled] = useState(false)
   const [monthlyDay, setMonthlyDay]       = useState(1)
   const [monthlyTime, setMonthlyTime]     = useState("09:00")
+  const [renewalReminderDays, setRenewalReminderDays] = useState(30)
+  const [renewalWaTemplate, setRenewalWaTemplate]     = useState("")
+  const [loading, setLoading]             = useState(true)
   const [saving, setSaving]               = useState(false)
   const [feedback, setFeedback]           = useState<{ type: "success" | "error"; msg: string } | null>(null)
+
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!token) { setLoading(false); return }
+    getNotificationSettings(token)
+      .then((s) => {
+        if (!s) return
+        setWaNumber(s.whatsapp_target_number ?? "")
+        setDailyEnabled(s.daily_digest_enabled)
+        setDailyTime((s.daily_digest_time ?? "08:00").slice(0, 5))
+        setDailyDays(s.daily_days_of_week ?? "1,2,3,4,5")
+        setMonthlyEnabled(s.monthly_digest_enabled)
+        setMonthlyDay(s.monthly_digest_day ?? 1)
+        setMonthlyTime((s.monthly_digest_time ?? "09:00").slice(0, 5))
+        setRenewalReminderDays(s.renewal_reminder_days ?? 30)
+        setRenewalWaTemplate(s.renewal_wa_message_template ?? "")
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   async function handleSave() {
     const token = getAccessToken()
@@ -243,6 +266,8 @@ function NotificationsTab() {
         monthly_digest_enabled: monthlyEnabled,
         monthly_digest_day: monthlyDay,
         monthly_digest_time: monthlyTime,
+        renewal_reminder_days: renewalReminderDays,
+        renewal_wa_message_template: renewalWaTemplate,
       })
       setFeedback({ type: "success", msg: "Pengaturan notifikasi berhasil disimpan." })
     } catch (err: any) {
@@ -263,6 +288,15 @@ function NotificationsTab() {
   }
 
   const activeDays = dailyDays.split(",").filter(Boolean).map(Number)
+
+  if (loading) {
+    return (
+      <Flex flexDir="column" gap="16px">
+        <Skeleton h="140px" borderRadius="12px" />
+        <Skeleton h="200px" borderRadius="12px" />
+      </Flex>
+    )
+  }
 
   return (
     <Flex flexDir="column" gap="16px">
@@ -367,6 +401,37 @@ function NotificationsTab() {
             </Field.Root>
           </Flex>
         )}
+      </Box>
+
+      {/* Renewal reminder */}
+      <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
+        <Flex borderLeft="4px solid" borderColor="#F59E0B" pl="12px" mb="20px">
+          <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Pengingat Perpanjangan</Text>
+        </Flex>
+        <Flex flexDir="column" gap="16px">
+          <Field.Root maxW="200px">
+            <Field.Label {...lbl}>KIRIM PENGINGAT (HARI SEBELUM JATUH TEMPO)</Field.Label>
+            <Input type="number" min={1} max={90} value={renewalReminderDays}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewalReminderDays(Number(e.target.value))}
+              fontSize="14px" />
+            <Field.HelperText fontSize="11px" color="#94A3B8">
+              Digest WhatsApp harian ke agen untuk polis yang jatuh tempo dalam N hari ini (1–90, default 30)
+            </Field.HelperText>
+          </Field.Root>
+
+          <Field.Root>
+            <Field.Label {...lbl}>TEMPLATE PESAN WHATSAPP DEFAULT</Field.Label>
+            <Textarea
+              rows={4} fontSize="14px"
+              placeholder="Halo {customer_name}, polis Anda {policy_number} akan berakhir {days_until_expiry} hari lagi. Konfirmasi perpanjangan ya!"
+              value={renewalWaTemplate}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRenewalWaTemplate(e.target.value)}
+            />
+            <Field.HelperText fontSize="11px" color="#94A3B8">
+              Dipakai saat tombol &ldquo;Kirim WhatsApp&rdquo; di halaman Perpanjangan diklik tanpa pesan kustom. Placeholder: {"{customer_name} {policy_number} {product_type} {insurer_name} {coverage_end} {days_until_expiry}"}. Kosongkan untuk memakai template bawaan sistem.
+            </Field.HelperText>
+          </Field.Root>
+        </Flex>
       </Box>
 
       {feedback && <Toast type={feedback.type} message={feedback.msg} />}

@@ -52,6 +52,7 @@ export interface ApiPolicy {
     insurer_name: string
     insurer_short_name?: string
     object_insured?: string
+    insured_name?: string | null
     notes?: string
     policy_year?: number
 }
@@ -135,6 +136,7 @@ export interface CreatePolicyPayload {
     issuing_agent_id?: string
     previous_policy_id?: string
     object_insured?: string
+    insured_name?: string | null
     coverage_notes?: string
     notes?: string
 }
@@ -297,6 +299,42 @@ export async function deletePolicy(
     policyId: string,
 ): Promise<void> {
     await req<unknown>('DELETE', `/policies/${policyId}`, token)
+}
+
+export interface RenewPolicyPayload {
+    policy_number: string
+    coverage_start?: string
+    coverage_end?: string
+    commission_rate?: number
+    commission_tax_rate?: number
+    insured_name?: string
+    sum_insured?: number
+    premium_amount?: number
+    materai_amount?: number
+    biaya_polis?: number
+    diskon?: number
+    object_insured?: string
+    coverage_notes?: string
+    construction_class?: ApiConstructionClass | null
+    notes?: string
+}
+
+export interface RenewPolicyResult {
+    policy_id: string
+    policy_number: string
+    previous_policy_id: string
+    coverage_start: string
+    coverage_end: string
+}
+
+export async function renewPolicy(
+    token: string,
+    policyId: string,
+    data: RenewPolicyPayload,
+): Promise<RenewPolicyResult> {
+    return req<RenewPolicyResult>(
+        'POST', `/policies/${policyId}/renew`, token, data as unknown as Record<string, unknown>,
+    )
 }
 
 export async function updateRenewalStatus(

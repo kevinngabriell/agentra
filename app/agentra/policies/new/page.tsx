@@ -140,7 +140,7 @@ const EMPTY = {
   commission_rate: "",
   commission_tax_rate: "2.5",  // displayed as %, stored as decimal on submit
   construction_class: "",
-  policy_year: "1", object_insured: "", coverage_notes: "", notes: "",
+  policy_year: "1", object_insured: "", insured_name: "", coverage_notes: "", notes: "",
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -451,6 +451,7 @@ export default function NewPolicy() {
           : null,
         policy_year:         Number(form.policy_year) || 1,
         object_insured:      form.object_insured  || undefined,
+        insured_name:        form.insured_name    || undefined,
         coverage_notes:      form.coverage_notes  || undefined,
         notes:               form.notes           || undefined,
       }
@@ -723,6 +724,15 @@ export default function NewPolicy() {
                           placeholder="Mis: Honda Civic 2020 B 1234 ABC"
                           value={form.object_insured}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("object_insured", e.target.value)}
+                        />
+                      </FField>
+
+                      <FField label="Nama Tertanggung" hint="Opsional — kosongkan untuk memakai nama nasabah">
+                        <Input
+                          {...INPUT}
+                          placeholder="Kosongkan untuk memakai nama nasabah"
+                          value={form.insured_name}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("insured_name", e.target.value)}
                         />
                       </FField>
 

@@ -133,7 +133,7 @@ export default function PolicyDetail() {
     sum_insured: '', premium_amount: '', materai_amount: '',
     biaya_polis: '', diskon: '',
     commission_rate: '', commission_tax_rate: '',
-    coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
+    coverage_end: '', object_insured: '', insured_name: '', coverage_notes: '', notes: '',
     construction_class: '',
   })
   const [koreksiSaving, setKoreksiSaving] = useState(false)
@@ -150,7 +150,7 @@ export default function PolicyDetail() {
     sum_insured: '', premium_amount: '', materai_amount: '',
     biaya_polis: '', diskon: '',
     commission_rate: '', commission_tax_rate: '',
-    coverage_end: '', object_insured: '', coverage_notes: '', notes: '',
+    coverage_end: '', object_insured: '', insured_name: '', coverage_notes: '', notes: '',
     construction_class: '',
   })
   const [endorseSaving, setEndorseSaving] = useState(false)
@@ -284,6 +284,7 @@ export default function PolicyDetail() {
       commission_tax_rate: String((policy.commission_tax_rate ?? 0) * 100),
       coverage_end:        policy.coverage_end,
       object_insured:      policy.object_insured ?? '',
+      insured_name:        policy.insured_name ?? '',
       coverage_notes:      policy.coverage_notes ?? '',
       notes:               '',
       construction_class:  policy.construction_class ?? '',
@@ -313,6 +314,7 @@ export default function PolicyDetail() {
           : null,
         coverage_end:        endorseForm.coverage_end,
         object_insured:      endorseForm.object_insured || undefined,
+        insured_name:        endorseForm.insured_name || null,
         coverage_notes:      endorseForm.coverage_notes || undefined,
         notes:               endorseForm.notes || undefined,
       })
@@ -341,6 +343,7 @@ export default function PolicyDetail() {
       commission_tax_rate: String((policy.commission_tax_rate ?? 0) * 100),
       coverage_end:        policy.coverage_end,
       object_insured:      policy.object_insured ?? '',
+      insured_name:        policy.insured_name ?? '',
       coverage_notes:      policy.coverage_notes ?? '',
       notes:               '',
       construction_class:  policy.construction_class ?? '',
@@ -371,6 +374,7 @@ export default function PolicyDetail() {
           : null,
         coverage_end:        koreksiFo.coverage_end,
         object_insured:      koreksiFo.object_insured || undefined,
+        insured_name:        koreksiFo.insured_name || null,
         coverage_notes:      koreksiFo.coverage_notes || undefined,
         notes:               koreksiFo.notes || undefined,
       })
@@ -943,6 +947,18 @@ export default function PolicyDetail() {
                       />
                     </Flex>
                     <Flex flexDir="column" gap="4px">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Nama Tertanggung (opsional)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833"
+                        placeholder={policy?.customer?.display_name ?? policy?.customer_name ?? "Kosongkan untuk memakai nama nasabah"}
+                        value={endorseForm.insured_name}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setEndorseForm((f) => ({ ...f, insured_name: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px">
                       <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Catatan Coverage</Text>
                       <Input
                         bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
@@ -1261,6 +1277,18 @@ export default function PolicyDetail() {
                         value={koreksiFo.object_insured}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setKoreksiFo((f) => ({ ...f, object_insured: e.target.value }))
+                        }
+                      />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px">
+                      <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Nama Tertanggung (opsional)</Text>
+                      <Input
+                        bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                        fontSize="13px" color="#1C2833"
+                        placeholder={policy?.customer?.display_name ?? policy?.customer_name ?? "Kosongkan untuk memakai nama nasabah"}
+                        value={koreksiFo.insured_name}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setKoreksiFo((f) => ({ ...f, insured_name: e.target.value }))
                         }
                       />
                     </Flex>
@@ -1678,6 +1706,15 @@ export default function PolicyDetail() {
                 <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{policy.customer?.display_name ?? policy.customer_name}</Text>
                 {policy.customer?.personal_address && (
                   <Text color="#64748B" fontSize="12px">{policy.customer.personal_address}</Text>
+                )}
+              </Flex>
+              <Flex flexDir="column" gap="4px" flex="1" minW="160px">
+                <Text {...lbl}>NAMA TERTANGGUNG</Text>
+                <Text color="#1C2833" fontSize="14px">
+                  {policy.insured_name || policy.customer?.display_name || policy.customer_name}
+                </Text>
+                {!policy.insured_name && (
+                  <Text color="#94A3B8" fontSize="11px">Memakai nama nasabah (tidak ada override)</Text>
                 )}
               </Flex>
               <Flex flexDir="column" gap="4px" flex="1" minW="160px">

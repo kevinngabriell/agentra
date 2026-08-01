@@ -105,3 +105,27 @@ export async function getRenewalStats(
     const qs = month ? `?month=${month}` : ''
     return req<RenewalStatsResponse>('GET', `/renewals/stats${qs}`, token)
 }
+
+export interface SendRenewalWhatsappResult {
+    message: string
+    followup_id: string
+}
+
+export async function sendRenewalWhatsapp(
+    token: string,
+    policyId: string,
+    message?: string,
+): Promise<SendRenewalWhatsappResult> {
+    const res = await fetch(`${BASE_URL}/api/v1/renewals/${policyId}/send-whatsapp`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(message !== undefined ? { message } : {}),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+        const err: any = new Error(json.status_message || 'Gagal mengirim WhatsApp')
+        err.status = res.status
+        throw err
+    }
+    return json.data as SendRenewalWhatsappResult
+}

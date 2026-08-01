@@ -2,13 +2,13 @@
 
 import { Sidebar, MobileHeader, MobileBottomNav, TopBar } from "@/components/layout";
 import { getAccessToken } from "@/lib/auth/session";
-import { getCustomerDetail, createCustomer, updateCustomer } from "@/lib/api/customers";
+import { getCustomerDetail, createCustomer, updateCustomer, getCustomerPolicies, type ApiCustomerPolicy } from "@/lib/api/customers";
 import {
-    Box, Button, Card, Checkbox, Field, FileUpload, Flex, Icon, Image,
-    Input, List, NativeSelect, SimpleGrid, Skeleton, Tabs, Text, Textarea,
+    Badge, Box, Button, Card, Checkbox, Field, FileUpload, Flex, Icon, Image,
+    Input, List, NativeSelect, SimpleGrid, Skeleton, Table, Tabs, Text, Textarea,
 } from "@chakra-ui/react";
-import { FaInfoCircle, FaArrowRight, FaRegFileImage, FaArrowLeft } from "react-icons/fa";
-import { LuUpload, LuUser } from "react-icons/lu";
+import { FaInfoCircle, FaArrowRight, FaRegFileImage, FaArrowLeft, FaEye } from "react-icons/fa";
+import { LuUpload, LuUser, LuFileText, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import verifiedImg from "@/assets/verified.png";
@@ -115,6 +115,157 @@ const initCorp = () => ({
 function ErrText({ msg }: { msg?: string }) {
     if (!msg) return null
     return <Field.ErrorText fontSize="11px">{msg}</Field.ErrorText>
+}
+
+// ─── Customer policies section (list 5.10) ───────────────────────────────────
+
+const POLICY_PRODUCT_LABELS: Record<string, string> = {
+    fire:       "Kebakaran",
+    motorcycle: "Motor",
+    car:        "Kendaraan",
+    travel:     "Perjalanan",
+    cargo:      "Kargo",
+    other:      "Lainnya",
+    kecelakaan: "Kecelakaan",
+    aep:        "AEP",
+}
+
+const RENEWAL_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+    pending:   { label: "Pending",     bg: "#FEF3C7", color: "#D97706" },
+    renewed:   { label: "Diperbarui",  bg: "#DCFCE7", color: "#16A34A" },
+    lapsed:    { label: "Lapse",       bg: "#FEE2E2", color: "#DC2626" },
+    cancelled: { label: "Dibatalkan",  bg: "#F1F5F9", color: "#64748B" },
+}
+
+function fmtIDR(n: number) {
+    return "Rp " + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+}
+
+function fmtDate(iso: string) {
+    return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
+}
+
+const POL_PAGE_SIZE = 5
+
+function CustomerPoliciesSection({ customerId }: { customerId: string }) {
+    const router = useRouter()
+    const [policies, setPolicies] = useState<ApiCustomerPolicy[]>([])
+    const [page, setPage]         = useState(1)
+    const [total, setTotal]       = useState(0)
+    const [loading, setLoading]   = useState(true)
+    const [error, setError]       = useState<string | null>(null)
+
+    useEffect(() => {
+        const token = getAccessToken()
+        if (!token) return
+        setLoading(true)
+        setError(null)
+        getCustomerPolicies(token, customerId, { page, limit: POL_PAGE_SIZE })
+            .then((res) => {
+                setPolicies(res.data ?? [])
+                setTotal(res.pagination?.total ?? 0)
+            })
+            .catch((err) => setError(err.message ?? "Gagal memuat polis nasabah"))
+            .finally(() => setLoading(false))
+    }, [customerId, page])
+
+    const totalPages = Math.max(1, Math.ceil(total / POL_PAGE_SIZE))
+
+    return (
+        <Card.Root borderRadius="12px" border="1px solid" borderColor="#F1F5F9">
+            <Card.Body p="0">
+                <Flex justify="space-between" align="center" px="32px" pt="24px" pb={loading || policies.length > 0 ? "16px" : "24px"}>
+                    <Flex gap="10px" align="center">
+                        <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuFileText size={18} /></Box>
+                        <Flex flexDir="column">
+                            <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Polis Dimiliki</Text>
+                            <Text color="#5D6D7E" fontSize="12px">{total} polis terdaftar atas nama nasabah ini</Text>
+                        </Flex>
+                    </Flex>
+                </Flex>
+
+                {error && (
+                    <Box px="32px" pb="20px">
+                        <Text fontSize="13px" color="#DC2626">{error}</Text>
+                    </Box>
+                )}
+
+                {!error && loading && (
+                    <Flex flexDir="column" gap="8px" px="32px" pb="24px">
+                        {[1, 2, 3].map((i) => <Skeleton key={i} h="44px" borderRadius="8px" />)}
+                    </Flex>
+                )}
+
+                {!error && !loading && policies.length === 0 && (
+                    <Box px="32px" pb="24px">
+                        <Text color="#94A3B8" fontSize="13px">Nasabah ini belum memiliki polis.</Text>
+                    </Box>
+                )}
+
+                {!error && !loading && policies.length > 0 && (
+                    <>
+                        <Table.Root>
+                            <Table.Header>
+                                <Table.Row bg="#F8FAFC">
+                                    {["NO. POLIS", "PRODUK", "PERIODE", "PREMI", "STATUS", ""].map((h) => (
+                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="10px">
+                                            {h}
+                                        </Table.ColumnHeader>
+                                    ))}
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {policies.map((p) => (
+                                    <Table.Row key={p.policy_id} borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
+                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="12px" fontFamily="mono">{p.policy_number}</Table.Cell>
+                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="13px">
+                                            {POLICY_PRODUCT_LABELS[p.product_type] ?? p.product_type}
+                                            {p.insurer_short_name ? ` · ${p.insurer_short_name}` : ""}
+                                        </Table.Cell>
+                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="12px">
+                                            {fmtDate(p.coverage_start)} – {fmtDate(p.coverage_end)}
+                                        </Table.Cell>
+                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="13px" fontWeight="medium">
+                                            {fmtIDR(p.premium_amount)}
+                                        </Table.Cell>
+                                        <Table.Cell px="20px" py="12px">
+                                            <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" fontWeight="medium"
+                                                bg={RENEWAL_STATUS_CONFIG[p.renewal_status]?.bg ?? "#F1F5F9"}
+                                                color={RENEWAL_STATUS_CONFIG[p.renewal_status]?.color ?? "#64748B"}>
+                                                {RENEWAL_STATUS_CONFIG[p.renewal_status]?.label ?? p.renewal_status}
+                                            </Badge>
+                                        </Table.Cell>
+                                        <Table.Cell px="20px" py="12px" textAlign="end">
+                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="12px"
+                                                onClick={() => router.push(`/agentra/policies/${p.policy_id}`)}>
+                                                <FaEye size={12} /> Lihat
+                                            </Button>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
+
+                        {totalPages > 1 && (
+                            <Flex justify="space-between" align="center" px="32px" py="14px" borderTop="1px solid" borderColor="#F1F5F9">
+                                <Text color="#64748B" fontSize="12px">Halaman {page} dari {totalPages}</Text>
+                                <Flex gap="6px">
+                                    <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151"
+                                        disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                                        <LuChevronLeft size={13} />
+                                    </Button>
+                                    <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151"
+                                        disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                                        <LuChevronRight size={13} />
+                                    </Button>
+                                </Flex>
+                            </Flex>
+                        )}
+                    </>
+                )}
+            </Card.Body>
+        </Card.Root>
+    )
 }
 
 // ─── Main form ────────────────────────────────────────────────────────────────
@@ -811,6 +962,10 @@ function CustomerDetailForm() {
                         </Flex>
                     </Tabs.Content>
                 </Tabs.Root>
+
+                {isEdit && customerId && (
+                    <CustomerPoliciesSection customerId={customerId} />
+                )}
             </Flex>
         </Box>
     )
