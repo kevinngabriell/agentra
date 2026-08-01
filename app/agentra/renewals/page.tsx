@@ -1,13 +1,14 @@
 "use client"
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
-import { Avatar, Badge, Box, Button, Flex, Input, Skeleton, Table, Text } from "@chakra-ui/react"
+import { Avatar, Badge, Box, Button, Dialog, Flex, Input, Skeleton, Table, Text, Textarea } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LuSearch, LuCalendar, LuList, LuChevronDown, LuChevronUp, LuBell, LuClock, LuCircleCheck, LuRefreshCw } from "react-icons/lu"
 import { FaWhatsapp } from "react-icons/fa"
 import { getAccessToken } from "@/lib/auth/session"
-import { getRenewals, getRenewalStats, type ApiRenewal, type RenewalStatsResponse } from "@/lib/api/renewals"
+import { getRenewals, getRenewalStats, sendRenewalWhatsapp, type ApiRenewal, type RenewalStatsResponse } from "@/lib/api/renewals"
+import { renewPolicy } from "@/lib/api/policies"
 
 type Urgency = "urgent" | "followup" | "done"
 
@@ -92,7 +93,77 @@ export default function Renewals() {
   const [loading, setLoading] = useState(true)
   const [error, setError]   = useState<string | null>(null)
 
+  // Send WhatsApp (RN-003) dialog state
+  const [waTarget, setWaTarget]   = useState<ApiRenewal | null>(null)
+  const [waMessage, setWaMessage] = useState("")
+  const [waSending, setWaSending] = useState(false)
+  const [waError, setWaError]     = useState<string | null>(null)
+  const [waSuccess, setWaSuccess] = useState<string | null>(null)
+
+  // Renew policy (6.12) dialog state
+  const [renewTarget, setRenewTarget] = useState<ApiRenewal | null>(null)
+  const [renewForm, setRenewForm]     = useState({ policy_number: "", coverage_start: "", coverage_end: "" })
+  const [renewSaving, setRenewSaving] = useState(false)
+  const [renewError, setRenewError]   = useState<string | null>(null)
+
   const toggle = (key: string) => setOpen((p) => ({ ...p, [key]: !p[key] }))
+
+  function openWaDialog(r: ApiRenewal) {
+    setWaTarget(r)
+    setWaMessage("")
+    setWaError(null)
+    setWaSuccess(null)
+  }
+
+  async function handleSendWhatsapp() {
+    const token = getAccessToken()
+    if (!token || !waTarget) return
+    setWaSending(true)
+    setWaError(null)
+    try {
+      await sendRenewalWhatsapp(token, waTarget.policy_id, waMessage.trim() || undefined)
+      setWaSuccess("Pesan WhatsApp berhasil dikirim.")
+      setRenewals((prev) => prev.map((r) => r.policy_id === waTarget.policy_id
+        ? { ...r, last_follow_up_status: "contacted", last_follow_up_date: new Date().toISOString().slice(0, 10) }
+        : r))
+    } catch (err: any) {
+      setWaError(err.message ?? "Gagal mengirim pesan WhatsApp")
+    } finally {
+      setWaSending(false)
+    }
+  }
+
+  function openRenewDialog(r: ApiRenewal) {
+    setRenewTarget(r)
+    setRenewForm({ policy_number: "", coverage_start: "", coverage_end: "" })
+    setRenewError(null)
+  }
+
+  async function handleRenew() {
+    const token = getAccessToken()
+    if (!token || !renewTarget) return
+    if (!renewForm.policy_number.trim()) {
+      setRenewError("Nomor polis baru wajib diisi")
+      return
+    }
+    setRenewSaving(true)
+    setRenewError(null)
+    try {
+      await renewPolicy(token, renewTarget.policy_id, {
+        policy_number: renewForm.policy_number.trim(),
+        coverage_start: renewForm.coverage_start || undefined,
+        coverage_end: renewForm.coverage_end || undefined,
+      })
+      setRenewals((prev) => prev.map((r) => r.policy_id === renewTarget.policy_id
+        ? { ...r, renewal_status: "renewed" }
+        : r))
+      setRenewTarget(null)
+    } catch (err: any) {
+      setRenewError(err.message ?? "Gagal memperpanjang polis")
+    } finally {
+      setRenewSaving(false)
+    }
+  }
 
   useEffect(() => {
     const token = getAccessToken()
@@ -264,16 +335,22 @@ export default function Renewals() {
                                 )}
                               </Table.Cell>
                               <Table.Cell px="20px" py="12px">
-                                <Flex gap="6px">
+                                <Flex gap="6px" flexWrap="wrap">
                                   {key !== "done" && (
                                     <Button size="sm" bg="#1A3557" color="white" fontSize="12px" fontWeight="semibold" borderRadius="8px" px="14px"
                                       onClick={() => router.push(`/agentra/policies/${r.policy_id}`)}>
                                       Follow Up
                                     </Button>
                                   )}
+                                  {r.renewal_status === "pending" && (
+                                    <Button size="sm" variant="outline" borderColor="#16A34A" color="#16A34A" fontSize="12px" borderRadius="8px" px="14px" gap="6px"
+                                      onClick={() => openRenewDialog(r)}>
+                                      <LuRefreshCw size={12} /> Perpanjang
+                                    </Button>
+                                  )}
                                   {r.customer_whatsapp && (
                                     <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="12px" borderRadius="8px" px="14px" gap="6px"
-                                      onClick={() => window.open(`https://wa.me/${r.customer_whatsapp.replace(/\D/g, "")}`, "_blank")}>
+                                      onClick={() => openWaDialog(r)}>
                                       <FaWhatsapp color="#25D366" size={13} /> WhatsApp
                                     </Button>
                                   )}
@@ -299,6 +376,135 @@ export default function Renewals() {
       </Box>
 
       <MobileBottomNav />
+
+      {/* Send WhatsApp dialog (RN-003) */}
+      <Dialog.Root
+        open={waTarget !== null}
+        onOpenChange={(d) => { if (!d.open && !waSending) setWaTarget(null) }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" p="0" maxW="460px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                Kirim WhatsApp Perpanjangan
+              </Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Text color="#5D6D7E" fontSize="13px" mb="12px">
+                Kepada <Text as="span" fontWeight="semibold" color="#1C2833">{waTarget?.customer_name}</Text> — polis {waTarget?.policy_number}
+              </Text>
+              <Text fontSize="12px" color="#64748B" fontWeight="medium" mb="6px">
+                Pesan (opsional — kosongkan untuk memakai template default)
+              </Text>
+              <Textarea
+                rows={4} fontSize="13px"
+                placeholder="Halo {customer_name}, polis Anda {policy_number} akan berakhir {days_until_expiry} hari lagi..."
+                value={waMessage}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setWaMessage(e.target.value)}
+              />
+              {waError && (
+                <Text mt="10px" fontSize="12px" color="#DC2626">{waError}</Text>
+              )}
+              {waSuccess && (
+                <Text mt="10px" fontSize="12px" color="#16A34A">{waSuccess}</Text>
+              )}
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" disabled={waSending}
+                onClick={() => setWaTarget(null)}
+              >
+                Tutup
+              </Button>
+              <Button
+                flex="1" bg="#25D366" color="white" fontSize="14px" borderRadius="8px" gap="6px"
+                loading={waSending} loadingText="Mengirim..."
+                onClick={handleSendWhatsapp}
+              >
+                <FaWhatsapp /> Kirim
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+
+      {/* Renew policy dialog (6.12) */}
+      <Dialog.Root
+        open={renewTarget !== null}
+        onOpenChange={(d) => { if (!d.open && !renewSaving) setRenewTarget(null) }}
+      >
+        <Dialog.Backdrop bg="rgba(0,0,0,0.5)" />
+        <Dialog.Positioner>
+          <Dialog.Content bg="white" borderRadius="12px" p="0" maxW="460px" w="90vw" shadow="xl">
+            <Dialog.Header px="24px" pt="24px" pb="0">
+              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                Perpanjang Polis
+              </Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body px="24px" py="16px">
+              <Text color="#5D6D7E" fontSize="13px" mb="16px">
+                {renewTarget?.customer_name} — polis lama {renewTarget?.policy_number}
+              </Text>
+
+              <Flex flexDir="column" gap="12px">
+                <Flex flexDir="column" gap="4px">
+                  <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
+                    Nomor Polis Baru <Text as="span" color="#DC2626">*</Text>
+                  </Text>
+                  <Input
+                    fontSize="13px" placeholder="01.08.2027.001"
+                    value={renewForm.policy_number}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewForm((f) => ({ ...f, policy_number: e.target.value }))}
+                  />
+                </Flex>
+                <Flex gap="12px">
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Mulai Periode</Text>
+                    <Input
+                      type="date" fontSize="13px"
+                      value={renewForm.coverage_start}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewForm((f) => ({ ...f, coverage_start: e.target.value }))}
+                    />
+                  </Flex>
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Akhir Periode</Text>
+                    <Input
+                      type="date" fontSize="13px"
+                      value={renewForm.coverage_end}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewForm((f) => ({ ...f, coverage_end: e.target.value }))}
+                    />
+                  </Flex>
+                </Flex>
+                <Text fontSize="11px" color="#94A3B8">
+                  Kosongkan tanggal untuk otomatis melanjutkan dari polis lama (akhir periode = mulai + 365 hari). Rate komisi, item pertanggungan, dan data lain akan disalin dari polis lama dan bisa diubah lagi di halaman detail polis.
+                </Text>
+              </Flex>
+
+              {renewError && (
+                <Text mt="12px" fontSize="12px" color="#DC2626">{renewError}</Text>
+              )}
+            </Dialog.Body>
+            <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
+              <Button
+                flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
+                fontSize="14px" borderRadius="8px" disabled={renewSaving}
+                onClick={() => setRenewTarget(null)}
+              >
+                Batal
+              </Button>
+              <Button
+                flex="1" bg="#16A34A" color="white" fontSize="14px" borderRadius="8px"
+                loading={renewSaving} loadingText="Memproses..."
+                onClick={handleRenew}
+              >
+                Perpanjang
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
     </Box>
   )
 }

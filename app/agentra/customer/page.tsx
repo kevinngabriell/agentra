@@ -2,7 +2,7 @@
 
 import { MobileBottomNav, MobileHeader, Sidebar, TopBar } from "@/components/layout";
 import { getAccessToken } from "@/lib/auth/session";
-import { getCustomers, deleteCustomer, type ApiCustomer, type ApiCustomerStatus, type ApiCustomerType } from "@/lib/api/customers";
+import { getCustomers, deleteCustomer, exportCustomers, type ApiCustomer, type ApiCustomerStatus, type ApiCustomerType } from "@/lib/api/customers";
 import {
   Avatar,
   Badge,
@@ -127,6 +127,8 @@ export default function Customer() {
   const [customerToDelete, setCustomerToDelete] = useState<ApiCustomer | null>(null)
   const [deleting, setDeleting]                 = useState(false)
   const [deleteErrorMsg, setDeleteErrorMsg]     = useState<string>("")
+  const [exporting, setExporting]               = useState(false)
+  const [exportErrorMsg, setExportErrorMsg]     = useState<string>("")
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -186,6 +188,30 @@ export default function Customer() {
       setDeleteErrorMsg(friendly)
     } finally {
       setDeleting(false)
+    }
+  }
+
+  async function handleExport() {
+    const token = getAccessToken()
+    if (!token) { router.push("/auth/login"); return }
+    setExporting(true)
+    setExportErrorMsg("")
+    try {
+      const { blob, filename } = await exportCustomers(token, {
+        params: debouncedQuery || undefined,
+        customer_type: filterType || undefined,
+        status: filterStatus || undefined,
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err: any) {
+      setExportErrorMsg(err.status === 404 ? "Tidak ada nasabah yang cocok untuk diekspor" : (err.message ?? "Gagal mengekspor data nasabah"))
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -342,7 +368,11 @@ export default function Customer() {
                   </Popover.Positioner>
                 </Popover.Root>
 
-                <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="13px" gap="6px">
+                <Button
+                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="13px" gap="6px"
+                  loading={exporting} loadingText="Mengekspor..."
+                  onClick={handleExport}
+                >
                   <TbFileExport size={14} />
                   Ekspor
                 </Button>
@@ -357,6 +387,12 @@ export default function Customer() {
                 </Button>
               </Flex>
             </Flex>
+
+            {exportErrorMsg && (
+              <Flex px="20px" py="10px" bg="#FEF2F2" borderBottom="1px solid" borderColor="#FECACA">
+                <Text fontSize="13px" color="#DC2626">{exportErrorMsg}</Text>
+              </Flex>
+            )}
 
             {/* Empty state — inside the card, no table rendered */}
             {isEmpty && (

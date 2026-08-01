@@ -207,6 +207,104 @@ export async function importCustomers(token: string, file: File): Promise<Import
     return json.data as ImportCustomersResult
 }
 
+export interface ApiCustomerPolicy {
+    policy_id: string
+    policy_number: string
+    product_type: string
+    policy_year?: number
+    renewal_status: string
+    payment_status: string
+    coverage_start: string
+    coverage_end: string
+    sum_insured: number
+    premium_amount: number
+    commission_amount: number
+    insurer_id: string
+    insurer_short_name?: string
+    issuing_agent_id: string | null
+    created_at?: string
+}
+
+export interface CustomerPoliciesResponse {
+    data: ApiCustomerPolicy[]
+    pagination: {
+        total: number
+        page: number
+        limit: number
+        total_pages: number
+    }
+}
+
+export interface CustomerPoliciesParams {
+    page?: number
+    limit?: number
+    renewal_status?: 'pending' | 'renewed' | 'lapsed' | 'cancelled'
+}
+
+const EMPTY_CUSTOMER_POLICIES: CustomerPoliciesResponse = {
+    data: [],
+    pagination: { total: 0, page: 1, limit: 10, total_pages: 0 },
+}
+
+export async function getCustomerPolicies(
+    token: string,
+    customerId: string,
+    params: CustomerPoliciesParams = {},
+): Promise<CustomerPoliciesResponse> {
+    const qs = new URLSearchParams()
+    qs.set('page', String(params.page ?? 1))
+    qs.set('limit', String(params.limit ?? 10))
+    if (params.renewal_status) qs.set('renewal_status', params.renewal_status)
+
+    const res = await fetch(`${BASE_URL}/api/v1/customers/${customerId}/policies?${qs.toString()}`, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    })
+    const json = await res.json()
+
+    if (res.status === 404) return EMPTY_CUSTOMER_POLICIES
+    if (!res.ok) {
+        const err: any = new Error(json.status_message || 'Request failed')
+        err.status = res.status
+        throw err
+    }
+
+    return json.data as CustomerPoliciesResponse
+}
+
+export interface ExportCustomersParams {
+    params?: string
+    customer_type?: ApiCustomerType
+    status?: ApiCustomerStatus
+}
+
+export async function exportCustomers(
+    token: string,
+    filters: ExportCustomersParams = {},
+): Promise<{ blob: Blob; filename: string }> {
+    const qs = new URLSearchParams()
+    if (filters.params) qs.set('params', filters.params)
+    if (filters.customer_type) qs.set('customer_type', filters.customer_type)
+    if (filters.status) qs.set('status', filters.status)
+
+    const res = await fetch(`${BASE_URL}/api/v1/customers/export?${qs.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        const err: any = new Error((json as any).status_message || 'Export failed')
+        err.status = res.status
+        throw err
+    }
+
+    const blob = await res.blob()
+    const disposition = res.headers.get('Content-Disposition') ?? ''
+    const match = disposition.match(/filename="?([^";\r\n]+)"?/)
+    const filename = match?.[1] ?? 'DAFTAR CUSTOMER.xlsx'
+
+    return { blob, filename }
+}
+
 export async function getCustomers(
     token: string,
     filters: CustomerListParams = {},
