@@ -41,6 +41,13 @@ const ACTION_TYPE_LABELS: Record<string, string> = {
   other:     "Lainnya",
 }
 
+// Fire-related fields (construction class, risk location) also apply when the
+// policy number prefix is "01", regardless of the selected product type.
+const FIRE_PRODUCT_TYPES = new Set(["fire", "kebakaran"])
+function isFirePolicy(p: { product_type: string; policy_number: string } | null | undefined): boolean {
+  return !!p && (FIRE_PRODUCT_TYPES.has(p.product_type) || p.policy_number.startsWith("01"))
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
 }
@@ -439,7 +446,7 @@ export default function PolicyDetail() {
     setEndorseError(null)
     try {
       const taxRatePct = parseFloat(endorseForm.commission_tax_rate) || 0
-      const isFireProduct = new Set(["fire", "kebakaran"]).has(policy.product_type)
+      const isFireProduct = isFirePolicy(policy)
       await updatePolicy(token, policy.policy_id, {
         sum_insured:         Number(endorseForm.sum_insured),
         premium_amount:      Number(endorseForm.premium_amount),
@@ -523,7 +530,7 @@ export default function PolicyDetail() {
     setKoreksiyError(null)
     try {
       const taxRatePct = parseFloat(koreksiFo.commission_tax_rate) || 0
-      const isFireProduct = new Set(["fire", "kebakaran"]).has(policy.product_type)
+      const isFireProduct = isFirePolicy(policy)
       await directUpdatePolicy(token, policy.policy_id, {
         sum_insured:         Number(koreksiFo.sum_insured),
         premium_amount:      Number(koreksiFo.premium_amount),
@@ -1084,7 +1091,7 @@ export default function PolicyDetail() {
                 <Box>
                   <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Detail Objek & Keterangan</Text>
                   <Flex flexDir="column" gap="10px">
-                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                    {isFirePolicy(policy) && (
                       <Flex flexDir="column" gap="4px">
                         <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kelas Konstruksi Bangunan</Text>
                         <NativeSelect.Root>
@@ -1141,7 +1148,7 @@ export default function PolicyDetail() {
                       />
                     </Flex>
 
-                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                    {isFirePolicy(policy) && (
                       <Flex flexDir="column" gap="10px" pt="6px" borderTop="1px solid" borderColor="#F1F5F9">
                         <Text fontSize="12px" fontWeight="semibold" color="#1C2833">Lokasi Risiko</Text>
                         <Flex flexDir="column" gap="4px">
@@ -1481,7 +1488,7 @@ export default function PolicyDetail() {
                 <Box>
                   <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Detail Objek & Keterangan</Text>
                   <Flex flexDir="column" gap="10px">
-                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                    {isFirePolicy(policy) && (
                       <Flex flexDir="column" gap="4px">
                         <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kelas Konstruksi Bangunan</Text>
                         <NativeSelect.Root>
@@ -1537,7 +1544,7 @@ export default function PolicyDetail() {
                       />
                     </Flex>
 
-                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                    {isFirePolicy(policy) && (
                       <Flex flexDir="column" gap="10px" pt="6px" borderTop="1px solid" borderColor="#F1F5F9">
                         <Text fontSize="12px" fontWeight="semibold" color="#1C2833">Lokasi Risiko</Text>
                         <Flex flexDir="column" gap="4px">

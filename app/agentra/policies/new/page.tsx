@@ -214,6 +214,10 @@ export default function NewPolicy() {
 
   const selectedCustomer = customers.find(c => c.customer_id === form.customer_id)
 
+  // Fire-related fields (construction class, risk location) also apply when the
+  // policy number prefix is "01", regardless of the selected product type.
+  const isFireProduct = FIRE_PRODUCT_TYPES.has(form.product_type) || form.policy_number.startsWith("01")
+
   // Coverage totals
   const covTotalSI      = localCoverages.filter(c => c.count_in_tsi).reduce((s, c) => s + c.sum_insured, 0)
   const covTotalPremium = localCoverages.reduce((s, c) => s + c.premium_amount, 0)
@@ -276,7 +280,7 @@ export default function NewPolicy() {
 
   function handleProductChange(code: string) {
     set("product_type", code)
-    if (!FIRE_PRODUCT_TYPES.has(code)) set("construction_class", "")
+    if (!FIRE_PRODUCT_TYPES.has(code) && !form.policy_number.startsWith("01")) set("construction_class", "")
     const match = masterProducts.find(p => p.product_code === code)
     if (match) {
       set("commission_rate", parseFloat(match.commission_rate).toString())
@@ -460,7 +464,7 @@ export default function NewPolicy() {
         diskon:              rawIDR(form.diskon) || undefined,
         commission_rate:     form.commission_rate ? Number(form.commission_rate) : (undefined as any),
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
-        construction_class:  FIRE_PRODUCT_TYPES.has(form.product_type) && form.construction_class
+        construction_class:  isFireProduct && form.construction_class
           ? form.construction_class as "I" | "II" | "III"
           : null,
         risk_address:        form.risk_address      || undefined,
@@ -721,7 +725,7 @@ export default function NewPolicy() {
                         </FField>
                       </Flex>
 
-                      {FIRE_PRODUCT_TYPES.has(form.product_type) && (
+                      {isFireProduct && (
                         <FField label="Kelas Konstruksi Bangunan" hint="Wajib untuk produk kebakaran">
                           <NativeSelect.Root>
                             <NativeSelect.Field
@@ -762,7 +766,7 @@ export default function NewPolicy() {
                     </Flex>
                   </Section>
 
-                  {FIRE_PRODUCT_TYPES.has(form.product_type) && (
+                  {isFireProduct && (
                     <Section title="Lokasi Risiko">
                       <Flex flexDir="column" gap="16px">
                         <FField label="Alamat Lokasi Risiko" hint="Alamat properti yang dipertanggungkan">
