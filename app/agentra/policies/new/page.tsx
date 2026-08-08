@@ -16,6 +16,7 @@ import {
 import { getCustomers, type ApiCustomer } from "@/lib/api/customers"
 import { getInsurers, type ApiInsurer } from "@/lib/api/insurers"
 import { getMasterProducts, type ApiMasterProduct } from "@/lib/api/master-products"
+import { useWilayahCascade } from "@/lib/hooks/useWilayahCascade"
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -140,6 +141,8 @@ const EMPTY = {
   commission_rate: "",
   commission_tax_rate: "2.5",  // displayed as %, stored as decimal on submit
   construction_class: "",
+  risk_address: "", risk_village: "", risk_district: "", risk_city: "", risk_province: "",
+  risk_postal_code: "", risk_latitude: "", risk_longitude: "",
   policy_year: "1", object_insured: "", insured_name: "", coverage_notes: "", notes: "",
 }
 
@@ -259,6 +262,11 @@ export default function NewPolicy() {
   function set(field: string, value: string) {
     setForm(f => ({ ...f, [field]: value }))
   }
+
+  const wilayah = useWilayahCascade(
+    { risk_province: form.risk_province, risk_city: form.risk_city, risk_district: form.risk_district, risk_village: form.risk_village },
+    (patch) => setForm(f => ({ ...f, ...patch })),
+  )
 
   function clearCustomer() {
     set("customer_id", "")
@@ -422,6 +430,12 @@ export default function NewPolicy() {
     if (!form.coverage_start || !form.coverage_end) {
       setError("Tanggal coverage wajib diisi"); return
     }
+    if (form.risk_postal_code && !/^\d{5}$/.test(form.risk_postal_code)) {
+      setError("Kode pos lokasi risiko harus 5 digit angka"); return
+    }
+    if (Boolean(form.risk_latitude) !== Boolean(form.risk_longitude)) {
+      setError("Latitude dan longitude lokasi risiko harus diisi bersamaan"); return
+    }
 
     setSubmitting(true)
     setError(null)
@@ -449,6 +463,14 @@ export default function NewPolicy() {
         construction_class:  FIRE_PRODUCT_TYPES.has(form.product_type) && form.construction_class
           ? form.construction_class as "I" | "II" | "III"
           : null,
+        risk_address:        form.risk_address      || undefined,
+        risk_village:        form.risk_village      || undefined,
+        risk_district:       form.risk_district     || undefined,
+        risk_city:           form.risk_city         || undefined,
+        risk_province:       form.risk_province     || undefined,
+        risk_postal_code:    form.risk_postal_code  || undefined,
+        risk_latitude:       form.risk_latitude  ? Number(form.risk_latitude)  : undefined,
+        risk_longitude:      form.risk_longitude ? Number(form.risk_longitude) : undefined,
         policy_year:         Number(form.policy_year) || 1,
         object_insured:      form.object_insured  || undefined,
         insured_name:        form.insured_name    || undefined,
@@ -524,6 +546,7 @@ export default function NewPolicy() {
 
                 {/* ── LEFT: Identitas ─────────────────────────────────── */}
                 <Box flex="1" minW="340px">
+                  <Flex flexDir="column" gap="16px">
                   <Section title="Identitas Polis">
                     <Flex flexDir="column" gap="16px">
 
@@ -738,6 +761,167 @@ export default function NewPolicy() {
 
                     </Flex>
                   </Section>
+
+                  {FIRE_PRODUCT_TYPES.has(form.product_type) && (
+                    <Section title="Lokasi Risiko">
+                      <Flex flexDir="column" gap="16px">
+                        <FField label="Alamat Lokasi Risiko" hint="Alamat properti yang dipertanggungkan">
+                          <Input
+                            {...INPUT}
+                            placeholder="Contoh: Jl. Industri No. 5, RT 003/RW 002"
+                            value={form.risk_address}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_address", e.target.value)}
+                          />
+                        </FField>
+                        <Flex gap="12px">
+                          <Box flex="1">
+                            <FField label="Provinsi">
+                              <NativeSelect.Root>
+                                <NativeSelect.Field
+                                  {...INPUT}
+                                  value={wilayah.provinceCode}
+                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectProvince(e.target.value)}
+                                >
+                                  <option value="">Pilih provinsi</option>
+                                  {wilayah.provinces.map(p => (
+                                    <option key={p.province_code} value={p.province_code}>{p.province_name}</option>
+                                  ))}
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                              </NativeSelect.Root>
+                            </FField>
+                          </Box>
+                          <Box flex="1">
+                            <FField
+                              label="Kota/Kabupaten"
+                              hint={wilayah.cityManual ? "Wilayah belum tersedia — ketik manual" : undefined}
+                            >
+                              {wilayah.cityManual ? (
+                                <Input
+                                  {...INPUT}
+                                  value={form.risk_city}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_city", e.target.value)}
+                                />
+                              ) : (
+                                <NativeSelect.Root disabled={!wilayah.provinceCode || wilayah.cityLoading}>
+                                  <NativeSelect.Field
+                                    {...INPUT}
+                                    value={wilayah.cityCode}
+                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectCity(e.target.value)}
+                                  >
+                                    <option value="">
+                                      {!wilayah.provinceCode ? "Pilih provinsi dahulu" : wilayah.cityLoading ? "Memuat…" : "Pilih kota/kabupaten"}
+                                    </option>
+                                    {wilayah.cities.map(c => (
+                                      <option key={c.city_code} value={c.city_code}>{c.city_name}</option>
+                                    ))}
+                                  </NativeSelect.Field>
+                                  <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                              )}
+                            </FField>
+                          </Box>
+                        </Flex>
+                        <Flex gap="12px">
+                          <Box flex="1">
+                            <FField
+                              label="Kecamatan"
+                              hint={wilayah.districtManual && !wilayah.cityManual ? "Wilayah belum tersedia — ketik manual" : undefined}
+                            >
+                              {wilayah.districtManual ? (
+                                <Input
+                                  {...INPUT}
+                                  value={form.risk_district}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_district", e.target.value)}
+                                />
+                              ) : (
+                                <NativeSelect.Root disabled={!wilayah.cityCode || wilayah.districtLoading}>
+                                  <NativeSelect.Field
+                                    {...INPUT}
+                                    value={wilayah.districtCode}
+                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectDistrict(e.target.value)}
+                                  >
+                                    <option value="">
+                                      {!wilayah.cityCode ? "Pilih kota dahulu" : wilayah.districtLoading ? "Memuat…" : "Pilih kecamatan"}
+                                    </option>
+                                    {wilayah.districts.map(d => (
+                                      <option key={d.district_code} value={d.district_code}>{d.district_name}</option>
+                                    ))}
+                                  </NativeSelect.Field>
+                                  <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                              )}
+                            </FField>
+                          </Box>
+                          <Box flex="1">
+                            <FField
+                              label="Kelurahan/Desa"
+                              hint={wilayah.villageManual && !wilayah.districtManual ? "Wilayah belum tersedia — ketik manual" : undefined}
+                            >
+                              {wilayah.villageManual ? (
+                                <Input
+                                  {...INPUT}
+                                  value={form.risk_village}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_village", e.target.value)}
+                                />
+                              ) : (
+                                <NativeSelect.Root disabled={!wilayah.districtCode || wilayah.villageLoading}>
+                                  <NativeSelect.Field
+                                    {...INPUT}
+                                    value={wilayah.villageCode}
+                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectVillage(e.target.value)}
+                                  >
+                                    <option value="">
+                                      {!wilayah.districtCode ? "Pilih kecamatan dahulu" : wilayah.villageLoading ? "Memuat…" : "Pilih kelurahan/desa"}
+                                    </option>
+                                    {wilayah.villages.map(v => (
+                                      <option key={v.village_code} value={v.village_code}>{v.village_name}</option>
+                                    ))}
+                                  </NativeSelect.Field>
+                                  <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                              )}
+                            </FField>
+                          </Box>
+                        </Flex>
+                        <Flex gap="12px" flexWrap="wrap">
+                          <Box w="120px">
+                            <FField label="Kode Pos">
+                              <Input
+                                {...INPUT}
+                                inputMode="numeric" maxLength={5} placeholder="17530"
+                                value={form.risk_postal_code}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                  set("risk_postal_code", e.target.value.replace(/\D/g, "").slice(0, 5))
+                                }
+                              />
+                            </FField>
+                          </Box>
+                          <Box flex="1" minW="140px">
+                            <FField label="Latitude" hint="Opsional — isi bersama longitude">
+                              <Input
+                                {...INPUT}
+                                type="number" step="any" placeholder="-6.481"
+                                value={form.risk_latitude}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_latitude", e.target.value)}
+                              />
+                            </FField>
+                          </Box>
+                          <Box flex="1" minW="140px">
+                            <FField label="Longitude" hint="Opsional — isi bersama latitude">
+                              <Input
+                                {...INPUT}
+                                type="number" step="any" placeholder="106.854"
+                                value={form.risk_longitude}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_longitude", e.target.value)}
+                              />
+                            </FField>
+                          </Box>
+                        </Flex>
+                      </Flex>
+                    </Section>
+                  )}
+                </Flex>
                 </Box>
 
                 {/* ── RIGHT: Periode + Finansial + Coverage + Notes ─── */}

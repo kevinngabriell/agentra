@@ -43,6 +43,14 @@ export interface ApiPolicy {
     customer_premium_amount: number
     is_coassurance: 0 | 1
     construction_class: ApiConstructionClass | null
+    risk_address?: string | null
+    risk_village?: string | null
+    risk_district?: string | null
+    risk_city?: string | null
+    risk_province?: string | null
+    risk_postal_code?: string | null
+    risk_latitude?: number | null
+    risk_longitude?: number | null
     renewal_status: ApiRenewalStatus
     payment_status: ApiPaymentStatus
     customer_id: string
@@ -132,6 +140,14 @@ export interface CreatePolicyPayload {
     commission_rate: number
     commission_tax_rate?: number
     construction_class?: ApiConstructionClass | null
+    risk_address?: string | null
+    risk_village?: string | null
+    risk_district?: string | null
+    risk_city?: string | null
+    risk_province?: string | null
+    risk_postal_code?: string | null
+    risk_latitude?: number | null
+    risk_longitude?: number | null
     policy_year?: number
     issuing_agent_id?: string
     previous_policy_id?: string
@@ -316,6 +332,14 @@ export interface RenewPolicyPayload {
     object_insured?: string
     coverage_notes?: string
     construction_class?: ApiConstructionClass | null
+    risk_address?: string | null
+    risk_village?: string | null
+    risk_district?: string | null
+    risk_city?: string | null
+    risk_province?: string | null
+    risk_postal_code?: string | null
+    risk_latitude?: number | null
+    risk_longitude?: number | null
     notes?: string
 }
 
