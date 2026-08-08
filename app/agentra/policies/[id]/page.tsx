@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react"
 import {
   LuArrowLeft, LuPencil, LuCalendar, LuCreditCard, LuMessageSquare,
   LuPhone, LuMail, LuFileText, LuUser, LuCircleCheck, LuTrash2, LuPlus,
-  LuHistory, LuRefreshCw, LuClipboard,
+  LuHistory, LuRefreshCw, LuClipboard, LuMapPin,
 } from "react-icons/lu"
 import { FaWhatsapp } from "react-icons/fa"
 import { getAccessToken } from "@/lib/auth/session"
@@ -20,6 +20,7 @@ import {
   type ApiCoverageItem, type ApiCoverageType, COVERAGE_TYPE_LABELS,
   type ApiCoassurance,
 } from "@/lib/api/policies"
+import { useWilayahCascade, type RiskLocationNames } from "@/lib/hooks/useWilayahCascade"
 
 const PRODUCT_LABELS: Record<string, string> = {
   fire:        "Asuransi Kebakaran",
@@ -88,6 +89,122 @@ function LogIcon({ type }: { type: string }) {
   return <LuMessageSquare size={14} />
 }
 
+const RISK_LABEL = { fontSize: "12px", color: "#5D6D7E", fontWeight: "medium" } as const
+const RISK_INPUT = { bg: "white", border: "1px solid", borderColor: "#E2E8F0", borderRadius: "8px", fontSize: "13px", color: "#1C2833" } as const
+
+// Province → City → District → Village cascade for the endorsement/koreksi
+// dialogs. Mount this fresh (via a `key` on an ancestor) whenever a dialog
+// re-opens so the initial free-text values get a chance to match master data.
+function RiskLocationCascadeFields({ value, onChange }: {
+  value: RiskLocationNames
+  onChange: (patch: Partial<RiskLocationNames>) => void
+}) {
+  const wilayah = useWilayahCascade(value, onChange)
+
+  return (
+    <>
+      <Flex gap="10px">
+        <Flex flexDir="column" gap="4px" flex="1">
+          <Text {...RISK_LABEL}>Provinsi</Text>
+          <NativeSelect.Root>
+            <NativeSelect.Field
+              {...RISK_INPUT}
+              value={wilayah.provinceCode}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectProvince(e.target.value)}
+            >
+              <option value="">Pilih provinsi</option>
+              {wilayah.provinces.map(p => (
+                <option key={p.province_code} value={p.province_code}>{p.province_name}</option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Flex>
+        <Flex flexDir="column" gap="4px" flex="1">
+          <Text {...RISK_LABEL}>Kota/Kabupaten{wilayah.cityManual ? " (ketik manual)" : ""}</Text>
+          {wilayah.cityManual ? (
+            <Input
+              {...RISK_INPUT}
+              value={value.risk_city}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ risk_city: e.target.value })}
+            />
+          ) : (
+            <NativeSelect.Root disabled={!wilayah.provinceCode || wilayah.cityLoading}>
+              <NativeSelect.Field
+                {...RISK_INPUT}
+                value={wilayah.cityCode}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectCity(e.target.value)}
+              >
+                <option value="">
+                  {!wilayah.provinceCode ? "Pilih provinsi dahulu" : wilayah.cityLoading ? "Memuat…" : "Pilih kota/kabupaten"}
+                </option>
+                {wilayah.cities.map(c => (
+                  <option key={c.city_code} value={c.city_code}>{c.city_name}</option>
+                ))}
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          )}
+        </Flex>
+      </Flex>
+      <Flex gap="10px">
+        <Flex flexDir="column" gap="4px" flex="1">
+          <Text {...RISK_LABEL}>Kecamatan{wilayah.districtManual && !wilayah.cityManual ? " (ketik manual)" : ""}</Text>
+          {wilayah.districtManual ? (
+            <Input
+              {...RISK_INPUT}
+              value={value.risk_district}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ risk_district: e.target.value })}
+            />
+          ) : (
+            <NativeSelect.Root disabled={!wilayah.cityCode || wilayah.districtLoading}>
+              <NativeSelect.Field
+                {...RISK_INPUT}
+                value={wilayah.districtCode}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectDistrict(e.target.value)}
+              >
+                <option value="">
+                  {!wilayah.cityCode ? "Pilih kota dahulu" : wilayah.districtLoading ? "Memuat…" : "Pilih kecamatan"}
+                </option>
+                {wilayah.districts.map(d => (
+                  <option key={d.district_code} value={d.district_code}>{d.district_name}</option>
+                ))}
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          )}
+        </Flex>
+        <Flex flexDir="column" gap="4px" flex="1">
+          <Text {...RISK_LABEL}>Kelurahan/Desa{wilayah.villageManual && !wilayah.districtManual ? " (ketik manual)" : ""}</Text>
+          {wilayah.villageManual ? (
+            <Input
+              {...RISK_INPUT}
+              value={value.risk_village}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ risk_village: e.target.value })}
+            />
+          ) : (
+            <NativeSelect.Root disabled={!wilayah.districtCode || wilayah.villageLoading}>
+              <NativeSelect.Field
+                {...RISK_INPUT}
+                value={wilayah.villageCode}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectVillage(e.target.value)}
+              >
+                <option value="">
+                  {!wilayah.districtCode ? "Pilih kecamatan dahulu" : wilayah.villageLoading ? "Memuat…" : "Pilih kelurahan/desa"}
+                </option>
+                {wilayah.villages.map(v => (
+                  <option key={v.village_code} value={v.village_code}>{v.village_name}</option>
+                ))}
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          )}
+        </Flex>
+      </Flex>
+    </>
+  )
+}
+
 export default function PolicyDetail() {
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
@@ -135,6 +252,8 @@ export default function PolicyDetail() {
     commission_rate: '', commission_tax_rate: '',
     coverage_end: '', object_insured: '', insured_name: '', coverage_notes: '', notes: '',
     construction_class: '',
+    risk_address: '', risk_village: '', risk_district: '', risk_city: '', risk_province: '',
+    risk_postal_code: '', risk_latitude: '', risk_longitude: '',
   })
   const [koreksiSaving, setKoreksiSaving] = useState(false)
   const [koreksiyError, setKoreksiyError] = useState<string | null>(null)
@@ -146,12 +265,15 @@ export default function PolicyDetail() {
 
   // Endorsement dialog state
   const [endorseDialog, setEndorseDialog] = useState(false)
+  const [endorseKey, setEndorseKey]       = useState(0)
   const [endorseForm, setEndorseForm]     = useState({
     sum_insured: '', premium_amount: '', materai_amount: '',
     biaya_polis: '', diskon: '',
     commission_rate: '', commission_tax_rate: '',
     coverage_end: '', object_insured: '', insured_name: '', coverage_notes: '', notes: '',
     construction_class: '',
+    risk_address: '', risk_village: '', risk_district: '', risk_city: '', risk_province: '',
+    risk_postal_code: '', risk_latitude: '', risk_longitude: '',
   })
   const [endorseSaving, setEndorseSaving] = useState(false)
   const [endorseError, setEndorseError]   = useState<string | null>(null)
@@ -288,14 +410,31 @@ export default function PolicyDetail() {
       coverage_notes:      policy.coverage_notes ?? '',
       notes:               '',
       construction_class:  policy.construction_class ?? '',
+      risk_address:        policy.risk_address ?? '',
+      risk_village:        policy.risk_village ?? '',
+      risk_district:       policy.risk_district ?? '',
+      risk_city:           policy.risk_city ?? '',
+      risk_province:       policy.risk_province ?? '',
+      risk_postal_code:    policy.risk_postal_code ?? '',
+      risk_latitude:       policy.risk_latitude != null ? String(policy.risk_latitude) : '',
+      risk_longitude:      policy.risk_longitude != null ? String(policy.risk_longitude) : '',
     })
     setEndorseError(null)
+    setEndorseKey(k => k + 1)
     setEndorseDialog(true)
   }
 
   async function handleEndorse() {
     const token = getAccessToken()
     if (!token || !policy) return
+    if (endorseForm.risk_postal_code && !/^\d{5}$/.test(endorseForm.risk_postal_code)) {
+      setEndorseError('Kode pos lokasi risiko harus 5 digit angka')
+      return
+    }
+    if (Boolean(endorseForm.risk_latitude) !== Boolean(endorseForm.risk_longitude)) {
+      setEndorseError('Latitude dan longitude lokasi risiko harus diisi bersamaan')
+      return
+    }
     setEndorseSaving(true)
     setEndorseError(null)
     try {
@@ -316,6 +455,14 @@ export default function PolicyDetail() {
         object_insured:      endorseForm.object_insured || undefined,
         insured_name:        endorseForm.insured_name || null,
         coverage_notes:      endorseForm.coverage_notes || undefined,
+        risk_address:        endorseForm.risk_address     || null,
+        risk_village:        endorseForm.risk_village     || null,
+        risk_district:       endorseForm.risk_district    || null,
+        risk_city:           endorseForm.risk_city        || null,
+        risk_province:       endorseForm.risk_province    || null,
+        risk_postal_code:    endorseForm.risk_postal_code || null,
+        risk_latitude:       endorseForm.risk_latitude  ? Number(endorseForm.risk_latitude)  : null,
+        risk_longitude:      endorseForm.risk_longitude ? Number(endorseForm.risk_longitude) : null,
         notes:               endorseForm.notes || undefined,
       })
       const updated = await getPolicyDetail(token, id)
@@ -347,6 +494,14 @@ export default function PolicyDetail() {
       coverage_notes:      policy.coverage_notes ?? '',
       notes:               '',
       construction_class:  policy.construction_class ?? '',
+      risk_address:        policy.risk_address ?? '',
+      risk_village:        policy.risk_village ?? '',
+      risk_district:       policy.risk_district ?? '',
+      risk_city:           policy.risk_city ?? '',
+      risk_province:       policy.risk_province ?? '',
+      risk_postal_code:    policy.risk_postal_code ?? '',
+      risk_latitude:       policy.risk_latitude != null ? String(policy.risk_latitude) : '',
+      risk_longitude:      policy.risk_longitude != null ? String(policy.risk_longitude) : '',
     })
     setKoreksiyError(null)
     setKoreksiKey(k => k + 1)
@@ -356,6 +511,14 @@ export default function PolicyDetail() {
   async function handleKoreksi() {
     const token = getAccessToken()
     if (!token || !policy) return
+    if (koreksiFo.risk_postal_code && !/^\d{5}$/.test(koreksiFo.risk_postal_code)) {
+      setKoreksiyError('Kode pos lokasi risiko harus 5 digit angka')
+      return
+    }
+    if (Boolean(koreksiFo.risk_latitude) !== Boolean(koreksiFo.risk_longitude)) {
+      setKoreksiyError('Latitude dan longitude lokasi risiko harus diisi bersamaan')
+      return
+    }
     setKoreksiSaving(true)
     setKoreksiyError(null)
     try {
@@ -376,6 +539,14 @@ export default function PolicyDetail() {
         object_insured:      koreksiFo.object_insured || undefined,
         insured_name:        koreksiFo.insured_name || null,
         coverage_notes:      koreksiFo.coverage_notes || undefined,
+        risk_address:        koreksiFo.risk_address     || null,
+        risk_village:        koreksiFo.risk_village     || null,
+        risk_district:       koreksiFo.risk_district    || null,
+        risk_city:           koreksiFo.risk_city        || null,
+        risk_province:       koreksiFo.risk_province    || null,
+        risk_postal_code:    koreksiFo.risk_postal_code || null,
+        risk_latitude:       koreksiFo.risk_latitude  ? Number(koreksiFo.risk_latitude)  : null,
+        risk_longitude:      koreksiFo.risk_longitude ? Number(koreksiFo.risk_longitude) : null,
         notes:               koreksiFo.notes || undefined,
       })
       const updated = await getPolicyDetail(token, id)
@@ -969,6 +1140,68 @@ export default function PolicyDetail() {
                         }
                       />
                     </Flex>
+
+                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                      <Flex flexDir="column" gap="10px" pt="6px" borderTop="1px solid" borderColor="#F1F5F9">
+                        <Text fontSize="12px" fontWeight="semibold" color="#1C2833">Lokasi Risiko</Text>
+                        <Flex flexDir="column" gap="4px">
+                          <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Alamat Lokasi Risiko</Text>
+                          <Input
+                            bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                            fontSize="13px" color="#1C2833"
+                            placeholder="Contoh: Jl. Industri No. 5, RT 003/RW 002"
+                            value={endorseForm.risk_address}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              setEndorseForm((f) => ({ ...f, risk_address: e.target.value }))
+                            }
+                          />
+                        </Flex>
+                        <RiskLocationCascadeFields
+                          key={endorseKey}
+                          value={endorseForm}
+                          onChange={(patch) => setEndorseForm((f) => ({ ...f, ...patch }))}
+                        />
+                        <Flex gap="10px">
+                          <Flex flexDir="column" gap="4px" w="110px">
+                            <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kode Pos</Text>
+                            <Input
+                              bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                              fontSize="13px" color="#1C2833"
+                              inputMode="numeric" maxLength={5} placeholder="17530"
+                              value={endorseForm.risk_postal_code}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setEndorseForm((f) => ({ ...f, risk_postal_code: e.target.value.replace(/\D/g, "").slice(0, 5) }))
+                              }
+                            />
+                          </Flex>
+                          <Flex flexDir="column" gap="4px" flex="1">
+                            <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Latitude</Text>
+                            <Input
+                              bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                              fontSize="13px" color="#1C2833"
+                              type="number" step="any" placeholder="-6.481"
+                              value={endorseForm.risk_latitude}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setEndorseForm((f) => ({ ...f, risk_latitude: e.target.value }))
+                              }
+                            />
+                          </Flex>
+                          <Flex flexDir="column" gap="4px" flex="1">
+                            <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Longitude</Text>
+                            <Input
+                              bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                              fontSize="13px" color="#1C2833"
+                              type="number" step="any" placeholder="106.854"
+                              value={endorseForm.risk_longitude}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setEndorseForm((f) => ({ ...f, risk_longitude: e.target.value }))
+                              }
+                            />
+                          </Flex>
+                        </Flex>
+                      </Flex>
+                    )}
+
                     <Flex flexDir="column" gap="4px">
                       <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Keterangan Endosemen</Text>
                       <Input
@@ -1303,6 +1536,68 @@ export default function PolicyDetail() {
                         }
                       />
                     </Flex>
+
+                    {policy != null && new Set(["fire", "kebakaran"]).has(policy.product_type) && (
+                      <Flex flexDir="column" gap="10px" pt="6px" borderTop="1px solid" borderColor="#F1F5F9">
+                        <Text fontSize="12px" fontWeight="semibold" color="#1C2833">Lokasi Risiko</Text>
+                        <Flex flexDir="column" gap="4px">
+                          <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Alamat Lokasi Risiko</Text>
+                          <Input
+                            bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                            fontSize="13px" color="#1C2833"
+                            placeholder="Contoh: Jl. Industri No. 5, RT 003/RW 002"
+                            value={koreksiFo.risk_address}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              setKoreksiFo((f) => ({ ...f, risk_address: e.target.value }))
+                            }
+                          />
+                        </Flex>
+                        <RiskLocationCascadeFields
+                          key={koreksiKey}
+                          value={koreksiFo}
+                          onChange={(patch) => setKoreksiFo((f) => ({ ...f, ...patch }))}
+                        />
+                        <Flex gap="10px">
+                          <Flex flexDir="column" gap="4px" w="110px">
+                            <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kode Pos</Text>
+                            <Input
+                              bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                              fontSize="13px" color="#1C2833"
+                              inputMode="numeric" maxLength={5} placeholder="17530"
+                              value={koreksiFo.risk_postal_code}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setKoreksiFo((f) => ({ ...f, risk_postal_code: e.target.value.replace(/\D/g, "").slice(0, 5) }))
+                              }
+                            />
+                          </Flex>
+                          <Flex flexDir="column" gap="4px" flex="1">
+                            <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Latitude</Text>
+                            <Input
+                              bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                              fontSize="13px" color="#1C2833"
+                              type="number" step="any" placeholder="-6.481"
+                              value={koreksiFo.risk_latitude}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setKoreksiFo((f) => ({ ...f, risk_latitude: e.target.value }))
+                              }
+                            />
+                          </Flex>
+                          <Flex flexDir="column" gap="4px" flex="1">
+                            <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Longitude</Text>
+                            <Input
+                              bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                              fontSize="13px" color="#1C2833"
+                              type="number" step="any" placeholder="106.854"
+                              value={koreksiFo.risk_longitude}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setKoreksiFo((f) => ({ ...f, risk_longitude: e.target.value }))
+                              }
+                            />
+                          </Flex>
+                        </Flex>
+                      </Flex>
+                    )}
+
                     <Flex flexDir="column" gap="4px">
                       <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Alasan Koreksi (opsional)</Text>
                       <Input
@@ -1754,6 +2049,29 @@ export default function PolicyDetail() {
                 </Flex>
               )}
             </Flex>
+
+            {(policy.risk_address || policy.risk_latitude != null) && (
+              <Flex justify="space-between" align="flex-end" flexWrap="wrap" gap="12px" mb="24px">
+                <Flex flexDir="column" gap="4px" flex="1" minW="220px">
+                  <Text {...lbl}>LOKASI RISIKO</Text>
+                  <Text color="#1C2833" fontSize="14px">
+                    {[policy.risk_address, policy.risk_village, policy.risk_district, policy.risk_city, policy.risk_province, policy.risk_postal_code]
+                      .filter(Boolean).join(", ") || "—"}
+                  </Text>
+                </Flex>
+                {policy.risk_latitude != null && policy.risk_longitude != null && (
+                  <a
+                    href={`https://www.google.com/maps?q=${policy.risk_latitude},${policy.risk_longitude}`}
+                    target="_blank" rel="noopener noreferrer"
+                  >
+                    <Flex align="center" gap="6px" px="10px" py="6px" borderRadius="8px" bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE">
+                      <LuMapPin size={13} color="#1D4ED8" />
+                      <Text fontSize="12px" color="#1D4ED8" fontWeight="semibold">Buka di Peta</Text>
+                    </Flex>
+                  </a>
+                )}
+              </Flex>
+            )}
 
             {/* Rincian Keuangan + Coverage breakdown */}
             <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
