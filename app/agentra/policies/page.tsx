@@ -3,7 +3,7 @@
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
   Avatar, Badge, Box, Button, ButtonGroup, Checkbox, Dialog, Flex, IconButton, Input,
-  NativeSelect, Pagination, Skeleton, Table, Text,
+  Pagination, Skeleton, Table, Text,
 } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -13,6 +13,7 @@ import {
   LuShip, LuPlane, LuDownload,
 } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
+import { SearchSelect } from "@/components/ui/search-select"
 import {
   getPolicies, exportPolicies,
   type ApiPolicy, type ApiProductType, type ApiRenewalStatus,
@@ -253,38 +254,30 @@ export default function Policies() {
             {/* Product type */}
             <Flex flexDir="column" gap="4px" minW="160px">
               <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Jenis Produk</Text>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="13px"
-                  value={productFilter}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProductFilter(e.target.value as ApiProductType | "")}
-                >
-                  <option value="">Semua Produk</option>
-                  {(Object.keys(PRODUCT_LABELS) as ApiProductType[]).map((k) => (
-                    <option key={k} value={k}>{PRODUCT_LABELS[k]}</option>
-                  ))}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
+              <SearchSelect
+                value={productFilter}
+                onChange={(v) => setProductFilter(v as ApiProductType | "")}
+                options={[
+                  { value: "", label: "Semua Produk" },
+                  ...(Object.keys(PRODUCT_LABELS) as ApiProductType[]).map((k) => ({ value: k, label: PRODUCT_LABELS[k] })),
+                ]}
+              />
             </Flex>
 
             {/* Renewal status */}
             <Flex flexDir="column" gap="4px" minW="160px">
               <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Status Renewal</Text>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="13px"
-                  value={statusFilter}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value as ApiRenewalStatus | "")}
-                >
-                  <option value="">Semua Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="renewed">Diperbarui</option>
-                  <option value="lapsed">Lapse</option>
-                  <option value="cancelled">Dibatalkan</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
+              <SearchSelect
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v as ApiRenewalStatus | "")}
+                options={[
+                  { value: "", label: "Semua Status" },
+                  { value: "pending", label: "Pending" },
+                  { value: "renewed", label: "Diperbarui" },
+                  { value: "lapsed", label: "Lapse" },
+                  { value: "cancelled", label: "Dibatalkan" },
+                ]}
+              />
             </Flex>
 
             <Flex gap="8px" ml="auto">

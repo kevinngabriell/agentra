@@ -2,15 +2,16 @@
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
-  Box, Button, Combobox, createListCollection, Dialog, Flex, IconButton,
-  Input, NativeSelect, Switch, Table, Text, Textarea,
+  Box, Button, Combobox, createListCollection, Dialog, Flex, Grid, IconButton,
+  Input, Switch, Table, Text, Textarea,
 } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { LuArrowLeft, LuFileText, LuZap, LuPlus, LuPencil, LuTrash2, LuX } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
+import { SearchSelect } from "@/components/ui/search-select"
 import {
-  createPolicy, addCoverage, addCoassuranceParticipant,
+  createPolicy, addCoassuranceParticipant,
   type CreatePolicyPayload, type ApiCoverageType, COVERAGE_TYPE_LABELS,
 } from "@/lib/api/policies"
 import { getCustomers, type ApiCustomer } from "@/lib/api/customers"
@@ -444,8 +445,10 @@ export default function NewPolicy() {
     setSubmitting(true)
     setError(null)
 
-    const finalSI      = hasAutoFill ? covTotalSI      : rawIDR(form.sum_insured)
-    const finalPremium = hasAutoFill ? covTotalPremium  : rawIDR(form.premium_amount)
+    // Coverage rows entered while creating a policy are part of the policy as issued, so they
+    // go inline in POST /policies (one `policy_created` log, no per-item endorsement). The
+    // server then derives sum_insured / premium_amount from them, so the scalars are omitted.
+    const inlineCoverages = !isEndorsement && localCoverages.length > 0
 
     try {
       const taxRatePct = parseFloat(form.commission_tax_rate) || 0
@@ -457,12 +460,24 @@ export default function NewPolicy() {
         product_type:        form.product_type as any,
         coverage_start:      form.coverage_start,
         coverage_end:        form.coverage_end,
-        sum_insured:         finalSI,
-        premium_amount:      finalPremium,
+        ...(inlineCoverages
+          ? {
+              coverages: localCoverages.map(cov => ({
+                coverage_type:  cov.coverage_type,
+                coverage_label: cov.coverage_label || undefined,
+                sum_insured:    cov.sum_insured,
+                rate_permille:  cov.rate_permille,
+                count_in_tsi:   cov.count_in_tsi,
+              })),
+            }
+          : {
+              sum_insured:    hasAutoFill ? covTotalSI      : rawIDR(form.sum_insured),
+              premium_amount: hasAutoFill ? covTotalPremium : rawIDR(form.premium_amount),
+            }),
         materai_amount:      rawIDR(form.materai_amount) || undefined,
         biaya_polis:         rawIDR(form.biaya_polis) || undefined,
         diskon:              rawIDR(form.diskon) || undefined,
-        commission_rate:     form.commission_rate ? Number(form.commission_rate) : (undefined as any),
+        commission_rate:     form.commission_rate ? Number(form.commission_rate) : undefined,
         commission_tax_rate: taxRatePct > 0 ? taxRatePct / 100 : undefined,
         construction_class:  isFireProduct && form.construction_class
           ? form.construction_class as "I" | "II" | "III"
@@ -484,18 +499,6 @@ export default function NewPolicy() {
 
       const { policy_id } = await createPolicy(token, payload)
 
-      if (!isEndorsement && localCoverages.length > 0) {
-        for (const cov of localCoverages) {
-          await addCoverage(token, policy_id, {
-            coverage_type:  cov.coverage_type,
-            coverage_label: cov.coverage_label || undefined,
-            sum_insured:    cov.sum_insured,
-            rate_permille:  cov.rate_permille,
-            count_in_tsi:   cov.count_in_tsi,
-          })
-        }
-      }
-
       if (isCoassurance && coassurances.length > 0) {
         for (const ca of coassurances) {
           await addCoassuranceParticipant(token, policy_id, {
@@ -511,7 +514,14 @@ export default function NewPolicy() {
 
       router.push(`/agentra/policies/${policy_id}`)
     } catch (err: any) {
-      setError(err.message ?? "Gagal membuat polis")
+      // The API reports a bad coverage item as `coverages[<index>]: <reason>` (0-based,
+      // in the order sent), so point at the row number the user sees in the table.
+      const covErr = /^coverages\[(\d+)\]:\s*(.*)$/.exec(err.message ?? "")
+      setError(
+        covErr
+          ? `Item pertanggungan baris ${Number(covErr[1]) + 1}: ${covErr[2]}`
+          : err.message ?? "Gagal membuat polis",
+      )
       setSubmitting(false)
     }
   }
@@ -585,23 +595,25 @@ export default function NewPolicy() {
                       <FField label="Nasabah" required>
                         {form.customer_id ? (
                           <Flex
-                            align="center" justify="space-between" px="12px" py="10px"
-                            bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0" borderRadius="8px"
+                            align="center" justify="space-between" gap="12px" px="16px" py="14px"
+                            bg="#F0FDF4" border="1px solid" borderColor="#86EFAC" borderRadius="8px"
                           >
-                            <Flex flexDir="column" gap="1px">
-                              <Text fontSize="13px" fontWeight="medium" color="#15803D">
+                            <Flex flexDir="column" gap="2px">
+                              <Text fontSize="18px" fontWeight="semibold" color="#14532D">
                                 {selectedCustomer?.display_name}
                               </Text>
-                              <Text fontSize="11px" color="#86EFAC">
+                              <Text fontSize="14px" fontWeight="medium" color="#166534">
                                 {selectedCustomer?.customer_type === "company" ? "Korporat" : "Individu"}
                               </Text>
                             </Flex>
                             <Button
-                              size="xs" variant="ghost" color="#64748B" gap="4px"
-                              _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
+                              size="sm" variant="outline" gap="6px" flexShrink={0}
+                              bg="white" color="#DC2626" border="1px solid" borderColor="#DC2626"
+                              fontSize="14px" fontWeight="semibold"
+                              _hover={{ bg: "#FEE2E2", color: "#B91C1C", borderColor: "#B91C1C" }}
                               onClick={clearCustomer}
                             >
-                              <LuX size={11} /> Ganti
+                              <LuX size={16} /> Ganti
                             </Button>
                           </Flex>
                         ) : (
@@ -662,19 +674,13 @@ export default function NewPolicy() {
                       </FField>
 
                       <FField label="Perusahaan Asuransi" required>
-                        <NativeSelect.Root>
-                          <NativeSelect.Field
-                            {...INPUT}
-                            value={form.insurer_id}
-                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => set("insurer_id", e.target.value)}
-                          >
-                            <option value="">Pilih insurer</option>
-                            {insurers.map(i => (
-                              <option key={i.insurer_id} value={i.insurer_id}>{i.name}</option>
-                            ))}
-                          </NativeSelect.Field>
-                          <NativeSelect.Indicator />
-                        </NativeSelect.Root>
+                        <SearchSelect
+                          value={form.insurer_id}
+                          onChange={v => set("insurer_id", v)}
+                          placeholder="Pilih insurer"
+                          options={insurers.map(i => ({ value: i.insurer_id, label: i.name }))}
+                          clearable
+                        />
                       </FField>
 
                       <FField label="Nomor Polis" required>
@@ -701,47 +707,37 @@ export default function NewPolicy() {
                       </FField>
 
                       <Flex gap="12px" w="100%">
-                        <FField label="Jenis Produk" required>
-                          <NativeSelect.Root flex="1">
-                            <NativeSelect.Field
-                              {...INPUT}
+                        <Box flex="1" minW="0">
+                          <FField label="Jenis Produk" required>
+                            <SearchSelect
                               value={form.product_type}
-                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleProductChange(e.target.value)}
-                            >
-                              <option value="">Pilih produk</option>
-                              {productOptions.map(p => (
-                                <option key={p.product_code} value={p.product_code}>{p.product_name}</option>
-                              ))}
-                            </NativeSelect.Field>
-                            <NativeSelect.Indicator />
-                          </NativeSelect.Root>
-                        </FField>
-                        <FField label="Tahun">
-                          <Input
-                            {...INPUT} w="72px" type="number" min={1} max={10}
-                            value={form.policy_year}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("policy_year", e.target.value)}
-                          />
-                        </FField>
+                              onChange={handleProductChange}
+                              placeholder="Pilih produk"
+                              options={productOptions.map(p => ({ value: p.product_code, label: p.product_name }))}
+                              clearable
+                            />
+                          </FField>
+                        </Box>
+                        <Box w="72px" flexShrink={0}>
+                          <FField label="Tahun">
+                            <Input
+                              {...INPUT} w="100%" type="number" min={1} max={10}
+                              value={form.policy_year}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("policy_year", e.target.value)}
+                            />
+                          </FField>
+                        </Box>
                       </Flex>
 
                       {isFireProduct && (
                         <FField label="Kelas Konstruksi Bangunan" hint="Wajib untuk produk kebakaran">
-                          <NativeSelect.Root>
-                            <NativeSelect.Field
-                              {...INPUT}
-                              value={form.construction_class}
-                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                                set("construction_class", e.target.value)
-                              }
-                            >
-                              <option value="">Pilih kelas konstruksi</option>
-                              {Object.entries(CONSTRUCTION_CLASS_LABELS).map(([val, label]) => (
-                                <option key={val} value={val}>{label}</option>
-                              ))}
-                            </NativeSelect.Field>
-                            <NativeSelect.Indicator />
-                          </NativeSelect.Root>
+                          <SearchSelect
+                            value={form.construction_class}
+                            onChange={v => set("construction_class", v)}
+                            placeholder="Pilih kelas konstruksi"
+                            options={Object.entries(CONSTRUCTION_CLASS_LABELS).map(([value, label]) => ({ value, label }))}
+                            clearable
+                          />
                         </FField>
                       )}
 
@@ -780,19 +776,13 @@ export default function NewPolicy() {
                         <Flex gap="12px">
                           <Box flex="1">
                             <FField label="Provinsi">
-                              <NativeSelect.Root>
-                                <NativeSelect.Field
-                                  {...INPUT}
-                                  value={wilayah.provinceCode}
-                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectProvince(e.target.value)}
-                                >
-                                  <option value="">Pilih provinsi</option>
-                                  {wilayah.provinces.map(p => (
-                                    <option key={p.province_code} value={p.province_code}>{p.province_name}</option>
-                                  ))}
-                                </NativeSelect.Field>
-                                <NativeSelect.Indicator />
-                              </NativeSelect.Root>
+                              <SearchSelect
+                                value={wilayah.provinceCode}
+                                onChange={wilayah.selectProvince}
+                                placeholder="Pilih provinsi"
+                                options={wilayah.provinces.map(p => ({ value: p.province_code, label: p.province_name }))}
+                                clearable
+                              />
                             </FField>
                           </Box>
                           <Box flex="1">
@@ -807,21 +797,15 @@ export default function NewPolicy() {
                                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_city", e.target.value)}
                                 />
                               ) : (
-                                <NativeSelect.Root disabled={!wilayah.provinceCode || wilayah.cityLoading}>
-                                  <NativeSelect.Field
-                                    {...INPUT}
-                                    value={wilayah.cityCode}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectCity(e.target.value)}
-                                  >
-                                    <option value="">
-                                      {!wilayah.provinceCode ? "Pilih provinsi dahulu" : wilayah.cityLoading ? "Memuat…" : "Pilih kota/kabupaten"}
-                                    </option>
-                                    {wilayah.cities.map(c => (
-                                      <option key={c.city_code} value={c.city_code}>{c.city_name}</option>
-                                    ))}
-                                  </NativeSelect.Field>
-                                  <NativeSelect.Indicator />
-                                </NativeSelect.Root>
+                                <SearchSelect
+                                  disabled={!wilayah.provinceCode || wilayah.cityLoading}
+                                  loading={wilayah.cityLoading}
+                                  value={wilayah.cityCode}
+                                  onChange={wilayah.selectCity}
+                                  placeholder={!wilayah.provinceCode ? "Pilih provinsi dahulu" : wilayah.cityLoading ? "Memuat…" : "Pilih kota/kabupaten"}
+                                  options={wilayah.cities.map(c => ({ value: c.city_code, label: c.city_name }))}
+                                  clearable
+                                />
                               )}
                             </FField>
                           </Box>
@@ -839,21 +823,15 @@ export default function NewPolicy() {
                                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_district", e.target.value)}
                                 />
                               ) : (
-                                <NativeSelect.Root disabled={!wilayah.cityCode || wilayah.districtLoading}>
-                                  <NativeSelect.Field
-                                    {...INPUT}
-                                    value={wilayah.districtCode}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectDistrict(e.target.value)}
-                                  >
-                                    <option value="">
-                                      {!wilayah.cityCode ? "Pilih kota dahulu" : wilayah.districtLoading ? "Memuat…" : "Pilih kecamatan"}
-                                    </option>
-                                    {wilayah.districts.map(d => (
-                                      <option key={d.district_code} value={d.district_code}>{d.district_name}</option>
-                                    ))}
-                                  </NativeSelect.Field>
-                                  <NativeSelect.Indicator />
-                                </NativeSelect.Root>
+                                <SearchSelect
+                                  disabled={!wilayah.cityCode || wilayah.districtLoading}
+                                  loading={wilayah.districtLoading}
+                                  value={wilayah.districtCode}
+                                  onChange={wilayah.selectDistrict}
+                                  placeholder={!wilayah.cityCode ? "Pilih kota dahulu" : wilayah.districtLoading ? "Memuat…" : "Pilih kecamatan"}
+                                  options={wilayah.districts.map(d => ({ value: d.district_code, label: d.district_name }))}
+                                  clearable
+                                />
                               )}
                             </FField>
                           </Box>
@@ -869,21 +847,15 @@ export default function NewPolicy() {
                                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_village", e.target.value)}
                                 />
                               ) : (
-                                <NativeSelect.Root disabled={!wilayah.districtCode || wilayah.villageLoading}>
-                                  <NativeSelect.Field
-                                    {...INPUT}
-                                    value={wilayah.villageCode}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectVillage(e.target.value)}
-                                  >
-                                    <option value="">
-                                      {!wilayah.districtCode ? "Pilih kecamatan dahulu" : wilayah.villageLoading ? "Memuat…" : "Pilih kelurahan/desa"}
-                                    </option>
-                                    {wilayah.villages.map(v => (
-                                      <option key={v.village_code} value={v.village_code}>{v.village_name}</option>
-                                    ))}
-                                  </NativeSelect.Field>
-                                  <NativeSelect.Indicator />
-                                </NativeSelect.Root>
+                                <SearchSelect
+                                  disabled={!wilayah.districtCode || wilayah.villageLoading}
+                                  loading={wilayah.villageLoading}
+                                  value={wilayah.villageCode}
+                                  onChange={wilayah.selectVillage}
+                                  placeholder={!wilayah.districtCode ? "Pilih kecamatan dahulu" : wilayah.villageLoading ? "Memuat…" : "Pilih kelurahan/desa"}
+                                  options={wilayah.villages.map(v => ({ value: v.village_code, label: v.village_name }))}
+                                  clearable
+                                />
                               )}
                             </FField>
                           </Box>
@@ -966,13 +938,13 @@ export default function NewPolicy() {
                   <Section title="Premi & Komisi">
                     <Flex flexDir="column" gap="16px">
 
-                      <Flex gap="16px" flexWrap="wrap">
+                      <Grid templateColumns="repeat(auto-fit, minmax(min(100%, 200px), 1fr))" gap="16px">
                         <FField
                           label="Nilai Pertanggungan / TSI (IDR)" required
                           hint={hasAutoFill ? "Auto dari item coverage" : undefined}
                         >
                           <Input
-                            {...INPUT_LG} minW="140px"
+                            {...INPUT_LG} w="100%"
                             inputMode="numeric" placeholder="0"
                             value={displaySI}
                             readOnly={hasAutoFill}
@@ -987,7 +959,7 @@ export default function NewPolicy() {
                           hint={hasAutoFill ? "Auto dari item coverage" : undefined}
                         >
                           <Input
-                            {...INPUT_LG} flex="1" minW="140px"
+                            {...INPUT_LG} w="100%"
                             inputMode="numeric" placeholder="0"
                             value={displayPremium}
                             readOnly={hasAutoFill}
@@ -997,9 +969,12 @@ export default function NewPolicy() {
                             }
                           />
                         </FField>
+                      </Grid>
+
+                      <Grid templateColumns="repeat(auto-fit, minmax(min(100%, 130px), 1fr))" gap="16px">
                         <FField label="Materai (IDR)">
                           <Input
-                            {...INPUT_LG} w="140px"
+                            {...INPUT_LG} w="100%"
                             inputMode="numeric" placeholder="0"
                             value={form.materai_amount}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -1009,7 +984,7 @@ export default function NewPolicy() {
                         </FField>
                         <FField label="Biaya Polis (IDR)">
                           <Input
-                            {...INPUT_LG} w="140px"
+                            {...INPUT_LG} w="100%"
                             inputMode="numeric" placeholder="0"
                             value={form.biaya_polis}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -1019,7 +994,7 @@ export default function NewPolicy() {
                         </FField>
                         <FField label="Diskon (IDR)">
                           <Input
-                            {...INPUT_LG} w="140px"
+                            {...INPUT_LG} w="100%"
                             inputMode="numeric" placeholder="0"
                             value={form.diskon}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -1027,14 +1002,14 @@ export default function NewPolicy() {
                             }
                           />
                         </FField>
-                      </Flex>
+                      </Grid>
 
                       <Flex justify="flex-end">
                         <Flex
                           align="center" justify="space-between"
                           px="14px" py="8px" borderRadius="8px"
                           bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE"
-                          minW="240px" gap="16px"
+                          w={{ base: "100%", sm: "auto" }} minW={{ sm: "240px" }} gap="16px"
                         >
                           <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold">Tagihan Nasabah</Text>
                           <Text fontSize="14px" color="#1D4ED8" fontWeight="bold">
@@ -1045,7 +1020,7 @@ export default function NewPolicy() {
 
                       {/* Commission */}
                       <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" p="14px">
-                        <Flex align="center" gap="8px" mb="10px">
+                        <Flex align="center" gap="8px" mb="10px" flexWrap="wrap">
                           <Text fontSize="13px" fontWeight="semibold" color="#1C2833">Komisi</Text>
                           {commissionSource?.kind === "product" && (
                             <Flex align="center" gap="4px" px="8px" py="2px" borderRadius="20px" bg="#DBEAFE">
@@ -1062,47 +1037,45 @@ export default function NewPolicy() {
                             <Text fontSize="10px" color="#94A3B8">Pilih produk untuk auto-isi</Text>
                           )}
                         </Flex>
-                        <Flex gap="16px" align="flex-start" flexWrap="wrap">
+                        <Grid templateColumns="repeat(auto-fit, minmax(min(100%, 150px), 1fr))" gap="16px">
                           {/* Rate inputs */}
-                          <Flex align="center" gap="16px" flexWrap="wrap">
-                            <Flex flexDir="column" gap="4px">
-                              <Text fontSize="10px" color="#64748B">Rate Komisi</Text>
-                              <Flex align="center" gap="6px">
-                                <Input
-                                  bg="white" border="1px solid" borderColor="#E2E8F0"
-                                  borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
-                                  h="40px" w="90px" type="number" min={0} max={100} step="0.01"
-                                  placeholder="0"
-                                  value={form.commission_rate}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    set("commission_rate", e.target.value)
-                                    setCommissionSource({ kind: "manual" })
-                                  }}
-                                />
-                                <Text fontSize="14px" color="#64748B">%</Text>
-                              </Flex>
+                          <Flex flexDir="column" gap="4px">
+                            <Text fontSize="10px" color="#64748B">Rate Komisi</Text>
+                            <Flex align="center" gap="6px">
+                              <Input
+                                bg="white" border="1px solid" borderColor="#E2E8F0"
+                                borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
+                                h="40px" flex="1" minW="0" type="number" min={0} max={100} step="0.01"
+                                placeholder="0"
+                                value={form.commission_rate}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                  set("commission_rate", e.target.value)
+                                  setCommissionSource({ kind: "manual" })
+                                }}
+                              />
+                              <Text fontSize="14px" color="#64748B">%</Text>
                             </Flex>
-                            <Flex flexDir="column" gap="4px">
-                              <Text fontSize="10px" color="#64748B">PPh / Pajak</Text>
-                              <Flex align="center" gap="6px">
-                                <Input
-                                  bg="white" border="1px solid" borderColor="#E2E8F0"
-                                  borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
-                                  h="40px" w="90px" type="number" min={0} max={100} step="0.01"
-                                  placeholder="2.5"
-                                  value={form.commission_tax_rate}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                    set("commission_tax_rate", e.target.value)
-                                  }
-                                />
-                                <Text fontSize="14px" color="#64748B">%</Text>
-                              </Flex>
+                          </Flex>
+                          <Flex flexDir="column" gap="4px">
+                            <Text fontSize="10px" color="#64748B">PPh / Pajak</Text>
+                            <Flex align="center" gap="6px">
+                              <Input
+                                bg="white" border="1px solid" borderColor="#E2E8F0"
+                                borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
+                                h="40px" flex="1" minW="0" type="number" min={0} max={100} step="0.01"
+                                placeholder="2.5"
+                                value={form.commission_tax_rate}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                  set("commission_tax_rate", e.target.value)
+                                }
+                              />
+                              <Text fontSize="14px" color="#64748B">%</Text>
                             </Flex>
                           </Flex>
 
                           {/* Breakdown preview */}
                           {commissionAmount > 0 && (
-                            <Box px="14px" py="10px" borderRadius="10px" bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0" minW="180px">
+                            <Box gridColumn="1 / -1" px="14px" py="10px" borderRadius="10px" bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0">
                               <Text fontSize="10px" color="#64748B" mb="6px" fontWeight="semibold">ESTIMASI KOMISI</Text>
                               <Flex justify="space-between" align="center" mb="2px">
                                 <Text fontSize="11px" color="#64748B">Gross</Text>
@@ -1122,7 +1095,7 @@ export default function NewPolicy() {
                               </Box>
                             </Box>
                           )}
-                        </Flex>
+                        </Grid>
                       </Box>
 
                     </Flex>
@@ -1399,20 +1372,11 @@ export default function NewPolicy() {
               <Flex flexDir="column" gap="14px">
 
                 <FField label="Kategori" required>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      {...INPUT}
-                      value={covForm.coverage_type}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                        setCovForm(f => ({ ...f, coverage_type: e.target.value as ApiCoverageType }))
-                      }
-                    >
-                      {(Object.entries(COVERAGE_TYPE_LABELS) as [ApiCoverageType, string][]).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
-                      ))}
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
+                  <SearchSelect
+                    value={covForm.coverage_type}
+                    onChange={v => setCovForm(f => ({ ...f, coverage_type: v as ApiCoverageType }))}
+                    options={(Object.entries(COVERAGE_TYPE_LABELS) as [ApiCoverageType, string][]).map(([value, label]) => ({ value, label }))}
+                  />
                 </FField>
 
                 <FField label="Label (Opsional)">

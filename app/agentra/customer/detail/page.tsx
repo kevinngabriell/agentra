@@ -5,7 +5,7 @@ import { getAccessToken } from "@/lib/auth/session";
 import { getCustomerDetail, createCustomer, updateCustomer, getCustomerPolicies, type ApiCustomerPolicy } from "@/lib/api/customers";
 import {
     Badge, Box, Button, Card, Checkbox, Field, FileUpload, Flex, Icon, Image,
-    Input, List, NativeSelect, SimpleGrid, Skeleton, Table, Tabs, Text, Textarea,
+    Input, List, SimpleGrid, Skeleton, Table, Tabs, Text, Textarea,
 } from "@chakra-ui/react";
 import { FaInfoCircle, FaArrowRight, FaRegFileImage, FaArrowLeft, FaEye } from "react-icons/fa";
 import { LuUpload, LuUser, LuFileText, LuChevronLeft, LuChevronRight } from "react-icons/lu";
@@ -13,11 +13,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import verifiedImg from "@/assets/verified.png";
 import companyImg from "@/assets/company.png";
+import { SearchSelect } from "@/components/ui/search-select";
 
 // ─── Style constants ────────────────────────────────────────────────────────
 
 const lbl  = { color: "#5D6D7E", fontSize: "12px", fontWeight: "semibold" } as const;
 const clbl = { color: "#1C2833", fontSize: "14px", fontWeight: "medium"   } as const;
+
+const STATUS_OPTIONS = [
+    { value: "active",   label: "Aktif" },
+    { value: "inactive", label: "Tidak Aktif" },
+    { value: "lapsed",   label: "Lapse" },
+];
+const SOURCE_OPTIONS = [
+    { value: "direct",   label: "Direct" },
+    { value: "referral", label: "Referral" },
+];
+const BUSINESS_TYPE_OPTIONS = ["PT", "CV", "Firma", "Koperasi"].map(v => ({ value: v, label: v }));
 
 // ─── Phone helpers ───────────────────────────────────────────────────────────
 
@@ -685,24 +697,11 @@ function CustomerDetailForm() {
                                         <SimpleGrid columns={{ md: 2 }} gap="24px">
                                             <Field.Root>
                                                 <Field.Label {...lbl}>STATUS</Field.Label>
-                                                <NativeSelect.Root>
-                                                    <NativeSelect.Field value={ind.status} onChange={(e) => updInd("status")(e.target.value)}>
-                                                        <option value="active">Aktif</option>
-                                                        <option value="inactive">Tidak Aktif</option>
-                                                        <option value="lapsed">Lapse</option>
-                                                    </NativeSelect.Field>
-                                                    <NativeSelect.Indicator />
-                                                </NativeSelect.Root>
+                                                <SearchSelect value={ind.status} onChange={updInd("status")} options={STATUS_OPTIONS} />
                                             </Field.Root>
                                             <Field.Root>
                                                 <Field.Label {...lbl}>SUMBER</Field.Label>
-                                                <NativeSelect.Root>
-                                                    <NativeSelect.Field value={ind.source} onChange={(e) => updInd("source")(e.target.value)}>
-                                                        <option value="direct">Direct</option>
-                                                        <option value="referral">Referral</option>
-                                                    </NativeSelect.Field>
-                                                    <NativeSelect.Indicator />
-                                                </NativeSelect.Root>
+                                                <SearchSelect value={ind.source} onChange={updInd("source")} options={SOURCE_OPTIONS} />
                                             </Field.Root>
                                         </SimpleGrid>
                                     </Card.Body>
@@ -793,16 +792,10 @@ function CustomerDetailForm() {
                                         </Field.Root>
                                         <Field.Root>
                                             <Field.Label {...clbl}>Tipe Bisnis</Field.Label>
-                                            <NativeSelect.Root>
-                                                <NativeSelect.Field placeholder="Pilih Tipe Bisnis"
-                                                    value={corp.business_type} onChange={(e) => updCorp("business_type")(e.target.value)}>
-                                                    <option value="PT">PT</option>
-                                                    <option value="CV">CV</option>
-                                                    <option value="Firma">Firma</option>
-                                                    <option value="Koperasi">Koperasi</option>
-                                                </NativeSelect.Field>
-                                                <NativeSelect.Indicator />
-                                            </NativeSelect.Root>
+                                            <SearchSelect
+                                                placeholder="Pilih Tipe Bisnis"
+                                                value={corp.business_type} onChange={updCorp("business_type")}
+                                                options={BUSINESS_TYPE_OPTIONS} clearable />
                                         </Field.Root>
                                         <Field.Root invalid={!!corpErr.company_email}>
                                             <Field.Label {...clbl}>Email Kantor</Field.Label>
@@ -840,24 +833,11 @@ function CustomerDetailForm() {
                                     <SimpleGrid columns={{ md: 2 }} gap="24px">
                                         <Field.Root>
                                             <Field.Label {...clbl}>STATUS</Field.Label>
-                                            <NativeSelect.Root>
-                                                <NativeSelect.Field value={corp.status} onChange={(e) => updCorp("status")(e.target.value)}>
-                                                    <option value="active">Aktif</option>
-                                                    <option value="inactive">Tidak Aktif</option>
-                                                    <option value="lapsed">Lapse</option>
-                                                </NativeSelect.Field>
-                                                <NativeSelect.Indicator />
-                                            </NativeSelect.Root>
+                                            <SearchSelect value={corp.status} onChange={updCorp("status")} options={STATUS_OPTIONS} />
                                         </Field.Root>
                                         <Field.Root>
                                             <Field.Label {...clbl}>SUMBER</Field.Label>
-                                            <NativeSelect.Root>
-                                                <NativeSelect.Field value={corp.source} onChange={(e) => updCorp("source")(e.target.value)}>
-                                                    <option value="direct">Direct</option>
-                                                    <option value="referral">Referral</option>
-                                                </NativeSelect.Field>
-                                                <NativeSelect.Indicator />
-                                            </NativeSelect.Root>
+                                            <SearchSelect value={corp.source} onChange={updCorp("source")} options={SOURCE_OPTIONS} />
                                         </Field.Root>
                                     </SimpleGrid>
                                 </Card.Body>

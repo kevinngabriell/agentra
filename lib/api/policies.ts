@@ -132,12 +132,18 @@ export interface CreatePolicyPayload {
     product_type: ApiProductType
     coverage_start: string
     coverage_end: string
-    sum_insured: number
-    premium_amount: number
+    // Required only when `coverages` is not sent — with `coverages`, both are derived
+    // server-side from the items (and ignored if sent).
+    sum_insured?: number
+    premium_amount?: number
+    // Item pertanggungan saved together with the policy. Logged only as `policy_created`,
+    // never as an endorsement. All-or-nothing: a bad item returns 400 `coverages[<index>]: <reason>`.
+    coverages?: AddCoveragePayload[]
     materai_amount?: number
     biaya_polis?: number
     diskon?: number
-    commission_rate: number
+    // Optional: auto-resolved server-side from product type / policy number prefix.
+    commission_rate?: number
     commission_tax_rate?: number
     construction_class?: ApiConstructionClass | null
     risk_address?: string | null

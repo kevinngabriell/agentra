@@ -2,12 +2,13 @@
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
-  Box, Button, Dialog, Field, Flex, Input, NativeSelect, Skeleton, Switch, Tabs, Text, Textarea,
+  Box, Button, Dialog, Field, Flex, Input, Skeleton, Switch, Tabs, Text, Textarea,
 } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LuUser, LuLock, LuBell, LuCheck, LuBuilding2, LuChevronDown, LuChevronUp, LuPencil, LuTrash2, LuPlus, LuX, LuCircle, LuPackage } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
+import { SearchSelect } from "@/components/ui/search-select"
 import { getMyProfile, updateProfile, changePassword, updateNotificationSettings, getNotificationSettings, type UserProfile } from "@/lib/api/user"
 import {
   getInsurers, createInsurer, updateInsurer, deleteInsurer,
@@ -112,13 +113,15 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
 
           <Field.Root>
             <Field.Label {...lbl}>BAHASA</Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field value={language} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLanguage(e.target.value)} fontSize="14px">
-                <option value="id">Bahasa Indonesia</option>
-                <option value="en">English</option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
+            <SearchSelect
+              fontSize="14px"
+              value={language}
+              onChange={setLanguage}
+              options={[
+                { value: "id", label: "Bahasa Indonesia" },
+                { value: "en", label: "English" },
+              ]}
+            />
           </Field.Root>
 
           {feedback && <Toast type={feedback.type} message={feedback.msg} />}

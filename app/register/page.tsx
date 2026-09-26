@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, NativeSelect, SimpleGrid, Steps, Text } from "@chakra-ui/react"
+import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, SimpleGrid, Steps, Text } from "@chakra-ui/react"
 import { Header } from "../../components/Header"
+import { SearchSelect } from "@/components/ui/search-select"
 import { FaShieldAlt } from "react-icons/fa"
 import { FiAlertCircle, FiAward, FiCheck, FiCreditCard, FiEye, FiEyeOff, FiLock, FiShield, FiSmartphone, FiZap, FiMessageCircle } from "react-icons/fi"
 import { MdAccountBalance, MdSupportAgent } from "react-icons/md"
@@ -242,6 +243,8 @@ function Step2Form({
   onCityChange: (v: string) => void
   errors: Record<string, string>
 }) {
+  const [province, setProvince] = useState("")
+
   return (
     <Card.Root boxShadow="sm" border="1px solid" borderColor="#E5E7EB">
       <Card.Body gap="0" p="32px">
@@ -276,15 +279,14 @@ function Step2Form({
                 Provinsi{" "}
                 <Box as="span" fontWeight="normal" color="#9CA3AF">(Opsional)</Box>
               </Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field fontSize="14px" color="#1C2833">
-                  <option value="">Pilih Provinsi</option>
-                  {PROVINCES.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
+              <SearchSelect
+                fontSize="14px"
+                value={province}
+                onChange={setProvince}
+                placeholder="Pilih Provinsi"
+                options={PROVINCES.map((p) => ({ value: p, label: p }))}
+                clearable
+              />
             </Field.Root>
 
             <Field.Root invalid={!!errors.city}>
