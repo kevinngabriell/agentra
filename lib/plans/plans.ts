@@ -13,11 +13,16 @@ export async function getPlans(): Promise<Plan[]> {
   const appId = process.env.NEXT_PUBLIC_APP_ID
   const params = appId ? `?app_id=${encodeURIComponent(appId)}` : ""
 
-  const res = await fetch(`${baseUrl}/api/v1/plans${params}`)
-  if (!res.ok) return []
+  try {
+    const res = await fetch(`${baseUrl}/api/v1/plans${params}`)
+    if (!res.ok) return []
 
-  const json = await res.json()
-  return (json.data ?? []).filter((p: Plan) => p.is_available !== false)
+    const json = await res.json()
+    return (json.data ?? []).filter((p: Plan) => p.is_available !== false)
+  } catch {
+    // API unreachable (e.g. backend not running) — show the empty state instead of crashing
+    return []
+  }
 }
 
 export function formatPlanPrice(priceIdr: number): string {

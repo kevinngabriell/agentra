@@ -1,7 +1,7 @@
 "use client"
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
-import { Avatar, Badge, Box, Button, Dialog, Flex, IconButton, Input, NativeSelect, Skeleton, Switch, Table, Text } from "@chakra-ui/react"
+import { Avatar, Badge, Box, Button, Dialog, Flex, IconButton, Input, Skeleton, Switch, Table, Text } from "@chakra-ui/react"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -10,6 +10,7 @@ import {
   LuHistory, LuRefreshCw, LuClipboard, LuMapPin,
 } from "react-icons/lu"
 import { FaWhatsapp } from "react-icons/fa"
+import { SearchSelect } from "@/components/ui/search-select"
 import { getAccessToken } from "@/lib/auth/session"
 import {
   getPolicyDetail, updateRenewalStatus, updatePaymentStatus, addPolicyFollowUp,
@@ -97,6 +98,12 @@ function LogIcon({ type }: { type: string }) {
 }
 
 const RISK_LABEL = { fontSize: "12px", color: "#5D6D7E", fontWeight: "medium" } as const
+const CONSTRUCTION_CLASS_OPTIONS = [
+  { value: "",    label: "Tidak ditentukan" },
+  { value: "I",   label: "Kelas I – Konstruksi Keras (beton, bata, besi/baja)" },
+  { value: "II",  label: "Kelas II – Semi Keras (campuran beton & kayu)" },
+  { value: "III", label: "Kelas III – Konstruksi Ringan (kayu, seng/genteng)" },
+]
 const RISK_INPUT = { bg: "white", border: "1px solid", borderColor: "#E2E8F0", borderRadius: "8px", fontSize: "13px", color: "#1C2833" } as const
 
 // Province → City → District → Village cascade for the endorsement/koreksi
@@ -113,19 +120,13 @@ function RiskLocationCascadeFields({ value, onChange }: {
       <Flex gap="10px">
         <Flex flexDir="column" gap="4px" flex="1">
           <Text {...RISK_LABEL}>Provinsi</Text>
-          <NativeSelect.Root>
-            <NativeSelect.Field
-              {...RISK_INPUT}
-              value={wilayah.provinceCode}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectProvince(e.target.value)}
-            >
-              <option value="">Pilih provinsi</option>
-              {wilayah.provinces.map(p => (
-                <option key={p.province_code} value={p.province_code}>{p.province_name}</option>
-              ))}
-            </NativeSelect.Field>
-            <NativeSelect.Indicator />
-          </NativeSelect.Root>
+          <SearchSelect
+            value={wilayah.provinceCode}
+            onChange={wilayah.selectProvince}
+            placeholder="Pilih provinsi"
+            options={wilayah.provinces.map(p => ({ value: p.province_code, label: p.province_name }))}
+            clearable
+          />
         </Flex>
         <Flex flexDir="column" gap="4px" flex="1">
           <Text {...RISK_LABEL}>Kota/Kabupaten{wilayah.cityManual ? " (ketik manual)" : ""}</Text>
@@ -136,21 +137,15 @@ function RiskLocationCascadeFields({ value, onChange }: {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ risk_city: e.target.value })}
             />
           ) : (
-            <NativeSelect.Root disabled={!wilayah.provinceCode || wilayah.cityLoading}>
-              <NativeSelect.Field
-                {...RISK_INPUT}
-                value={wilayah.cityCode}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectCity(e.target.value)}
-              >
-                <option value="">
-                  {!wilayah.provinceCode ? "Pilih provinsi dahulu" : wilayah.cityLoading ? "Memuat…" : "Pilih kota/kabupaten"}
-                </option>
-                {wilayah.cities.map(c => (
-                  <option key={c.city_code} value={c.city_code}>{c.city_name}</option>
-                ))}
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
+            <SearchSelect
+              disabled={!wilayah.provinceCode || wilayah.cityLoading}
+              loading={wilayah.cityLoading}
+              value={wilayah.cityCode}
+              onChange={wilayah.selectCity}
+              placeholder={!wilayah.provinceCode ? "Pilih provinsi dahulu" : wilayah.cityLoading ? "Memuat…" : "Pilih kota/kabupaten"}
+              options={wilayah.cities.map(c => ({ value: c.city_code, label: c.city_name }))}
+              clearable
+            />
           )}
         </Flex>
       </Flex>
@@ -164,21 +159,15 @@ function RiskLocationCascadeFields({ value, onChange }: {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ risk_district: e.target.value })}
             />
           ) : (
-            <NativeSelect.Root disabled={!wilayah.cityCode || wilayah.districtLoading}>
-              <NativeSelect.Field
-                {...RISK_INPUT}
-                value={wilayah.districtCode}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectDistrict(e.target.value)}
-              >
-                <option value="">
-                  {!wilayah.cityCode ? "Pilih kota dahulu" : wilayah.districtLoading ? "Memuat…" : "Pilih kecamatan"}
-                </option>
-                {wilayah.districts.map(d => (
-                  <option key={d.district_code} value={d.district_code}>{d.district_name}</option>
-                ))}
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
+            <SearchSelect
+              disabled={!wilayah.cityCode || wilayah.districtLoading}
+              loading={wilayah.districtLoading}
+              value={wilayah.districtCode}
+              onChange={wilayah.selectDistrict}
+              placeholder={!wilayah.cityCode ? "Pilih kota dahulu" : wilayah.districtLoading ? "Memuat…" : "Pilih kecamatan"}
+              options={wilayah.districts.map(d => ({ value: d.district_code, label: d.district_name }))}
+              clearable
+            />
           )}
         </Flex>
         <Flex flexDir="column" gap="4px" flex="1">
@@ -190,21 +179,15 @@ function RiskLocationCascadeFields({ value, onChange }: {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ risk_village: e.target.value })}
             />
           ) : (
-            <NativeSelect.Root disabled={!wilayah.districtCode || wilayah.villageLoading}>
-              <NativeSelect.Field
-                {...RISK_INPUT}
-                value={wilayah.villageCode}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => wilayah.selectVillage(e.target.value)}
-              >
-                <option value="">
-                  {!wilayah.districtCode ? "Pilih kecamatan dahulu" : wilayah.villageLoading ? "Memuat…" : "Pilih kelurahan/desa"}
-                </option>
-                {wilayah.villages.map(v => (
-                  <option key={v.village_code} value={v.village_code}>{v.village_name}</option>
-                ))}
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
+            <SearchSelect
+              disabled={!wilayah.districtCode || wilayah.villageLoading}
+              loading={wilayah.villageLoading}
+              value={wilayah.villageCode}
+              onChange={wilayah.selectVillage}
+              placeholder={!wilayah.districtCode ? "Pilih kecamatan dahulu" : wilayah.villageLoading ? "Memuat…" : "Pilih kelurahan/desa"}
+              options={wilayah.villages.map(v => ({ value: v.village_code, label: v.village_name }))}
+              clearable
+            />
           )}
         </Flex>
       </Flex>
@@ -254,6 +237,7 @@ export default function PolicyDetail() {
   const [koreksiDialog, setKoreksiDialog] = useState(false)
   const [koreksiKey, setKoreksiKey]       = useState(0)
   const [koreksiFo, setKoreksiFo]         = useState({
+    policy_number: '',
     sum_insured: '', premium_amount: '', materai_amount: '',
     biaya_polis: '', diskon: '',
     commission_rate: '', commission_tax_rate: '',
@@ -488,6 +472,7 @@ export default function PolicyDetail() {
   function openKoreksiDialog() {
     if (!policy) return
     setKoreksiFo({
+      policy_number:       policy.policy_number,
       sum_insured:         String(policy.sum_insured),
       premium_amount:      String(policy.premium_amount),
       materai_amount:      String(policy.materai_amount ?? 0),
@@ -518,6 +503,11 @@ export default function PolicyDetail() {
   async function handleKoreksi() {
     const token = getAccessToken()
     if (!token || !policy) return
+    const newPolicyNumber = koreksiFo.policy_number.trim()
+    if (!newPolicyNumber) {
+      setKoreksiyError('Nomor polis tidak boleh kosong')
+      return
+    }
     if (koreksiFo.risk_postal_code && !/^\d{5}$/.test(koreksiFo.risk_postal_code)) {
       setKoreksiyError('Kode pos lokasi risiko harus 5 digit angka')
       return
@@ -530,8 +520,11 @@ export default function PolicyDetail() {
     setKoreksiyError(null)
     try {
       const taxRatePct = parseFloat(koreksiFo.commission_tax_rate) || 0
-      const isFireProduct = isFirePolicy(policy)
+      const isFireProduct = isFirePolicy({ ...policy, policy_number: newPolicyNumber })
       await directUpdatePolicy(token, policy.policy_id, {
+        // Only sent when it actually changed. commission_rate below is always sent
+        // explicitly because the backend never re-derives it from the new prefix.
+        ...(newPolicyNumber !== policy.policy_number ? { policy_number: newPolicyNumber } : {}),
         sum_insured:         Number(koreksiFo.sum_insured),
         premium_amount:      Number(koreksiFo.premium_amount),
         materai_amount:      Number(koreksiFo.materai_amount) || undefined,
@@ -561,7 +554,11 @@ export default function PolicyDetail() {
       await loadLogs()
       setKoreksiDialog(false)
     } catch (err: any) {
-      setKoreksiyError(err.message ?? 'Gagal menyimpan koreksi')
+      setKoreksiyError(
+        err.status === 409
+          ? 'Nomor polis sudah digunakan polis lain di perusahaan ini'
+          : err.message ?? 'Gagal menyimpan koreksi',
+      )
     } finally {
       setKoreksiSaving(false)
     }
@@ -746,21 +743,11 @@ export default function PolicyDetail() {
                   <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">
                     Kategori <Text as="span" color="#DC2626">*</Text>
                   </Text>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                      fontSize="13px" color="#1C2833"
-                      value={covForm.coverage_type}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                        setCovForm((f) => ({ ...f, coverage_type: e.target.value as ApiCoverageType }))
-                      }
-                    >
-                      {(Object.entries(COVERAGE_TYPE_LABELS) as [ApiCoverageType, string][]).map(([val, label]) => (
-                        <option key={val} value={val}>{label}</option>
-                      ))}
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
+                  <SearchSelect
+                    value={covForm.coverage_type}
+                    onChange={(v) => setCovForm((f) => ({ ...f, coverage_type: v as ApiCoverageType }))}
+                    options={(Object.entries(COVERAGE_TYPE_LABELS) as [ApiCoverageType, string][]).map(([value, label]) => ({ value, label }))}
+                  />
                 </Flex>
 
                 <Flex flexDir="column" gap="4px">
@@ -1094,22 +1081,11 @@ export default function PolicyDetail() {
                     {isFirePolicy(policy) && (
                       <Flex flexDir="column" gap="4px">
                         <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kelas Konstruksi Bangunan</Text>
-                        <NativeSelect.Root>
-                          <NativeSelect.Field
-                            bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                            fontSize="13px" color="#1C2833"
-                            value={endorseForm.construction_class}
-                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                              setEndorseForm((f) => ({ ...f, construction_class: e.target.value }))
-                            }
-                          >
-                            <option value="">Tidak ditentukan</option>
-                            <option value="I">Kelas I – Konstruksi Keras (beton, bata, besi/baja)</option>
-                            <option value="II">Kelas II – Semi Keras (campuran beton & kayu)</option>
-                            <option value="III">Kelas III – Konstruksi Ringan (kayu, seng/genteng)</option>
-                          </NativeSelect.Field>
-                          <NativeSelect.Indicator />
-                        </NativeSelect.Root>
+                        <SearchSelect
+                          value={endorseForm.construction_class}
+                          onChange={(v) => setEndorseForm((f) => ({ ...f, construction_class: v }))}
+                          options={CONSTRUCTION_CLASS_OPTIONS}
+                        />
                       </Flex>
                     )}
                     <Flex flexDir="column" gap="4px">
@@ -1276,6 +1252,25 @@ export default function PolicyDetail() {
                     Gunakan hanya untuk memperbaiki kesalahan input data, bukan untuk perubahan polis yang disepakati.
                   </Text>
                 </Box>
+
+                {/* ── Nomor Polis ── */}
+                <Box>
+                  <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Nomor Polis</Text>
+                  <Input
+                    bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
+                    fontSize="13px" color="#1C2833"
+                    value={koreksiFo.policy_number}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setKoreksiFo((f) => ({ ...f, policy_number: e.target.value }))
+                    }
+                  />
+                  <Text fontSize="11px" color="#94A3B8" mt="6px" lineHeight="1.5">
+                    Harus unik per perusahaan. Mengubah nomor polis tidak menghitung ulang rate komisi
+                    — ubah rate di bawah bila prefiks baru memerlukannya.
+                  </Text>
+                </Box>
+
+                <Box h="1px" bg="#E2E8F0" />
 
                 {/* ── Item Pertanggungan ── */}
                 <Box>
@@ -1488,25 +1483,14 @@ export default function PolicyDetail() {
                 <Box>
                   <Text fontSize="13px" fontWeight="semibold" color="#1C2833" mb="12px">Detail Objek & Keterangan</Text>
                   <Flex flexDir="column" gap="10px">
-                    {isFirePolicy(policy) && (
+                    {isFirePolicy({ product_type: policy?.product_type ?? "", policy_number: koreksiFo.policy_number.trim() }) && (
                       <Flex flexDir="column" gap="4px">
                         <Text fontSize="12px" color="#5D6D7E" fontWeight="medium">Kelas Konstruksi Bangunan</Text>
-                        <NativeSelect.Root>
-                          <NativeSelect.Field
-                            bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                            fontSize="13px" color="#1C2833"
-                            value={koreksiFo.construction_class}
-                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                              setKoreksiFo((f) => ({ ...f, construction_class: e.target.value }))
-                            }
-                          >
-                            <option value="">Tidak ditentukan</option>
-                            <option value="I">Kelas I – Konstruksi Keras (beton, bata, besi/baja)</option>
-                            <option value="II">Kelas II – Semi Keras (campuran beton & kayu)</option>
-                            <option value="III">Kelas III – Konstruksi Ringan (kayu, seng/genteng)</option>
-                          </NativeSelect.Field>
-                          <NativeSelect.Indicator />
-                        </NativeSelect.Root>
+                        <SearchSelect
+                          value={koreksiFo.construction_class}
+                          onChange={(v) => setKoreksiFo((f) => ({ ...f, construction_class: v }))}
+                          options={CONSTRUCTION_CLASS_OPTIONS}
+                        />
                       </Flex>
                     )}
                     <Flex flexDir="column" gap="4px">
@@ -1544,7 +1528,7 @@ export default function PolicyDetail() {
                       />
                     </Flex>
 
-                    {isFirePolicy(policy) && (
+                    {isFirePolicy({ product_type: policy?.product_type ?? "", policy_number: koreksiFo.policy_number.trim() }) && (
                       <Flex flexDir="column" gap="10px" pt="6px" borderTop="1px solid" borderColor="#F1F5F9">
                         <Text fontSize="12px" fontWeight="semibold" color="#1C2833">Lokasi Risiko</Text>
                         <Flex flexDir="column" gap="4px">

@@ -80,6 +80,9 @@ export function useWilayahCascade(
                 const match = list.find(c => c.city_name.toLowerCase() === initial.risk_city.toLowerCase())
                 if (match) setCityCode(match.city_code)
             }
+        }).catch(() => {
+            // Non-404 failure (401/5xx/network): don't block the form, let the user type it.
+            if (!cancelled) setCityManual(true)
         }).finally(() => { if (!cancelled) setCityLoading(false) })
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,6 +105,8 @@ export function useWilayahCascade(
                 const match = list.find(d => d.district_name.toLowerCase() === initial.risk_district.toLowerCase())
                 if (match) setDistrictCode(match.district_code)
             }
+        }).catch(() => {
+            if (!cancelled) setDistrictManual(true)
         }).finally(() => { if (!cancelled) setDistrictLoading(false) })
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,6 +128,8 @@ export function useWilayahCascade(
                 const match = list.find(v => v.village_name.toLowerCase() === initial.risk_village.toLowerCase())
                 if (match) setVillageCode(match.village_code)
             }
+        }).catch(() => {
+            if (!cancelled) setVillageManual(true)
         }).finally(() => { if (!cancelled) setVillageLoading(false) })
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps

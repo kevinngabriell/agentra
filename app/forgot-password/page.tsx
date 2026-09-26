@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { FiLock, FiMessageCircle } from "react-icons/fi"
 import { PasswordInput, PasswordStrengthMeter } from "@/components/ui/password-input"
 import { ForgotPassword, ResetPassword } from "@/lib/auth/auth"
+import iconImg from "@/assets/icon.svg"
 
 type Step = 1 | 2 | 3
 
@@ -203,7 +204,7 @@ export default function ForgotPasswordPage() {
                     {step === 1 && (
                         <>
                             <Flex flexDir="column" alignItems="center" mb="28px" gap="6px">
-                                <Image src="../assets/icon.svg" alt="Agentra" w="44px" h="44px" mb="2px" />
+                                <Image src={iconImg.src} alt="Agentra" w="44px" h="44px" mb="2px" />
                                 <Text color="#001F40" fontSize="22px" fontWeight="bold" lineHeight="1">Agentra</Text>
                                 <Text color="#001F40" fontSize="19px" fontWeight="bold" mt="8px">Lupa Password?</Text>
                                 <Text color="#5D6D7E" fontSize="13px" textAlign="center" lineHeight="1.6">
