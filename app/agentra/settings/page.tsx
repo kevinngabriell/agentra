@@ -1405,7 +1405,7 @@ export default function SettingsPage() {
           <TopBar title="Settings" />
         </Box>
 
-        <Flex p="32px" flexDir="column" gap="24px">
+        <Flex p={{ base: "16px", md: "32px" }} flexDir="column" gap="24px">
           <Flex flexDir="column" gap="4px">
             <Text color="#1C2833" fontSize="24px" fontWeight="bold">Pengaturan Akun</Text>
             <Text color="#5D6D7E" fontSize="16px">Kelola profil, keamanan, dan preferensi notifikasi Anda</Text>
@@ -1418,7 +1418,7 @@ export default function SettingsPage() {
             </Flex>
           ) : user ? (
             <Tabs.Root defaultValue={initialTab} variant="plain">
-              <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w="max-content" mb="4px">
+              <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w={{ base: "100%", md: "max-content" }} maxW="100%" overflowX="auto" mb="4px">
                 {[
                   { value: "profile",       label: "Profil",      Icon: LuUser },
                   { value: "security",      label: "Keamanan",    Icon: LuLock },
@@ -1428,7 +1428,7 @@ export default function SettingsPage() {
                   { value: "subscription",  label: "Langganan",   Icon: LuCrown },
                 ].map(({ value, label, Icon }) => (
                   <Tabs.Trigger key={value} value={value}
-                    px="20px" py="8px" borderRadius="8px" fontSize="16px"
+                    px="20px" py="8px" borderRadius="8px" fontSize="16px" flexShrink={0}
                     fontWeight="medium" color="#64748B" gap="6px"
                     _selected={{ bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" }}>
                     <Icon size={14} /> {label}
