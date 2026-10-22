@@ -749,41 +749,7 @@ function InsurersTab() {
         </Button>
       </Flex>
 
-      {feedback && <Toast type={feedback.type} message={feedback.msg} />}
-
-      {/* Add form */}
-      {showAdd && (
-        <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#3B82F6" p="20px">
-          <Flex align="center" gap="8px" mb="16px">
-            <Text color="#1D4ED8" fontSize="16px" fontWeight="semibold">Tambah Perusahaan Asuransi Baru</Text>
-          </Flex>
-          <Flex gap="12px" flexWrap="wrap" mb="12px">
-            <Flex flexDir="column" gap="4px" flex="1" minW="180px">
-              <Text {...lbl}>NAMA LENGKAP *</Text>
-              <Input fontSize="15px" placeholder="PT Asuransi XYZ" value={addForm.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, name: e.target.value }))} />
-            </Flex>
-            <Flex flexDir="column" gap="4px" w="140px">
-              <Text {...lbl}>KODE SINGKAT *</Text>
-              <Input fontSize="15px" placeholder="XYZ" value={addForm.short_name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, short_name: e.target.value }))} />
-            </Flex>
-            <Flex flexDir="column" gap="4px" w="160px">
-              <Text {...lbl}>KODE AGEN</Text>
-              <Input fontSize="15px" placeholder="AG-001" value={addForm.agent_code}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, agent_code: e.target.value }))} />
-            </Flex>
-          </Flex>
-          <Flex gap="12px" align="center" justify="flex-end">
-            <Switch.Root checked={addForm.is_primary} onCheckedChange={(e) => setAddForm((f) => ({ ...f, is_primary: e.checked }))} colorPalette="blue" size="sm">
-              <Switch.HiddenInput /><Switch.Control />
-              <Text fontSize="14px" color="#374151" ml="6px">Insurer Utama</Text>
-            </Switch.Root>
-            <Button variant="ghost" color="#64748B" fontSize="15px" onClick={() => setShowAdd(false)}><LuX size={14} /></Button>
-            <Button bg="#1A3557" color="white" fontSize="15px" loading={adding} onClick={handleAdd}>Simpan</Button>
-          </Flex>
-        </Box>
-      )}
+      {feedback && !(showAdd && feedback.type === "error") && <Toast type={feedback.type} message={feedback.msg} />}
 
       {/* Insurer list */}
       {loading
@@ -904,6 +870,47 @@ function InsurersTab() {
             )
           })
       }
+
+      <Dialog.Root open={showAdd} onOpenChange={({ open }) => { if (!open) setShowAdd(false) }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="16px" maxW="480px" mx="16px">
+            <Dialog.Header borderBottom="1px solid" borderColor="#E2E8F0" pb="16px">
+              <Dialog.Title fontSize="18px" fontWeight="semibold" color="#1C2833">Tambah Perusahaan Asuransi Baru</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body py="20px">
+              <Flex flexDir="column" gap="16px">
+                <Flex flexDir="column" gap="4px">
+                  <Text {...lbl}>NAMA LENGKAP *</Text>
+                  <Input fontSize="16px" placeholder="PT Asuransi XYZ" value={addForm.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, name: e.target.value }))} />
+                </Flex>
+                <Flex gap="12px" flexDir={{ base: "column", sm: "row" }}>
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text {...lbl}>KODE SINGKAT *</Text>
+                    <Input fontSize="16px" placeholder="XYZ" value={addForm.short_name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, short_name: e.target.value }))} />
+                  </Flex>
+                  <Flex flexDir="column" gap="4px" flex="1">
+                    <Text {...lbl}>KODE AGEN</Text>
+                    <Input fontSize="16px" placeholder="AG-001" value={addForm.agent_code}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, agent_code: e.target.value }))} />
+                  </Flex>
+                </Flex>
+                <Switch.Root checked={addForm.is_primary} onCheckedChange={(e) => setAddForm((f) => ({ ...f, is_primary: e.checked }))} colorPalette="blue" size="md">
+                  <Switch.HiddenInput /><Switch.Control />
+                  <Text fontSize="15px" color="#374151" ml="8px">Insurer Utama</Text>
+                </Switch.Root>
+                {feedback?.type === "error" && <Toast type="error" message={feedback.msg} />}
+              </Flex>
+            </Dialog.Body>
+            <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
+              <Button variant="outline" onClick={() => setShowAdd(false)} disabled={adding}>Batal</Button>
+              <Button bg="#1A3557" color="white" loading={adding} onClick={handleAdd}>Simpan</Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
 
       <Dialog.Root open={confirmDeleteId !== null} onOpenChange={({ open }) => { if (!open) setConfirmDeleteId(null) }}>
         <Dialog.Backdrop />
