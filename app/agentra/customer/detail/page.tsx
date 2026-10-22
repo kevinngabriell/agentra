@@ -3,8 +3,10 @@
 import { Sidebar, MobileHeader, MobileBottomNav, TopBar } from "@/components/layout";
 import { getAccessToken } from "@/lib/auth/session";
 import { getCustomerDetail, createCustomer, updateCustomer, getCustomerPolicies, type ApiCustomerPolicy } from "@/lib/api/customers";
+import { errorMessage, errorStatus } from "@/lib/api/client";
+import { fmtIDR } from "@/lib/format";
 import {
-    Badge, Box, Button, Card, Checkbox, Field, FileUpload, Flex, Icon, Image,
+    Badge, Box, Button, Card, Checkbox, Field, Flex, Icon, Image,
     Input, List, SimpleGrid, Skeleton, Table, Tabs, Text, Textarea,
 } from "@chakra-ui/react";
 import { FaInfoCircle, FaArrowRight, FaRegFileImage, FaArrowLeft, FaEye } from "react-icons/fa";
@@ -14,11 +16,18 @@ import { Suspense, useEffect, useState } from "react";
 import verifiedImg from "@/assets/verified.png";
 import companyImg from "@/assets/company.png";
 import { SearchSelect } from "@/components/ui/search-select";
+import { SubAgentSelect } from "@/components/sub-agents";
+import { DocumentsPanel, UploadDocumentDialog } from "@/components/documents";
+import { ClaimsPanel } from "@/components/claims";
+import { TasksPanel } from "@/components/tasks";
+import { Customer360Panel } from "@/components/customer-360";
+import { CustomerMessagesPanel } from "@/components/communications";
+import type { ApiDocumentType } from "@/lib/api/documents";
 
 // ─── Style constants ────────────────────────────────────────────────────────
 
-const lbl  = { color: "#5D6D7E", fontSize: "12px", fontWeight: "semibold" } as const;
-const clbl = { color: "#1C2833", fontSize: "14px", fontWeight: "medium"   } as const;
+const lbl  = { color: "#5D6D7E", fontSize: "14px", fontWeight: "semibold" } as const;
+const clbl = { color: "#1C2833", fontSize: "16px", fontWeight: "medium"   } as const;
 
 const STATUS_OPTIONS = [
     { value: "active",   label: "Aktif" },
@@ -89,7 +98,7 @@ function PhoneInput({ value, onChange, placeholder = "81234567890", disabled, in
         >
             <Box
                 px="3" display="flex" alignItems="center"
-                bg="#F8FAFC" color="#94A3B8" fontSize="14px"
+                bg="#F8FAFC" color="#64748B" fontSize="16px"
                 borderRight="1px solid" borderRightColor={invalid ? "#E53E3E" : "#E2E8F0"}
                 whiteSpace="nowrap"
             >
@@ -111,7 +120,7 @@ function PhoneInput({ value, onChange, placeholder = "81234567890", disabled, in
 const initInd = () => ({
     nik: "", npwp_personal: "", display_name: "", date_of_birth: "",
     personal_email: "", personal_phone: "", personal_whatsapp: "",
-    personal_address: "", status: "active", source: "direct", notes: "",
+    personal_address: "", status: "active", source: "direct", referred_by_agent_id: "", notes: "",
 })
 
 const initCorp = () => ({
@@ -119,14 +128,14 @@ const initCorp = () => ({
     business_type: "", company_email: "", company_phone: "",
     operational_address: "", legal_address: "",
     pic_name: "", pic_role: "", pic_phone: "", pic_whatsapp: "",
-    status: "active", source: "direct",
+    status: "active", source: "direct", referred_by_agent_id: "",
 })
 
 // ─── Error text helper ────────────────────────────────────────────────────────
 
 function ErrText({ msg }: { msg?: string }) {
     if (!msg) return null
-    return <Field.ErrorText fontSize="11px">{msg}</Field.ErrorText>
+    return <Field.ErrorText fontSize="14px">{msg}</Field.ErrorText>
 }
 
 // ─── Customer policies section (list 5.10) ───────────────────────────────────
@@ -149,10 +158,6 @@ const RENEWAL_STATUS_CONFIG: Record<string, { label: string; bg: string; color: 
     cancelled: { label: "Dibatalkan",  bg: "#F1F5F9", color: "#64748B" },
 }
 
-function fmtIDR(n: number) {
-    return "Rp " + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-}
-
 function fmtDate(iso: string) {
     return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
 }
@@ -161,25 +166,30 @@ const POL_PAGE_SIZE = 5
 
 function CustomerPoliciesSection({ customerId }: { customerId: string }) {
     const router = useRouter()
-    const [policies, setPolicies] = useState<ApiCustomerPolicy[]>([])
     const [page, setPage]         = useState(1)
-    const [total, setTotal]       = useState(0)
-    const [loading, setLoading]   = useState(true)
-    const [error, setError]       = useState<string | null>(null)
+    // Tagged with the page it answers so `loading` can be derived and stale responses ignored.
+    const [result, setResult]     = useState<{ key: string; policies: ApiCustomerPolicy[]; total: number; error: string | null } | null>(null)
+    const queryKey = `${customerId}|${page}`
 
     useEffect(() => {
         const token = getAccessToken()
         if (!token) return
-        setLoading(true)
-        setError(null)
+        const key = `${customerId}|${page}`
+        let cancelled = false
         getCustomerPolicies(token, customerId, { page, limit: POL_PAGE_SIZE })
             .then((res) => {
-                setPolicies(res.data ?? [])
-                setTotal(res.pagination?.total ?? 0)
+                if (!cancelled) setResult({ key, policies: res.data ?? [], total: res.pagination?.total ?? 0, error: null })
             })
-            .catch((err) => setError(err.message ?? "Gagal memuat polis nasabah"))
-            .finally(() => setLoading(false))
+            .catch((err: unknown) => {
+                if (!cancelled) setResult({ key, policies: [], total: 0, error: errorMessage(err, "Data polis nasabah belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.") })
+            })
+        return () => { cancelled = true }
     }, [customerId, page])
+
+    const loading  = result?.key !== queryKey
+    const policies = loading ? [] : result?.policies ?? []
+    const total    = result?.total ?? 0
+    const error    = loading ? null : result?.error ?? null
 
     const totalPages = Math.max(1, Math.ceil(total / POL_PAGE_SIZE))
 
@@ -191,14 +201,14 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                         <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuFileText size={18} /></Box>
                         <Flex flexDir="column">
                             <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Polis Dimiliki</Text>
-                            <Text color="#5D6D7E" fontSize="12px">{total} polis terdaftar atas nama nasabah ini</Text>
+                            <Text color="#5D6D7E" fontSize="14px">{total} polis terdaftar atas nama nasabah ini</Text>
                         </Flex>
                     </Flex>
                 </Flex>
 
                 {error && (
                     <Box px="32px" pb="20px">
-                        <Text fontSize="13px" color="#DC2626">{error}</Text>
+                        <Text fontSize="15px" color="#DC2626">{error}</Text>
                     </Box>
                 )}
 
@@ -210,7 +220,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
 
                 {!error && !loading && policies.length === 0 && (
                     <Box px="32px" pb="24px">
-                        <Text color="#94A3B8" fontSize="13px">Nasabah ini belum memiliki polis.</Text>
+                        <Text color="#64748B" fontSize="15px">Nasabah ini belum memiliki polis.</Text>
                     </Box>
                 )}
 
@@ -220,7 +230,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                             <Table.Header>
                                 <Table.Row bg="#F8FAFC">
                                     {["NO. POLIS", "PRODUK", "PERIODE", "PREMI", "STATUS", ""].map((h) => (
-                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="10px">
+                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="10px">
                                             {h}
                                         </Table.ColumnHeader>
                                     ))}
@@ -229,27 +239,27 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                             <Table.Body>
                                 {policies.map((p) => (
                                     <Table.Row key={p.policy_id} borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
-                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="12px" fontFamily="mono">{p.policy_number}</Table.Cell>
-                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="13px">
+                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="14px" fontFamily="mono">{p.policy_number}</Table.Cell>
+                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="15px">
                                             {POLICY_PRODUCT_LABELS[p.product_type] ?? p.product_type}
                                             {p.insurer_short_name ? ` · ${p.insurer_short_name}` : ""}
                                         </Table.Cell>
-                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="12px">
+                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px">
                                             {fmtDate(p.coverage_start)} – {fmtDate(p.coverage_end)}
                                         </Table.Cell>
-                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="13px" fontWeight="medium">
+                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="15px" fontWeight="medium">
                                             {fmtIDR(p.premium_amount)}
                                         </Table.Cell>
                                         <Table.Cell px="20px" py="12px">
-                                            <Badge px="8px" py="2px" borderRadius="full" fontSize="11px" fontWeight="medium"
+                                            <Badge px="8px" py="2px" borderRadius="full" fontSize="14px" fontWeight="medium"
                                                 bg={RENEWAL_STATUS_CONFIG[p.renewal_status]?.bg ?? "#F1F5F9"}
                                                 color={RENEWAL_STATUS_CONFIG[p.renewal_status]?.color ?? "#64748B"}>
                                                 {RENEWAL_STATUS_CONFIG[p.renewal_status]?.label ?? p.renewal_status}
                                             </Badge>
                                         </Table.Cell>
                                         <Table.Cell px="20px" py="12px" textAlign="end">
-                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="12px"
-                                                onClick={() => router.push(`/agentra/policies/${p.policy_id}`)}>
+                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="14px"
+                                                onClick={() => router.push(`/agentra/policies/${encodeURIComponent(p.policy_id)}`)}>
                                                 <FaEye size={12} /> Lihat
                                             </Button>
                                         </Table.Cell>
@@ -260,7 +270,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
 
                         {totalPages > 1 && (
                             <Flex justify="space-between" align="center" px="32px" py="14px" borderTop="1px solid" borderColor="#F1F5F9">
-                                <Text color="#64748B" fontSize="12px">Halaman {page} dari {totalPages}</Text>
+                                <Text color="#64748B" fontSize="14px">Halaman {page} dari {totalPages}</Text>
                                 <Flex gap="6px">
                                     <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151"
                                         disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
@@ -297,6 +307,8 @@ function CustomerDetailForm() {
     const [activeTab, setActiveTab] = useState<"individual" | "corporate">("individual")
     const [ind, setInd]             = useState(initInd())
     const [corp, setCorp]           = useState(initCorp())
+    const [kycUpload, setKycUpload]     = useState<ApiDocumentType | null>(null)
+    const [docsRefresh, setDocsRefresh] = useState(0)
     const [sameWaInd, setSameWaInd]   = useState(false)
     const [sameWaCorp, setSameWaCorp] = useState(false)
 
@@ -308,10 +320,12 @@ function CustomerDetailForm() {
     useEffect(() => {
         if (!isEdit || !customerId) return
         const token = getAccessToken()
-        if (!token) { router.push("/auth/login"); return }
+        if (!token) { router.push("/login"); return }
 
+        let cancelled = false
         getCustomerDetail(token, customerId)
             .then((d) => {
+                if (cancelled) return
                 if (d.customer_type === "individual") {
                     setActiveTab("individual")
                     setInd({
@@ -325,6 +339,7 @@ function CustomerDetailForm() {
                         personal_address:  d.personal_address ?? "",
                         status:            d.status,
                         source:            d.source ?? "direct",
+                        referred_by_agent_id: d.referred_by_agent_id ?? "",
                         notes:             d.notes ?? "",
                     })
                 } else {
@@ -345,22 +360,36 @@ function CustomerDetailForm() {
                         pic_whatsapp:       toDisplay(d.pic_whatsapp),
                         status:             d.status,
                         source:             d.source ?? "direct",
+                        referred_by_agent_id: d.referred_by_agent_id ?? "",
                     })
                 }
             })
-            .catch((err) => setFetchError(err.message ?? "Gagal memuat data nasabah"))
-            .finally(() => setFetchLoading(false))
-    }, [customerId])
+            .catch((err: unknown) => {
+                if (!cancelled && errorStatus(err) !== 401) setFetchError(errorMessage(err, "Data nasabah belum bisa dibuka. Periksa sinyal internet, lalu coba lagi."))
+            })
+            .finally(() => { if (!cancelled) setFetchLoading(false) })
+        return () => { cancelled = true }
+    }, [customerId, isEdit, router])
 
     // ── WA mirror ─────────────────────────────────────────────────────────────
+    // "Sama" copies the phone into WhatsApp when ticked and keeps it in sync while
+    // ticked; done in the event handlers rather than an effect.
 
-    useEffect(() => {
-        if (sameWaInd) setInd(f => ({ ...f, personal_whatsapp: f.personal_phone }))
-    }, [sameWaInd, ind.personal_phone])
+    function toggleSameWaInd(checked: boolean) {
+        setSameWaInd(checked)
+        if (checked) {
+            setInd(f => ({ ...f, personal_whatsapp: f.personal_phone }))
+            setIndErr(e => { const n = { ...e }; delete n.personal_whatsapp; return n })
+        }
+    }
 
-    useEffect(() => {
-        if (sameWaCorp) setCorp(f => ({ ...f, pic_whatsapp: f.pic_phone }))
-    }, [sameWaCorp, corp.pic_phone])
+    function toggleSameWaCorp(checked: boolean) {
+        setSameWaCorp(checked)
+        if (checked) {
+            setCorp(f => ({ ...f, pic_whatsapp: f.pic_phone }))
+            setCorpErr(e => { const n = { ...e }; delete n.pic_whatsapp; return n })
+        }
+    }
 
     // ── Field update helpers (clears error on change) ─────────────────────────
 
@@ -425,7 +454,7 @@ function CustomerDetailForm() {
         }
 
         const token = getAccessToken()
-        if (!token) { router.push("/auth/login"); return }
+        if (!token) { router.push("/login"); return }
 
         setSaving(true); setSaveError(null)
 
@@ -443,11 +472,11 @@ function CustomerDetailForm() {
                     personal_address:  ind.personal_address || undefined,
                     status:            ind.status,
                     source:            ind.source,
+                    referred_by_agent_id: ind.source === "referral" ? ind.referred_by_agent_id : "",
                     notes:             ind.notes || undefined,
                 }
-                isEdit && customerId
-                    ? await updateCustomer(token, customerId, payload)
-                    : await createCustomer(token, payload)
+                if (isEdit && customerId) await updateCustomer(token, customerId, payload)
+                else await createCustomer(token, payload)
             } else {
                 const payload = {
                     customer_type:      "company",
@@ -466,16 +495,16 @@ function CustomerDetailForm() {
                     pic_whatsapp:       corp.pic_whatsapp ? toApi(corp.pic_whatsapp) : undefined,
                     status:             corp.status,
                     source:             corp.source,
+                    referred_by_agent_id: corp.source === "referral" ? corp.referred_by_agent_id : "",
                 }
-                isEdit && customerId
-                    ? await updateCustomer(token, customerId, payload)
-                    : await createCustomer(token, payload)
+                if (isEdit && customerId) await updateCustomer(token, customerId, payload)
+                else await createCustomer(token, payload)
             }
 
             setSaveSuccess(true)
             setTimeout(() => router.push("/agentra/customer"), 1200)
-        } catch (err: any) {
-            setSaveError(friendlyError(err.message ?? "Gagal menyimpan data"))
+        } catch (err: unknown) {
+            setSaveError(friendlyError(errorMessage(err, "Gagal menyimpan data")))
         } finally {
             setSaving(false)
         }
@@ -485,22 +514,26 @@ function CustomerDetailForm() {
         ? ((activeTab === "individual" ? ind.display_name : corp.display_name) || "Detail Nasabah")
         : "Tambah Nasabah Baru"
 
+    const docCustomer = isEdit && customerId
+        ? { id: customerId, name: pageTitle, type: activeTab === "individual" ? "individual" as const : "company" as const }
+        : null
+
     // ── Loading skeleton ──────────────────────────────────────────────────────
 
     if (fetchLoading) {
         return (
-            <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+            <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Detail Nasabah" /></Box>
-                <Flex p="32px" gap="24px" flexDir="column">
+                <Flex p={{ base: "16px", md: "32px" }} gap="24px" flexDir="column">
                     <Skeleton h="32px" w="220px" borderRadius="8px" />
                     <Flex gap="32px">
-                        <Flex w="70%" flexDir="column" gap="16px">
+                        <Flex w={{ base: "100%", md: "70%" }} flexDir="column" gap="16px">
                             <Skeleton h="56px" borderRadius="8px" />
                             <Skeleton h="56px" borderRadius="8px" />
                             <Skeleton h="56px" borderRadius="8px" />
                             <Skeleton h="100px" borderRadius="8px" />
                         </Flex>
-                        <Flex w="30%" flexDir="column" gap="12px">
+                        <Flex w={{ base: "100%", md: "30%" }} flexDir="column" gap="12px">
                             <Skeleton h="180px" borderRadius="12px" />
                             <Skeleton h="140px" borderRadius="12px" />
                         </Flex>
@@ -514,9 +547,9 @@ function CustomerDetailForm() {
 
     if (fetchError) {
         return (
-            <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+            <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Detail Nasabah" /></Box>
-                <Flex p="32px" flexDir="column" gap="16px">
+                <Flex p={{ base: "16px", md: "32px" }} flexDir="column" gap="16px">
                     <Text color="#DC2626" fontSize="16px">{fetchError}</Text>
                     <Button w="max-content" variant="outline" gap="8px" onClick={() => router.push("/agentra/customer")}>
                         <FaArrowLeft size={12} /> Kembali ke Daftar Nasabah
@@ -528,7 +561,9 @@ function CustomerDetailForm() {
 
     // ── Save/Cancel action block ──────────────────────────────────────────────
 
-    const ActionRow = ({ dark = false }: { dark?: boolean }) => (
+    // A render helper, not a nested component: a component declared inside the render
+    // body is a new type every render, so React would remount it on every keystroke.
+    const renderActionRow = (dark = false) => (
         <Flex flexDir="column" gap="10px">
             {saveError && (
                 <Flex
@@ -537,7 +572,7 @@ function CustomerDetailForm() {
                     borderColor={dark ? "rgba(254,202,202,0.4)" : "#FECACA"}
                     borderRadius="8px" px="12px" py="10px" gap="8px"
                 >
-                    <Text fontSize="12px" color={dark ? "#FCA5A5" : "#DC2626"} lineHeight="1.5">
+                    <Text fontSize="14px" color={dark ? "#FCA5A5" : "#DC2626"} lineHeight="1.5">
                         {saveError}
                     </Text>
                 </Flex>
@@ -546,7 +581,7 @@ function CustomerDetailForm() {
                 <Flex bg={dark ? "rgba(134,239,172,0.15)" : "#F0FDF4"} border="1px solid"
                     borderColor={dark ? "rgba(134,239,172,0.4)" : "#BBF7D0"}
                     borderRadius="8px" px="12px" py="10px">
-                    <Text fontSize="12px" color={dark ? "#86EFAC" : "#16A34A"}>
+                    <Text fontSize="14px" color={dark ? "#86EFAC" : "#16A34A"}>
                         Data berhasil {isEdit ? "diperbarui" : "disimpan"}! Mengalihkan...
                     </Text>
                 </Flex>
@@ -554,7 +589,7 @@ function CustomerDetailForm() {
             <Button
                 bg={dark ? "white" : "#1A3557"}
                 color={dark ? "#1A3557" : "white"}
-                fontSize="14px" fontWeight="bold" py="16px" borderRadius="10px" gap="8px"
+                fontSize="16px" fontWeight="bold" py="16px" borderRadius="10px" gap="8px"
                 onClick={handleSave} loading={saving} disabled={saving || saveSuccess}
             >
                 {isEdit ? "Perbarui Data" : "Simpan Data Nasabah"} <FaArrowRight />
@@ -562,7 +597,7 @@ function CustomerDetailForm() {
             <Button
                 bg={dark ? "transparent" : "white"}
                 color={dark ? "#DBEAFE" : "#5D6D7E"}
-                fontSize="14px" border="1px solid"
+                fontSize="16px" border="1px solid"
                 borderColor={dark ? "#2F5788" : "#DDE1E7"}
                 py="16px" borderRadius="10px"
                 onClick={() => router.push("/agentra/customer")} disabled={saving}
@@ -575,14 +610,14 @@ function CustomerDetailForm() {
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+        <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
             <Box display={{ base: "none", md: "block" }}>
                 <TopBar title={isEdit ? "Detail Nasabah" : "Tambah Nasabah"} />
             </Box>
 
-            <Flex gap="24px" p="32px" flexDir="column">
+            <Flex gap="24px" p={{ base: "16px", md: "32px" }} flexDir="column">
                 {/* Header */}
-                <Flex align="center" gap="12px">
+                <Flex align="center" gap="12px" flexWrap="wrap">
                     <Button size="sm" variant="ghost" color="#64748B" gap="6px"
                         onClick={() => router.push("/agentra/customer")}>
                         <FaArrowLeft size={12} /> Kembali
@@ -597,10 +632,10 @@ function CustomerDetailForm() {
                 >
                     {/* Tab switcher — only when creating */}
                     {!isEdit ? (
-                        <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w="max-content">
+                        <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w={{ base: "100%", md: "max-content" }}>
                             {(["individual", "corporate"] as const).map((v, i) => (
                                 <Tabs.Trigger key={v} value={v}
-                                    px="20px" py="8px" borderRadius="8px" fontSize="14px"
+                                    flex={{ base: 1, md: "initial" }} justifyContent="center" px="20px" py="8px" borderRadius="8px" fontSize="16px"
                                     fontWeight="medium" color="#64748B"
                                     _selected={{ bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" }}>
                                     {["Perorangan", "Perusahaan"][i]}
@@ -609,7 +644,7 @@ function CustomerDetailForm() {
                         </Tabs.List>
                     ) : (
                         <Box px="12px" py="5px" borderRadius="8px" w="max-content"
-                            fontSize="13px" fontWeight="semibold"
+                            fontSize="15px" fontWeight="semibold"
                             bg={activeTab === "individual" ? "#E5EFF5" : "#F3E8FF"}
                             color={activeTab === "individual" ? "#006397" : "#7E22CE"}>
                             {activeTab === "individual" ? "Nasabah Perorangan" : "Nasabah Perusahaan"}
@@ -618,11 +653,11 @@ function CustomerDetailForm() {
 
                     {/* ── Individual ─────────────────────────────────────────── */}
                     <Tabs.Content value="individual">
-                        <Flex w="100%" gap="32px">
+                        <Flex w="100%" gap={{ base: "24px", md: "32px" }} flexDir={{ base: "column", md: "row" }}>
                             {/* Left form */}
-                            <Flex w="70%">
+                            <Flex w={{ base: "100%", md: "70%" }}>
                                 <Card.Root w="100%" border="1px solid" borderColor="#F1F5F9" borderRadius="12px">
-                                    <Card.Body gap="24px" p="32px">
+                                    <Card.Body gap="24px" p={{ base: "16px", md: "32px" }}>
                                         <Flex borderLeft="4px solid" borderColor="#1A3557" pl="12px">
                                             <Text color="#1A3557" fontSize="18px" fontWeight="semibold">Data Identitas</Text>
                                         </Flex>
@@ -666,7 +701,7 @@ function CustomerDetailForm() {
                                             <Field.Root invalid={!!indErr.personal_phone}>
                                                 <Field.Label {...lbl}>NO. TELEPON (HP)</Field.Label>
                                                 <PhoneInput value={ind.personal_phone}
-                                                    onChange={updInd("personal_phone")}
+                                                    onChange={(v) => { updInd("personal_phone")(v); if (sameWaInd) updInd("personal_whatsapp")(v) }}
                                                     invalid={!!indErr.personal_phone} />
                                                 <ErrText msg={indErr.personal_phone} />
                                             </Field.Root>
@@ -678,10 +713,10 @@ function CustomerDetailForm() {
                                                         disabled={sameWaInd}
                                                         invalid={!!indErr.personal_whatsapp} />
                                                     <Checkbox.Root size="sm" checked={sameWaInd}
-                                                        onCheckedChange={(e) => setSameWaInd(!!e.checked)} colorPalette="green">
+                                                        onCheckedChange={(e) => toggleSameWaInd(!!e.checked)} colorPalette="green">
                                                         <Checkbox.HiddenInput />
                                                         <Checkbox.Control />
-                                                        <Checkbox.Label fontSize="12px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
+                                                        <Checkbox.Label fontSize="14px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
                                                     </Checkbox.Root>
                                                 </Flex>
                                                 <ErrText msg={indErr.personal_whatsapp} />
@@ -704,12 +739,18 @@ function CustomerDetailForm() {
                                                 <SearchSelect value={ind.source} onChange={updInd("source")} options={SOURCE_OPTIONS} />
                                             </Field.Root>
                                         </SimpleGrid>
+                                        {ind.source === "referral" && (
+                                            <Field.Root>
+                                                <Field.Label {...lbl}>SUB-AGEN PEREFERENSI</Field.Label>
+                                                <SubAgentSelect value={ind.referred_by_agent_id} onChange={updInd("referred_by_agent_id")} ariaLabel="Sub-agen pereferensi" />
+                                            </Field.Root>
+                                        )}
                                     </Card.Body>
                                 </Card.Root>
                             </Flex>
 
                             {/* Right sidebar */}
-                            <Flex w="30%" gap="24px" flexDir="column">
+                            <Flex w={{ base: "100%", md: "30%" }} gap="24px" flexDir="column">
                                 <Card.Root bgColor="#1A3557" color="white" borderRadius="12px">
                                     <Card.Body gap="16px">
                                         <Flex gap="8px" align="center" fontWeight="semibold" fontSize="16px">
@@ -720,7 +761,7 @@ function CustomerDetailForm() {
                                                 "Kolom bertanda * wajib diisi sebelum menyimpan.",
                                                 "NIK harus 16 digit sesuai E-KTP.",
                                                 "Nomor WhatsApp aktif diperlukan untuk pengiriman e-Polis otomatis.",
-                                            ].map((t, i) => <List.Item key={i} fontSize="12px" color="white">{t}</List.Item>)}
+                                            ].map((t, i) => <List.Item key={i} fontSize="14px" color="white">{t}</List.Item>)}
                                         </List.Root>
                                     </Card.Body>
                                 </Card.Root>
@@ -729,22 +770,24 @@ function CustomerDetailForm() {
                                     <Card.Body p="16px">
                                         <Flex flexDir="column" align="center" gap="12px"
                                             border="2px dashed" borderColor="#CBD5E1" borderRadius="10px" p="16px">
-                                            <Image src={verifiedImg.src} w="72px" />
-                                            <Text color="#1A3557" fontSize="15px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
-                                            <Text color="#64748B" fontSize="12px" textAlign="center">
-                                                Unggah foto KTP untuk mempercepat verifikasi via OCR
+                                            <Image src={verifiedImg.src} alt="" w="72px" />
+                                            <Text color="#1A3557" fontSize="16px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
+                                            <Text color="#64748B" fontSize="14px" textAlign="center">
+                                                {isEdit
+                                                    ? "Unggah KTP untuk melengkapi dokumen KYC (APU-PPT)"
+                                                    : "Simpan data nasabah terlebih dahulu untuk mengunggah KTP"}
                                             </Text>
-                                            <Flex w="100%" align="center" justify="center" gap="8px"
-                                                border="1px solid" borderColor="#CBD5E1" borderRadius="8px"
-                                                py="10px" color="#94A3B8" fontSize="13px" cursor="pointer"
-                                                _hover={{ borderColor: "#93C5FD", color: "#60A5FA" }}>
-                                                <FaRegFileImage size={15} /> Unggah Foto KTP
-                                            </Flex>
+                                            {isEdit && (
+                                                <Button w="100%" variant="outline" borderColor="#1A3557" color="#1A3557" gap="8px" fontSize="15px"
+                                                    onClick={() => setKycUpload("ktp")}>
+                                                    <FaRegFileImage size={15} aria-hidden="true" /> Unggah Foto KTP
+                                                </Button>
+                                            )}
                                         </Flex>
                                     </Card.Body>
                                 </Card.Root>
 
-                                <ActionRow />
+                                {renderActionRow()}
                             </Flex>
                         </Flex>
                     </Tabs.Content>
@@ -754,12 +797,12 @@ function CustomerDetailForm() {
                         <Flex gap="32px" flexDir="column">
                             {/* Company info */}
                             <Card.Root borderRadius="12px" border="1px solid" borderColor="#F1F5F9">
-                                <Card.Body gap="24px" p="32px">
+                                <Card.Body gap="24px" p={{ base: "16px", md: "32px" }}>
                                     <Flex gap="12px" align="center">
-                                        <Image src={companyImg.src} w="40px" h="40px" />
+                                        <Image src={companyImg.src} alt="" w="40px" h="40px" />
                                         <Flex flexDir="column">
                                             <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi Perusahaan</Text>
-                                            <Text color="#5D6D7E" fontSize="12px">Lengkapi detail legalitas dan operasional perusahaan nasabah</Text>
+                                            <Text color="#5D6D7E" fontSize="14px">Lengkapi detail legalitas dan operasional perusahaan nasabah</Text>
                                         </Flex>
                                     </Flex>
 
@@ -821,7 +864,7 @@ function CustomerDetailForm() {
                                     <Field.Root>
                                         <Flex justify="space-between" align="center">
                                             <Field.Label {...clbl} mb="0">Alamat Legal (Sesuai Domisili/NPWP)</Field.Label>
-                                            <Text color="#3B82F6" fontSize="12px" cursor="pointer"
+                                            <Text color="#3B82F6" fontSize="14px" cursor="pointer"
                                                 onClick={() => updCorp("legal_address")(corp.operational_address)}>
                                                 ⟳ Samakan dengan Operasional
                                             </Text>
@@ -840,19 +883,25 @@ function CustomerDetailForm() {
                                             <SearchSelect value={corp.source} onChange={updCorp("source")} options={SOURCE_OPTIONS} />
                                         </Field.Root>
                                     </SimpleGrid>
+                                    {corp.source === "referral" && (
+                                        <Field.Root>
+                                            <Field.Label {...clbl}>SUB-AGEN PEREFERENSI</Field.Label>
+                                            <SubAgentSelect value={corp.referred_by_agent_id} onChange={updCorp("referred_by_agent_id")} ariaLabel="Sub-agen pereferensi" />
+                                        </Field.Root>
+                                    )}
                                 </Card.Body>
                             </Card.Root>
 
                             {/* PIC + right sidebar */}
-                            <Flex w="100%" gap="32px">
-                                <Flex w="70%">
+                            <Flex w="100%" gap={{ base: "24px", md: "32px" }} flexDir={{ base: "column", md: "row" }}>
+                                <Flex w={{ base: "100%", md: "70%" }}>
                                     <Card.Root w="100%" borderRadius="12px" border="1px solid" borderColor="#F1F5F9">
-                                        <Card.Body gap="24px" p="32px">
+                                        <Card.Body gap="24px" p={{ base: "16px", md: "32px" }}>
                                             <Flex gap="12px" align="center">
                                                 <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuUser size={20} /></Box>
                                                 <Flex flexDir="column">
                                                     <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi PIC</Text>
-                                                    <Text color="#5D6D7E" fontSize="12px">Detail orang yang bertanggung jawab (Person In Charge).</Text>
+                                                    <Text color="#5D6D7E" fontSize="14px">Detail orang yang bertanggung jawab (Person In Charge).</Text>
                                                 </Flex>
                                             </Flex>
 
@@ -886,10 +935,10 @@ function CustomerDetailForm() {
                                                             disabled={sameWaCorp}
                                                             invalid={!!corpErr.pic_whatsapp} />
                                                         <Checkbox.Root size="sm" checked={sameWaCorp}
-                                                            onCheckedChange={(e) => setSameWaCorp(!!e.checked)} colorPalette="green">
+                                                            onCheckedChange={(e) => toggleSameWaCorp(!!e.checked)} colorPalette="green">
                                                             <Checkbox.HiddenInput />
                                                             <Checkbox.Control />
-                                                            <Checkbox.Label fontSize="12px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
+                                                            <Checkbox.Label fontSize="14px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
                                                         </Checkbox.Root>
                                                     </Flex>
                                                     <ErrText msg={corpErr.pic_whatsapp} />
@@ -900,11 +949,11 @@ function CustomerDetailForm() {
                                 </Flex>
 
                                 {/* Right sidebar */}
-                                <Flex w="30%" gap="24px" flexDir="column">
+                                <Flex w={{ base: "100%", md: "30%" }} gap="24px" flexDir="column">
                                     <Card.Root bgColor="#1A3557" color="white" borderRadius="12px">
                                         <Card.Body gap="12px">
                                             <Text fontSize="16px" fontWeight="semibold">Verifikasi Data</Text>
-                                            <Text fontSize="12px" color="#BFDBFE">
+                                            <Text fontSize="14px" color="#BFDBFE">
                                                 Pastikan seluruh informasi perusahaan dan PIC sesuai dengan dokumen legal asli.
                                             </Text>
                                             <Flex flexDir="column" gap="8px" my="4px">
@@ -918,35 +967,68 @@ function CustomerDetailForm() {
                                                         <Box w="10px" h="10px" borderRadius="full" flexShrink={0}
                                                             bg={item.done ? "#4ADE80" : "transparent"}
                                                             border={item.done ? "none" : "2px solid #94A3B8"} />
-                                                        <Text fontSize="12px" color={item.done ? "white" : "#94A3B8"}>{item.label}</Text>
+                                                        <Text fontSize="14px" color={item.done ? "white" : "#94A3B8"}>{item.label}</Text>
                                                     </Flex>
                                                 ))}
                                             </Flex>
-                                            <ActionRow dark />
+                                            {renderActionRow(true)}
                                         </Card.Body>
                                     </Card.Root>
 
-                                    <FileUpload.Root maxFiles={5}>
-                                        <FileUpload.HiddenInput />
-                                        <FileUpload.Dropzone borderRadius="12px">
-                                            <Icon size="md" color="fg.muted"><LuUpload /></Icon>
-                                            <FileUpload.DropzoneContent>
-                                                <Box fontWeight="bold" fontSize="14px" color="#1C2833">Unggah Dokumen Legal</Box>
-                                                <Box color="#94A3B8" fontSize="12px">PDF, JPG (Maks. 5MB)</Box>
-                                            </FileUpload.DropzoneContent>
-                                        </FileUpload.Dropzone>
-                                        <FileUpload.List />
-                                    </FileUpload.Root>
+                                    <Flex flexDir="column" align="center" gap="8px" textAlign="center"
+                                        border="2px dashed" borderColor="#CBD5E1" borderRadius="12px" p="20px">
+                                        <Icon size="md" color="fg.muted"><LuUpload /></Icon>
+                                        <Box fontWeight="bold" fontSize="16px" color="#1C2833">Dokumen Legal</Box>
+                                        <Box color="#64748B" fontSize="14px">Akta Pendirian, NIB, NPWP, KTP Direktur — PDF, JPG, PNG (Maks. 10MB)</Box>
+                                        {isEdit ? (
+                                            <Button size="sm" variant="outline" borderColor="#1A3557" color="#1A3557" gap="6px" fontSize="15px"
+                                                onClick={() => setKycUpload("akta_pendirian")}>
+                                                <LuUpload size={13} /> Unggah Dokumen Legal
+                                            </Button>
+                                        ) : (
+                                            <Text color="#64748B" fontSize="14px">Simpan data nasabah terlebih dahulu untuk mengunggah dokumen.</Text>
+                                        )}
+                                    </Flex>
                                 </Flex>
                             </Flex>
                         </Flex>
                     </Tabs.Content>
                 </Tabs.Root>
 
+                {isEdit && customerId && !fetchLoading && (
+                    <Customer360Panel customerId={customerId} />
+                )}
+
                 {isEdit && customerId && (
                     <CustomerPoliciesSection customerId={customerId} />
                 )}
+
+                {isEdit && customerId && !fetchLoading && docCustomer && (
+                    <ClaimsPanel customer={{ id: docCustomer.id, name: docCustomer.name }} />
+                )}
+
+                {isEdit && customerId && !fetchLoading && docCustomer && (
+                    <TasksPanel link={{ customer_id: docCustomer.id, label: docCustomer.name }} />
+                )}
+
+                {isEdit && customerId && !fetchLoading && docCustomer && (
+                    <CustomerMessagesPanel customer={{ id: docCustomer.id, name: docCustomer.name }} />
+                )}
+
+                {isEdit && customerId && !fetchLoading && (
+                    <DocumentsPanel customer={docCustomer!} refreshKey={docsRefresh} />
+                )}
             </Flex>
+
+            {docCustomer && (
+                <UploadDocumentDialog
+                    open={kycUpload !== null}
+                    onClose={() => setKycUpload(null)}
+                    onUploaded={() => setDocsRefresh((k) => k + 1)}
+                    customer={{ id: docCustomer.id, name: docCustomer.name }}
+                    defaultType={kycUpload ?? undefined}
+                />
+            )}
         </Box>
     )
 }
@@ -957,7 +1039,7 @@ export default function CustomerDetailPage() {
             <Sidebar />
             <MobileHeader />
             <Suspense fallback={
-                <Box ml={{ base: 0, md: "200px" }} p="32px">
+                <Box ml={{ base: 0, md: "250px" }} p={{ base: "16px", md: "32px" }}>
                     <Skeleton h="32px" w="200px" borderRadius="8px" mb="24px" />
                     <Skeleton h="400px" borderRadius="12px" />
                 </Box>
