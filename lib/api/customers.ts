@@ -1,20 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
-
-async function apiGet<T>(path: string, token: string): Promise<T> {
-    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as T
-}
+import { apiDownload, apiFetch, apiFetchOr, apiPath, withQuery } from "./client"
 
 export type ApiCustomerType = 'individual' | 'company'
 export type ApiCustomerStatus = 'active' | 'inactive' | 'lapsed'
@@ -47,16 +31,12 @@ export interface CustomersListResponse {
 }
 
 export interface CustomerListParams {
+    signal?: AbortSignal
     params?: string
     customer_type?: ApiCustomerType
     status?: ApiCustomerStatus
     page?: number
     limit?: number
-}
-
-const EMPTY: CustomersListResponse = {
-    data: [],
-    pagination: { total: 0, page: 1, limit: 10, total_pages: 0 },
 }
 
 export interface ApiCustomerDetail {
@@ -65,6 +45,11 @@ export interface ApiCustomerDetail {
     display_name: string
     status: ApiCustomerStatus
     source?: string
+    /** sub_agents.sub_agent_id of the referring sub-agent, when source is 'referral'. */
+    referred_by_agent_id?: string | null
+    /** customer_groups.group_id, when the customer belongs to a group of related customers. */
+    group_id?: string | null
+    group_name?: string | null
     notes?: string
     // Individual
     nik?: string
@@ -90,35 +75,15 @@ export interface ApiCustomerDetail {
     pic_email?: string
 }
 
-async function apiMutate<T>(
-    method: 'POST' | 'PUT',
-    path: string,
-    token: string,
-    body: Record<string, unknown>,
-): Promise<T> {
-    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
-        method,
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as T
-}
-
 export async function getCustomerDetail(token: string, customerId: string): Promise<ApiCustomerDetail> {
-    return apiGet<ApiCustomerDetail>(`/customers/${customerId}`, token)
+    return apiFetch<ApiCustomerDetail>(apiPath`/customers/${customerId}`, { token })
 }
 
 export async function createCustomer(
     token: string,
     data: Record<string, unknown>,
 ): Promise<{ customer_id: string }> {
-    return apiMutate<{ customer_id: string }>('POST', '/customers', token, data)
+    return apiFetch<{ customer_id: string }>('/customers', { method: 'POST', token, body: data })
 }
 
 export async function updateCustomer(
@@ -126,22 +91,13 @@ export async function updateCustomer(
     customerId: string,
     data: Record<string, unknown>,
 ): Promise<void> {
-    await apiMutate<unknown>('PUT', `/customers/${customerId}`, token, data)
+    await apiFetch<unknown>(apiPath`/customers/${customerId}`, { method: 'PUT', token, body: data })
 }
 
+// On failure the API puts the specific reason (e.g. a foreign-key violation) in
+// `data.error`; it is exposed as ApiError.detail.
 export async function deleteCustomer(token: string, customerId: string): Promise<void> {
-    const res = await fetch(`${BASE_URL}/api/v1/customers/${customerId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const detail: string = json.data?.error ?? json.status_message ?? 'Request failed'
-        const err: any = new Error(detail)
-        err.status = res.status
-        err.detail = detail
-        throw err
-    }
+    await apiFetch<unknown>(apiPath`/customers/${customerId}`, { method: 'DELETE', token })
 }
 
 export async function updateCustomerStatus(
@@ -149,7 +105,7 @@ export async function updateCustomerStatus(
     customerId: string,
     status: ApiCustomerStatus,
 ): Promise<void> {
-    await apiMutate<unknown>('PUT', `/customers/${customerId}/status`, token, { status })
+    await apiFetch<unknown>(apiPath`/customers/${customerId}/status`, { method: 'PUT', token, body: { status } })
 }
 
 export interface ApiCustomerFollowUp {
@@ -177,35 +133,11 @@ export async function getCustomerFollowUps(
     page = 1,
     limit = 10,
 ): Promise<CustomerFollowUpsResponse> {
-    return apiGet<CustomerFollowUpsResponse>(
-        `/customers/${customerId}/follow-ups?page=${page}&limit=${limit}`,
-        token,
-    )
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) })
+    return apiFetch<CustomerFollowUpsResponse>(withQuery(apiPath`/customers/${customerId}/follow-ups`, qs), { token })
 }
 
-export interface ImportCustomersResult {
-    inserted: number
-    failed: number
-    failures: Array<{ row: number; reason: string }>
-}
-
-export async function importCustomers(token: string, file: File): Promise<ImportCustomersResult> {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const res = await fetch(`${BASE_URL}/api/v1/customers/import`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Import failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as ImportCustomersResult
-}
+// Bulk import lives in ./imports (customers and policies share one flow).
 
 export interface ApiCustomerPolicy {
     policy_id: string
@@ -241,34 +173,23 @@ export interface CustomerPoliciesParams {
     renewal_status?: 'pending' | 'renewed' | 'lapsed' | 'cancelled'
 }
 
-const EMPTY_CUSTOMER_POLICIES: CustomerPoliciesResponse = {
-    data: [],
-    pagination: { total: 0, page: 1, limit: 10, total_pages: 0 },
-}
-
 export async function getCustomerPolicies(
     token: string,
     customerId: string,
     params: CustomerPoliciesParams = {},
 ): Promise<CustomerPoliciesResponse> {
+    const page = params.page ?? 1
+    const limit = params.limit ?? 10
     const qs = new URLSearchParams()
-    qs.set('page', String(params.page ?? 1))
-    qs.set('limit', String(params.limit ?? 10))
+    qs.set('page', String(page))
+    qs.set('limit', String(limit))
     if (params.renewal_status) qs.set('renewal_status', params.renewal_status)
 
-    const res = await fetch(`${BASE_URL}/api/v1/customers/${customerId}/policies?${qs.toString()}`, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    // 404 = the customer has no policies.
+    return apiFetchOr<CustomerPoliciesResponse>(withQuery(apiPath`/customers/${customerId}/policies`, qs), { token }, {
+        data: [],
+        pagination: { total: 0, page, limit, total_pages: 0 },
     })
-    const json = await res.json()
-
-    if (res.status === 404) return EMPTY_CUSTOMER_POLICIES
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-
-    return json.data as CustomerPoliciesResponse
 }
 
 export interface ExportCustomersParams {
@@ -286,23 +207,7 @@ export async function exportCustomers(
     if (filters.customer_type) qs.set('customer_type', filters.customer_type)
     if (filters.status) qs.set('status', filters.status)
 
-    const res = await fetch(`${BASE_URL}/api/v1/customers/export?${qs.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    })
-
-    if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        const err: any = new Error((json as any).status_message || 'Export failed')
-        err.status = res.status
-        throw err
-    }
-
-    const blob = await res.blob()
-    const disposition = res.headers.get('Content-Disposition') ?? ''
-    const match = disposition.match(/filename="?([^";\r\n]+)"?/)
-    const filename = match?.[1] ?? 'DAFTAR CUSTOMER.xlsx'
-
-    return { blob, filename }
+    return apiDownload(withQuery('/customers/export', qs), { token, errorMessage: 'Export failed' }, 'DAFTAR CUSTOMER.xlsx')
 }
 
 export async function getCustomers(
@@ -313,25 +218,88 @@ export async function getCustomers(
     if (filters.params) qs.set('params', filters.params)
     if (filters.customer_type) qs.set('customer_type', filters.customer_type)
     if (filters.status) qs.set('status', filters.status)
-    qs.set('page', String(filters.page ?? 1))
-    qs.set('limit', String(filters.limit ?? 10))
-
-    const res = await fetch(`${BASE_URL}/api/v1/customers?${qs.toString()}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-    })
-    const json = await res.json()
+    const page = filters.page ?? 1
+    const limit = filters.limit ?? 10
+    qs.set('page', String(page))
+    qs.set('limit', String(limit))
 
     // API returns 404 when no records match the query — treat as empty, not an error
-    if (res.status === 404) return EMPTY
+    return apiFetchOr<CustomersListResponse>(withQuery('/customers', qs), { token, signal: filters.signal }, {
+        data: [],
+        pagination: { total: 0, page, limit, total_pages: 0 },
+    })
+}
 
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
+// ── Customer 360, groups and cross-sell ─────────────────────────────────────
 
-    return json.data as CustomersListResponse
+export interface CustomerGroup {
+    group_id: string
+    name: string
+    notes: string | null
+    member_count: number
+    in_force_policies: number
+    premium: number
+}
+
+export async function getCustomerGroups(token: string): Promise<CustomerGroup[]> {
+    const res = await apiFetch<{ data: CustomerGroup[] }>('/customer-groups', { token })
+    return res.data
+}
+
+/** Puts the customer in an existing group (`group_id`), creates-or-joins one by name (`group_name`), or removes them from any group (neither). */
+export async function setCustomerGroup(
+    token: string,
+    customerId: string,
+    data: { group_id?: string | null; group_name?: string },
+): Promise<{ customer_id: string; group_id: string | null; group_name: string | null }> {
+    return apiFetch(apiPath`/customers/${customerId}/group`, { method: 'PUT', token, body: data })
+}
+
+export type PolicyStanding = 'in_force' | 'upcoming' | 'expired' | 'cancelled'
+
+export interface CustomerOverviewPolicy {
+    policy_id: string
+    policy_number: string
+    product_type: string
+    product_name: string
+    insurer_id: string
+    insurer_name: string | null
+    customer_id: string
+    customer_name: string | null
+    coverage_start: string
+    coverage_end: string
+    renewal_status: 'pending' | 'renewed' | 'lapsed' | 'cancelled'
+    payment_status: string
+    sum_insured: number
+    premium_amount: number
+    standing: PolicyStanding
+    days_until_expiry: number
+}
+
+export interface CustomerOverview {
+    customer: { customer_id: string; display_name: string; customer_type: ApiCustomerType; group_id: string | null; group_name: string | null }
+    scope: 'customer' | 'group'
+    members: { customer_id: string; display_name: string; customer_type: ApiCustomerType; in_force_policies: number; premium: number }[]
+    policies: CustomerOverviewPolicy[]
+    held: { policies: number; premium: number; sum_insured: number }
+    by_product: { product_type: string; product_name: string; policies: number; premium: number; sum_insured: number; insurers: string[] }[]
+    by_insurer: { insurer_id: string; insurer_name: string | null; policies: number; premium: number; products: string[] }[]
+}
+
+export async function getCustomerOverview(token: string, customerId: string, scope: 'customer' | 'group' = 'customer'): Promise<CustomerOverview> {
+    return apiFetch<CustomerOverview>(withQuery(`/customers/${encodeURIComponent(customerId)}/overview`, new URLSearchParams({ scope })), { token })
+}
+
+export interface CrossSellSuggestion {
+    family: string
+    /** The product the customer already holds that triggered the suggestion. */
+    because: string
+    reason: string
+    products: { product_code: string; product_name: string }[]
+}
+
+export async function getCustomerCrossSell(token: string, customerId: string, scope: 'customer' | 'group' = 'customer'): Promise<CrossSellSuggestion[]> {
+    const res = await apiFetch<{ suggestions: CrossSellSuggestion[] }>(
+        withQuery(`/customers/${encodeURIComponent(customerId)}/cross-sell`, new URLSearchParams({ scope })), { token })
+    return res.suggestions
 }

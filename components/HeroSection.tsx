@@ -1,5 +1,3 @@
-"use client"
-
 import { Box, Flex, VStack, HStack, Button, Text, Heading, Badge } from "@chakra-ui/react"
 import Link from "next/link"
 
@@ -13,6 +11,8 @@ function DashboardMockup() {
 
   return (
     <Box
+      role="img"
+      aria-label="Contoh tampilan dashboard renewal Agentra: total polis, polis jatuh tempo, dan komisi bulan ini"
       w="100%"
       maxW="520px"
       bg="#1a2f5c"
@@ -23,11 +23,11 @@ function DashboardMockup() {
     >
       {/* Dashboard header bar */}
       <HStack justify="space-between" mb={4}>
-        <Text color="gray.300" fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide">
+        <Text color="gray.300" fontSize="sm" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide">
           Dashboard Renewal
         </Text>
         <Box bg="#3B82F6" px={3} py={1} borderRadius="md">
-          <Text color="white" fontSize="xs" fontWeight="bold">Live</Text>
+          <Text color="white" fontSize="sm" fontWeight="bold">Live</Text>
         </Box>
       </HStack>
 
@@ -39,7 +39,7 @@ function DashboardMockup() {
           { label: "Komisi Bulan Ini", value: "Rp 18 jt" },
         ].map((stat) => (
           <Box key={stat.label} flex={1} bg="#0D1B3E" borderRadius="lg" p={3}>
-            <Text color="gray.400" fontSize="9px" mb={1}>{stat.label}</Text>
+            <Text color="gray.400" fontSize="14px" mb={1}>{stat.label}</Text>
             <Text color="white" fontSize="sm" fontWeight="bold">{stat.value}</Text>
           </Box>
         ))}
@@ -49,10 +49,10 @@ function DashboardMockup() {
       <Box bg="#0D1B3E" borderRadius="lg" overflow="hidden">
         <Box px={3} py={2} borderBottom="1px solid rgba(255,255,255,0.06)">
           <HStack gap={0}>
-            <Text color="gray.500" fontSize="9px" flex={2}>NASABAH</Text>
-            <Text color="gray.500" fontSize="9px" flex={2}>NO. POLIS</Text>
-            <Text color="gray.500" fontSize="9px" flex={1}>JATUH TEMPO</Text>
-            <Text color="gray.500" fontSize="9px" flex={1} textAlign="right">STATUS</Text>
+            <Text color="gray.500" fontSize="14px" flex={2}>NASABAH</Text>
+            <Text color="gray.500" fontSize="14px" flex={2}>NO. POLIS</Text>
+            <Text color="gray.500" fontSize="14px" flex={1}>JATUH TEMPO</Text>
+            <Text color="gray.500" fontSize="14px" flex={1} textAlign="right">STATUS</Text>
           </HStack>
         </Box>
         {rows.map((row, i) => (
@@ -63,9 +63,9 @@ function DashboardMockup() {
             borderBottom={i < rows.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none"}
           >
             <HStack gap={0} align="center">
-              <Text color="gray.300" fontSize="10px" flex={2} fontWeight="medium">{row.name}</Text>
-              <Text color="gray.400" fontSize="10px" flex={2}>{row.policy}</Text>
-              <Text color="gray.400" fontSize="10px" flex={1}>{row.due}</Text>
+              <Text color="gray.300" fontSize="14px" flex={2} fontWeight="medium">{row.name}</Text>
+              <Text color="gray.400" fontSize="14px" flex={2}>{row.policy}</Text>
+              <Text color="gray.400" fontSize="14px" flex={1}>{row.due}</Text>
               <Box flex={1} display="flex" justifyContent="flex-end">
                 <Box
                   px={2}
@@ -74,7 +74,7 @@ function DashboardMockup() {
                   bg={row.status === "Jatuh Tempo" ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.15)"}
                 >
                   <Text
-                    fontSize="9px"
+                    fontSize="14px"
                     fontWeight="semibold"
                     color={row.status === "Jatuh Tempo" ? "#F87171" : "#4ADE80"}
                   >
@@ -88,7 +88,7 @@ function DashboardMockup() {
       </Box>
 
       {/* Footer note */}
-      <Text color="gray.500" fontSize="9px" textAlign="center" mt={3}>
+      <Text color="gray.500" fontSize="14px" textAlign="center" mt={3}>
         Disbursement · Safe to work
       </Text>
     </Box>
@@ -126,7 +126,7 @@ export function HeroSection() {
             color="white"
             lineHeight="1.15"
           >
-            Kelola Bisnis Asuransi Lebih Cerdas dengan Agentra
+            CRM Asuransi untuk Agen: Kelola Bisnis Lebih Cerdas dengan Agentra
           </Heading>
 
           <Text
@@ -135,38 +135,37 @@ export function HeroSection() {
             lineHeight="1.75"
             maxW="480px"
           >
-            Solusi CRM terintegrasi untuk pelacakan renewal, notifikasi WhatsApp, dan
-            transparansi komisi dalam satu platform yang aman.
+            Aplikasi agen asuransi terintegrasi untuk pengingat renewal polis yang jatuh tempo,
+            notifikasi WhatsApp ke nasabah, dan transparansi komisi dalam satu platform yang aman.
           </Text>
 
           <HStack gap={4} flexWrap="wrap">
-            <Link href="/register">
-              <Button
-                size="lg"
-                bg="#3B82F6"
-                color="white"
-                _hover={{ bg: "#2563EB" }}
-                minH="48px"
-                px={8}
-                fontWeight="semibold"
-              >
-                Coba Gratis
-              </Button>
-            </Link>
-            <Link href="#demo">
-              <Button
-                size="lg"
-                variant="outline"
-                color="white"
-                borderColor="rgba(255,255,255,0.4)"
-                _hover={{ bg: "rgba(255,255,255,0.08)", borderColor: "white" }}
-                minH="48px"
-                px={8}
-                fontWeight="semibold"
-              >
-                Lihat Demo
-              </Button>
-            </Link>
+            {/* Button styled links: a <button> nested inside <a> is invalid interactive content. */}
+            <Button
+              asChild
+              size="lg"
+              bg="#3B82F6"
+              color="white"
+              _hover={{ bg: "#2563EB" }}
+              minH="48px"
+              px={8}
+              fontWeight="semibold"
+            >
+              <Link href="/register">Coba Gratis</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              color="white"
+              borderColor="rgba(255,255,255,0.4)"
+              _hover={{ bg: "rgba(255,255,255,0.08)", borderColor: "white" }}
+              minH="48px"
+              px={8}
+              fontWeight="semibold"
+            >
+              <Link href="#features">Lihat Fitur Agentra</Link>
+            </Button>
           </HStack>
 
           {/* Social proof */}
@@ -201,11 +200,11 @@ export function HeroSection() {
               <HStack gap={1} align="baseline">
                 <Text fontSize="2xl" fontWeight="bold" color="white">5rb+</Text>
               </HStack>
-              <Text fontSize="xs" color="gray.400">Agen Aktif</Text>
+              <Text fontSize="sm" color="gray.400">Agen Aktif</Text>
             </VStack>
             <VStack align="flex-start" gap={0}>
               <Text fontSize="2xl" fontWeight="bold" color="white">99%</Text>
-              <Text fontSize="xs" color="gray.400">Tingkat Retensi</Text>
+              <Text fontSize="sm" color="gray.400">Tingkat Retensi</Text>
             </VStack>
           </HStack>
         </VStack>

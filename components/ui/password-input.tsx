@@ -70,11 +70,19 @@ export const PasswordInput = React.forwardRef<
       endElement={
         <VisibilityTrigger
           disabled={rest.disabled}
+          aria-pressed={visible}
+          aria-label={visible ? "Sembunyikan password" : "Tampilkan password"}
           onPointerDown={(e) => {
             if (rest.disabled) return
             if (e.button !== 0) return
+            // preventDefault keeps focus in the input while toggling with the mouse.
             e.preventDefault()
             setVisible(!visible)
+          }}
+          onClick={(e) => {
+            // Keyboard activation (Enter/Space) yields a click with detail 0; pointer clicks
+            // were already handled in onPointerDown.
+            if (e.detail === 0 && !rest.disabled) setVisible(!visible)
           }}
         >
           {visible ? visibilityIcon.off : visibilityIcon.on}
@@ -95,14 +103,13 @@ const VisibilityTrigger = React.forwardRef<HTMLButtonElement, ButtonProps>(
   function VisibilityTrigger(props, ref) {
     return (
       <IconButton
-        tabIndex={-1}
         ref={ref}
         me="-2"
         aspectRatio="square"
         size="sm"
         variant="ghost"
-        height="calc(100% - {spacing.2})"
-        aria-label="Toggle password visibility"
+        h="8"
+        aria-label="Tampilkan password"
         {...props}
       />
     )

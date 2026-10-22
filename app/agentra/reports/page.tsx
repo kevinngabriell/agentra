@@ -1,12 +1,19 @@
 "use client"
 
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
-import { Box, Flex, Skeleton, Table, Text, Button } from "@chakra-ui/react"
+import { Box, Flex, Skeleton, Table, Text } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { LuCalendar, LuTrendingUp, LuUsers, LuFileText } from "react-icons/lu"
+import Link from "next/link"
+import { LuTrendingUp, LuUsers, LuFileText } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
 import { getRevenueSummary, type RevenueSummaryResponse } from "@/lib/api/revenue"
+import { errorMessage, errorStatus } from "@/lib/api/client"
+import { localMonth } from "@/lib/format"
+import { MonthPickerButton } from "@/components/ui/month-picker"
+import { REPORT_DEFS, ReportView } from "@/components/reports/ReportView"
+
+const PRODUCTION_TAB = "production"
 
 function fmt(n: number) {
   return "Rp " + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
@@ -16,56 +23,34 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })
 }
 
-function MonthPickerButton({ month, onChange }: { month: string; onChange: (m: string) => void }) {
-  const label = new Date(month + "-01").toLocaleDateString("id-ID", { month: "long", year: "numeric" })
-  return (
-    <Flex align="center" gap="8px">
-      <Button
-        size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="12px"
-        onClick={() => {
-          const d = new Date(month + "-01")
-          d.setMonth(d.getMonth() - 1)
-          onChange(d.toISOString().slice(0, 7))
-        }}
-      >‹</Button>
-      <Flex align="center" gap="6px" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="12px" py="6px">
-        <LuCalendar size={14} color="#64748B" />
-        <Text fontSize="13px" color="#374151" fontWeight="medium">{label}</Text>
-      </Flex>
-      <Button
-        size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="12px"
-        onClick={() => {
-          const d = new Date(month + "-01")
-          d.setMonth(d.getMonth() + 1)
-          onChange(d.toISOString().slice(0, 7))
-        }}
-      >›</Button>
-    </Flex>
-  )
-}
-
-const colHeader = { color: "#64748B", fontSize: "11px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px" } as const
+const colHeader = { color: "#64748B", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px" } as const
 
 export default function Reports() {
   const router = useRouter()
-  const currentMonth = new Date().toISOString().slice(0, 7)
-
-  const [month, setMonth]     = useState(currentMonth)
-  const [data, setData]       = useState<RevenueSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [tab, setTab]         = useState(PRODUCTION_TAB)
+  const [month, setMonth]     = useState(() => localMonth())
+  // Tagged with the month it answers so `loading` is derived and stale months are ignored.
+  const [result, setResult]   = useState<{ month: string; data: RevenueSummaryResponse | null; error: string | null } | null>(null)
 
   useEffect(() => {
     const token = getAccessToken()
     if (!token) { router.push("/login"); return }
+    if (tab !== PRODUCTION_TAB) return
 
-    setLoading(true)
-    setError(null)
+    let cancelled = false
     getRevenueSummary(token, month)
-      .then(setData)
-      .catch((err) => setError(err.message ?? "Gagal memuat laporan produksi"))
-      .finally(() => setLoading(false))
-  }, [month])
+      .then((data) => { if (!cancelled) setResult({ month, data, error: null }) })
+      .catch((err: unknown) => {
+        if (!cancelled && errorStatus(err) !== 401) {
+          setResult({ month, data: null, error: errorMessage(err, "Data laporan produksi belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.") })
+        }
+      })
+    return () => { cancelled = true }
+  }, [month, tab, router])
+
+  const loading = result?.month !== month
+  const data    = loading ? null : result?.data ?? null
+  const error   = loading ? null : result?.error ?? null
 
   const cards = data ? [
     { label: "Jumlah Polis", value: String(data.totals.policies_count), accent: "#1D4ED8", bg: "#EFF6FF", Icon: LuFileText },
@@ -76,33 +61,58 @@ export default function Reports() {
 
   return (
     <Box bg="#F4F6F9" minH="100vh">
-      <Sidebar />
-      <MobileHeader />
+      <Box className="no-print"><Sidebar /></Box>
+      <Box className="no-print"><MobileHeader /></Box>
 
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
-        <Box display={{ base: "none", md: "block" }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: "96px" }} css={{ "@media print": { marginLeft: 0, padding: 0 } }}>
+        <Box display={{ base: "none", md: "block" }} className="no-print">
           <TopBar title="Reports" />
         </Box>
 
         <Flex flexDir="column" gap="24px" p="32px">
+          {/* Report picker */}
+          <Flex gap="6px" flexWrap="wrap" role="tablist" aria-label="Jenis laporan" className="no-print">
+            {[{ key: PRODUCTION_TAB, label: "Produksi" }, ...REPORT_DEFS].map((t) => (
+              <Box key={t.key} as="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+                px="14px" py="7px" borderRadius="full" fontSize="16px" fontWeight="medium" border="1px solid"
+                bg={tab === t.key ? "#1A3557" : "white"} color={tab === t.key ? "white" : "#475569"}
+                borderColor={tab === t.key ? "#1A3557" : "#E2E8F0"}>
+                {t.label}
+              </Box>
+            ))}
+          </Flex>
+
           {/* Heading */}
+          {tab === PRODUCTION_TAB ? (
           <Flex justify="space-between" align="flex-start" flexWrap="wrap" gap="16px">
             <Flex flexDir="column" gap="4px">
               <Text color="#1C2833" fontSize="24px" fontWeight="bold">Laporan Produksi</Text>
-              <Text color="#5D6D7E" fontSize="14px">
+              <Text color="#5D6D7E" fontSize="16px">
                 Total produksi bulanan dan mingguan untuk rekonsiliasi komisi secara manual.
               </Text>
             </Flex>
             <MonthPickerButton month={month} onChange={setMonth} />
           </Flex>
+          ) : (() => {
+            const def = REPORT_DEFS.find((d) => d.key === tab)!
+            return (
+              <>
+                <Flex flexDir="column" gap="4px">
+                  <Text color="#1C2833" fontSize="24px" fontWeight="bold">{def.label}</Text>
+                  <Text color="#5D6D7E" fontSize="16px">{def.description}</Text>
+                </Flex>
+                <ReportView key={def.key} def={def} />
+              </>
+            )
+          })()}
 
-          {error && (
+          {tab === PRODUCTION_TAB && error && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-              <Text color="#DC2626" fontSize="14px">{error}</Text>
+              <Text color="#DC2626" fontSize="16px">{error}</Text>
             </Box>
           )}
 
-          {loading ? (
+          {tab !== PRODUCTION_TAB ? null : loading ? (
             <Flex flexDir="column" gap="16px">
               <Flex gap="16px" flexWrap="wrap">
                 {[1, 2, 3, 4].map((i) => <Skeleton key={i} h="90px" flex="1" minW="180px" borderRadius="12px" />)}
@@ -120,7 +130,7 @@ export default function Reports() {
                       <Flex w="28px" h="28px" borderRadius="8px" bg={bg} align="center" justify="center">
                         <Icon size={14} color={accent} />
                       </Flex>
-                      <Text fontSize="11px" fontWeight="bold" color="#64748B" letterSpacing="0.03em">{label.toUpperCase()}</Text>
+                      <Text fontSize="14px" fontWeight="bold" color="#64748B" letterSpacing="0.03em">{label.toUpperCase()}</Text>
                     </Flex>
                     <Text color="#1C2833" fontSize="20px" fontWeight="bold">{value}</Text>
                   </Box>
@@ -128,23 +138,23 @@ export default function Reports() {
               </Flex>
 
               <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="16px">
-                <Text color="#5D6D7E" fontSize="12px">
+                <Text color="#5D6D7E" fontSize="14px">
                   Total premi mencerminkan premi bruto yang diterbitkan (produksi), bukan komisi yang sudah diterima dari insurer.
                   Bandingkan komisi di atas dengan pembayaran aktual insurer melalui halaman{" "}
-                  <Text as="span" color="#1D4ED8" fontWeight="medium" cursor="pointer" onClick={() => router.push("/agentra/commisions")}>
+                  <Link href="/agentra/commissions" style={{ color: "#1D4ED8", fontWeight: 500 }}>
                     Komisi
-                  </Text>.
+                  </Link>.
                 </Text>
               </Box>
 
               {/* Weekly breakdown */}
               <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                 <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0">
-                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Rincian Mingguan</Text>
+                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Rincian Mingguan</Text>
                 </Flex>
                 {data.weekly.length === 0 ? (
                   <Flex align="center" justify="center" py="32px">
-                    <Text color="#94A3B8" fontSize="13px">Tidak ada data untuk bulan ini</Text>
+                    <Text color="#64748B" fontSize="15px">Tidak ada data untuk bulan ini</Text>
                   </Flex>
                 ) : (
                   <Table.Root>
@@ -158,13 +168,13 @@ export default function Reports() {
                     <Table.Body>
                       {data.weekly.map((w) => (
                         <Table.Row key={w.week_start} borderBottom="1px solid" borderColor="#F1F5F9">
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="13px">
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">
                             {fmtDate(w.week_start)} – {fmtDate(w.week_end)}
                           </Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="13px">{w.policies_count}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="13px">{fmt(w.total_premium)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="13px">{fmt(w.total_commission_amount)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="13px" fontWeight="medium">{fmt(w.total_net_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{w.policies_count}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">{fmt(w.total_premium)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{fmt(w.total_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="15px" fontWeight="medium">{fmt(w.total_net_commission_amount)}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>
@@ -176,11 +186,11 @@ export default function Reports() {
               <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                 <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0" align="center" gap="8px">
                   <LuUsers size={15} color="#64748B" />
-                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Rincian per Agen</Text>
+                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Rincian per Agen</Text>
                 </Flex>
                 {data.by_agent.length === 0 ? (
                   <Flex align="center" justify="center" py="32px">
-                    <Text color="#94A3B8" fontSize="13px">Tidak ada data untuk bulan ini</Text>
+                    <Text color="#64748B" fontSize="15px">Tidak ada data untuk bulan ini</Text>
                   </Flex>
                 ) : (
                   <Table.Root>
@@ -194,11 +204,11 @@ export default function Reports() {
                     <Table.Body>
                       {data.by_agent.map((a) => (
                         <Table.Row key={a.agent_id ?? "main"} borderBottom="1px solid" borderColor="#F1F5F9">
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="13px" fontWeight="medium">{a.agent_name}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="13px">{a.policies_count}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="13px">{fmt(a.total_premium)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="13px">{fmt(a.total_commission_amount)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="13px" fontWeight="medium">{fmt(a.total_net_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" fontWeight="medium">{a.agent_name}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{a.policies_count}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">{fmt(a.total_premium)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{fmt(a.total_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="15px" fontWeight="medium">{fmt(a.total_net_commission_amount)}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>
@@ -210,7 +220,7 @@ export default function Reports() {
         </Flex>
       </Box>
 
-      <MobileBottomNav />
+      <Box className="no-print"><MobileBottomNav /></Box>
     </Box>
   )
 }

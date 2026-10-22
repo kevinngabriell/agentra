@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, NativeSelect, SimpleGrid, Steps, Text } from "@chakra-ui/react"
+import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, SimpleGrid, Steps, Text } from "@chakra-ui/react"
 import { Header } from "../../components/Header"
+import { ErrorAlert } from "@/components/ui/error-alert"
+import { SearchSelect } from "@/components/ui/search-select"
 import { FaShieldAlt } from "react-icons/fa"
-import { FiAlertCircle, FiAward, FiCheck, FiCreditCard, FiEye, FiEyeOff, FiLock, FiShield, FiSmartphone, FiZap, FiMessageCircle } from "react-icons/fi"
-import { MdAccountBalance, MdSupportAgent } from "react-icons/md"
+import { FiAward, FiCheck, FiEye, FiEyeOff, FiLock, FiShield, FiZap, FiMessageCircle } from "react-icons/fi"
+import { MdSupportAgent } from "react-icons/md"
 import { RegisterAgent } from "@/lib/auth/auth"
+import { getWilayahProvinces, getWilayahCities, type ApiWilayahProvince, type ApiWilayahCity } from "@/lib/api/master-wilayah"
 import { getPlans, formatPlanPrice, formatBillingCycle, type Plan } from "@/lib/plans/plans"
 
 function Stepper({ currentStep }: { currentStep: number }) {
@@ -213,18 +216,6 @@ function FeatureCards() {
   )
 }
 
-const PROVINCES = [
-  "Aceh", "Bali", "Banten", "Bengkulu", "DI Yogyakarta", "DKI Jakarta",
-  "Gorontalo", "Jambi", "Jawa Barat", "Jawa Tengah", "Jawa Timur",
-  "Kalimantan Barat", "Kalimantan Selatan", "Kalimantan Tengah",
-  "Kalimantan Timur", "Kalimantan Utara", "Kepulauan Bangka Belitung",
-  "Kepulauan Riau", "Lampung", "Maluku", "Maluku Utara",
-  "Nusa Tenggara Barat", "Nusa Tenggara Timur", "Papua", "Papua Barat",
-  "Riau", "Sulawesi Barat", "Sulawesi Selatan", "Sulawesi Tengah",
-  "Sulawesi Tenggara", "Sulawesi Utara", "Sumatera Barat",
-  "Sumatera Selatan", "Sumatera Utara",
-]
-
 function Step2Form({
   onBack,
   onNext,
@@ -242,6 +233,36 @@ function Step2Form({
   onCityChange: (v: string) => void
   errors: Record<string, string>
 }) {
+  const [provinces, setProvinces] = useState<ApiWilayahProvince[]>([])
+  const [provinceCode, setProvinceCode] = useState("")
+  const [cityLevel, setCityLevel] = useState<{ parent: string; list: ApiWilayahCity[] } | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getWilayahProvinces().then((l) => { if (active) setProvinces(l) }).catch(() => {})
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (!provinceCode) return
+    let active = true
+    getWilayahCities(undefined, provinceCode)
+      .then((list) => { if (active) setCityLevel({ parent: provinceCode, list }) })
+      .catch(() => { if (active) setCityLevel({ parent: provinceCode, list: [] }) })
+    return () => { active = false }
+  }, [provinceCode])
+
+  const cityReady = !!provinceCode && cityLevel?.parent === provinceCode
+  const cities = cityReady ? cityLevel.list : []
+  const cityLoading = !!provinceCode && !cityReady
+  // No province picked, or no city data synced for it: keep a free-text field.
+  const cityManual = !provinceCode || (cityReady && cities.length === 0)
+
+  function handleProvince(code: string) {
+    setProvinceCode(code)
+    onCityChange("")
+  }
+
   return (
     <Card.Root boxShadow="sm" border="1px solid" borderColor="#E5E7EB">
       <Card.Body gap="0" p="32px">
@@ -276,27 +297,39 @@ function Step2Form({
                 Provinsi{" "}
                 <Box as="span" fontWeight="normal" color="#9CA3AF">(Opsional)</Box>
               </Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field fontSize="14px" color="#1C2833">
-                  <option value="">Pilih Provinsi</option>
-                  {PROVINCES.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
+              <SearchSelect
+                fontSize="14px"
+                value={provinceCode}
+                onChange={handleProvince}
+                placeholder="Pilih Provinsi"
+                options={provinces.map((p) => ({ value: p.province_code, label: p.province_name }))}
+                clearable
+              />
             </Field.Root>
 
             <Field.Root invalid={!!errors.city}>
               <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
-                Kota / Kabupaten
+                Kota / Kabupaten{" "}
+                <Box as="span" fontWeight="normal" color="#9CA3AF">(Opsional)</Box>
               </Field.Label>
-              <Input
-                placeholder="Masukkan nama kota"
-                fontSize="14px"
-                value={city}
-                onChange={(e) => onCityChange(e.target.value)}
-              />
+              {cityManual ? (
+                <Input
+                  placeholder="Masukkan nama kota"
+                  fontSize="14px"
+                  value={city}
+                  onChange={(e) => onCityChange(e.target.value)}
+                />
+              ) : (
+                <SearchSelect
+                  fontSize="14px"
+                  value={cities.find((c) => c.city_name === city)?.city_code ?? ""}
+                  onChange={(code) => onCityChange(cities.find((c) => c.city_code === code)?.city_name ?? "")}
+                  placeholder="Pilih Kota / Kabupaten"
+                  options={cities.map((c) => ({ value: c.city_code, label: c.city_name }))}
+                  loading={cityLoading}
+                  clearable
+                />
+              )}
               {errors.city && (
                 <Field.ErrorText fontSize="12px">{errors.city}</Field.ErrorText>
               )}
@@ -353,14 +386,17 @@ function Step3Form({
   plans,
   loadingPlans,
   submitting,
+  initialPlanId,
 }: {
   onBack: () => void
   onNext: (plan: Plan) => void
   plans: Plan[]
   loadingPlans: boolean
   submitting?: boolean
+  /** Plan picked on the landing page's pricing section (?plan=…), preselected here. */
+  initialPlanId?: string | null
 }) {
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(initialPlanId ?? null)
 
   return (
     <>
@@ -492,245 +528,6 @@ function Step3Form({
   )
 }
 
-function Step4Form({
-  onBack,
-  selectedPlan,
-  onSubmit,
-  loading,
-}: {
-  onBack: () => void
-  selectedPlan: Plan
-  onSubmit: () => void
-  loading: boolean
-}) {
-  const [paymentMethod, setPaymentMethod] = useState<"va" | "card" | "ewallet">("va")
-
-  const planName = selectedPlan.name
-  const planPrice = formatPlanPrice(selectedPlan.price_idr)
-
-  const instructions = [
-    "Pilih bank yang ingin Anda gunakan untuk transfer Virtual Account.",
-    'Klik tombol "Konfirmasi & Bayar" untuk mendapatkan Nomor Virtual Account.',
-    "Lakukan pembayaran melalui ATM, Mobile Banking, atau Internet Banking sebelum 24 jam.",
-  ]
-
-  function RadioDot({ active }: { active: boolean }) {
-    return (
-      <Flex
-        w="18px" h="18px" borderRadius="full"
-        border="2px solid" borderColor={active ? "#0D1B3E" : "#D1D5DB"}
-        align="center" justify="center" flexShrink={0}
-      >
-        {active && <Box w="8px" h="8px" borderRadius="full" bg="#0D1B3E" />}
-      </Flex>
-    )
-  }
-
-  return (
-    <>
-      <Box mb="28px">
-        <Heading color="#001F40" fontWeight="bold" fontSize="22px" mb="6px">
-          Pembayaran
-        </Heading>
-        <Text color="#5D6D7E" fontSize="14px">
-          Selesaikan pembayaran Anda untuk mengaktifkan polis asuransi.
-        </Text>
-      </Box>
-
-      <Grid templateColumns={{ base: "1fr", md: "3fr 2fr" }} gap="24px" mb="28px">
-        {/* Left column */}
-        <Flex flexDir="column" gap="20px">
-          {/* Order summary */}
-          <Box bg="white" border="1px solid" borderColor="#E5E7EB" borderRadius="12px" p="24px">
-            <Text fontWeight="semibold" color="#0D1B3E" fontSize="15px" mb="16px">
-              Ringkasan Pesanan
-            </Text>
-            <Flex justify="space-between" mb="10px">
-              <Text fontSize="14px" color="#5D6D7E">Paket Terpilih</Text>
-              <Text fontSize="14px" color="#1C2833" fontWeight="medium">{planName}</Text>
-            </Flex>
-            <Flex justify="space-between" mb="16px">
-              <Text fontSize="14px" color="#5D6D7E">Premi Bulanan</Text>
-              <Text fontSize="14px" color="#1C2833">{planPrice}</Text>
-            </Flex>
-            <Box borderTop="1px solid" borderColor="#E5E7EB" pt="16px">
-              <Flex justify="space-between" align="center">
-                <Text fontWeight="bold" color="#0D1B3E">Total Bayar</Text>
-                <Text fontWeight="bold" color="#0D1B3E" fontSize="18px">{planPrice}</Text>
-              </Flex>
-            </Box>
-          </Box>
-
-          {/* Payment methods */}
-          <Box bg="white" border="1px solid" borderColor="#E5E7EB" borderRadius="12px" p="24px">
-            <Text fontWeight="semibold" color="#0D1B3E" fontSize="15px" mb="16px">
-              Pilih Metode Pembayaran
-            </Text>
-            <Flex flexDir="column" gap="12px">
-              {/* VA */}
-              <Box
-                border="2px solid" borderColor={paymentMethod === "va" ? "#0D1B3E" : "#E5E7EB"}
-                borderRadius="10px" p="14px" cursor="pointer"
-                onClick={() => setPaymentMethod("va")}
-                transition="border-color 0.15s"
-              >
-                <Flex justify="space-between" align="center">
-                  <Flex gap="10px" align="center">
-                    <Box color="#0D1B3E"><MdAccountBalance size={18} /></Box>
-                    <Text fontWeight="medium" fontSize="14px" color="#1C2833">
-                      Transfer Bank (Virtual Account)
-                    </Text>
-                  </Flex>
-                  <RadioDot active={paymentMethod === "va"} />
-                </Flex>
-                {paymentMethod === "va" && (
-                  <Flex gap="8px" mt="12px" pl="28px">
-                    <Box px="10px" py="4px" bg="#EFF6FF" borderRadius="6px" fontSize="11px" fontWeight="bold" color="#1D4ED8">BCA</Box>
-                    <Box px="10px" py="4px" bg="#FFF7ED" borderRadius="6px" fontSize="11px" fontWeight="bold" color="#C2410C">Mandiri</Box>
-                    <Box px="10px" py="4px" bg="#F0FDF4" borderRadius="6px" fontSize="11px" fontWeight="bold" color="#166534">BRI</Box>
-                  </Flex>
-                )}
-              </Box>
-
-              {/* Credit card */}
-              <Box
-                border="2px solid" borderColor={paymentMethod === "card" ? "#0D1B3E" : "#E5E7EB"}
-                borderRadius="10px" p="14px" cursor="pointer"
-                onClick={() => setPaymentMethod("card")}
-                transition="border-color 0.15s"
-              >
-                <Flex justify="space-between" align="center">
-                  <Flex gap="10px" align="center">
-                    <Box color="#0D1B3E"><FiCreditCard size={18} /></Box>
-                    <Text fontWeight="medium" fontSize="14px" color="#1C2833">Kartu Kredit</Text>
-                  </Flex>
-                  <RadioDot active={paymentMethod === "card"} />
-                </Flex>
-              </Box>
-
-              {/* E-wallet */}
-              <Box
-                border="2px solid" borderColor={paymentMethod === "ewallet" ? "#0D1B3E" : "#E5E7EB"}
-                borderRadius="10px" p="14px" cursor="pointer"
-                onClick={() => setPaymentMethod("ewallet")}
-                transition="border-color 0.15s"
-              >
-                <Flex justify="space-between" align="center">
-                  <Flex gap="10px" align="center">
-                    <Box color="#0D1B3E"><FiSmartphone size={18} /></Box>
-                    <Text fontWeight="medium" fontSize="14px" color="#1C2833">E-Wallet (OVO / GoPay)</Text>
-                  </Flex>
-                  <RadioDot active={paymentMethod === "ewallet"} />
-                </Flex>
-              </Box>
-            </Flex>
-          </Box>
-        </Flex>
-
-        {/* Right column */}
-        <Flex flexDir="column" gap="16px">
-          {/* Instructions */}
-          <Box bg="white" border="1px solid" borderColor="#E5E7EB" borderRadius="12px" p="24px">
-            <Text fontWeight="semibold" color="#0D1B3E" fontSize="15px" mb="16px">
-              Instruksi Pembayaran
-            </Text>
-            <Flex flexDir="column" gap="14px">
-              {instructions.map((inst, i) => (
-                <Flex key={i} gap="12px" align="flex-start">
-                  <Flex
-                    w="24px" h="24px" minW="24px"
-                    bg="#0D1B3E" color="white"
-                    borderRadius="full"
-                    align="center" justify="center"
-                    fontSize="11px" fontWeight="bold"
-                    flexShrink={0} mt="1px"
-                  >
-                    {i + 1}
-                  </Flex>
-                  <Text fontSize="13px" color="#5D6D7E" lineHeight="1.6">{inst}</Text>
-                </Flex>
-              ))}
-            </Flex>
-          </Box>
-
-          {/* Important info */}
-          <Box bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="10px" p="16px">
-            <Flex gap="10px" align="flex-start">
-              <Box color="#D97706" flexShrink={0} mt="1px">
-                <FiAlertCircle size={16} />
-              </Box>
-              <Box>
-                <Text fontWeight="semibold" fontSize="13px" color="#92400E" mb="4px">
-                  Informasi Penting
-                </Text>
-                <Text fontSize="13px" color="#78350F" lineHeight="1.6">
-                  Polis akan aktif secara otomatis setelah sistem kami menerima konfirmasi pembayaran Anda (biasanya kurang dari 5 menit).
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-
-          {/* Security badge */}
-          <Box bg="#0D1B3E" borderRadius="12px" p="20px" textAlign="center">
-            <Flex justify="center" mb="8px">
-              <FiShield size={28} color="white" />
-            </Flex>
-            <Text color="white" fontWeight="bold" fontSize="15px" mb="4px">
-              Pembayaran Aman
-            </Text>
-            <Text color="rgba(255,255,255,0.7)" fontSize="12px">
-              Enkripsi SSL 256-bit standar industri
-            </Text>
-          </Box>
-        </Flex>
-      </Grid>
-
-      {/* Navigation */}
-      <Flex justify="space-between" mb="24px">
-        <Button
-          variant="outline"
-          color="#5D6D7E"
-          borderColor="#D1D5DB"
-          _hover={{ bg: "#F9FAFB" }}
-          fontSize="14px"
-          px="24px"
-          onClick={onBack}
-          disabled={loading}
-        >
-          Kembali
-        </Button>
-        <Button
-          backgroundColor="#0D1B3E"
-          color="white"
-          _hover={{ bg: "#1a2f5c" }}
-          fontSize="14px"
-          px="28px"
-          onClick={onSubmit}
-          loading={loading}
-          loadingText="Memproses..."
-        >
-          Konfirmasi &amp; Bayar
-        </Button>
-      </Flex>
-
-      {/* Trust indicators */}
-      <Flex justify="center" gap={{ base: "16px", md: "32px" }} flexWrap="wrap">
-        {[
-          { icon: <FiLock size={12} />, label: "SECURE PAYMENT" },
-          { icon: <FiAward size={12} />, label: "OJK LICENSED" },
-          { icon: <FiShield size={12} />, label: "DATA ENCRYPTION" },
-          { icon: <MdSupportAgent size={14} />, label: "24/7 SUPPORT" },
-        ].map(({ icon, label }) => (
-          <Flex key={label} gap="6px" align="center" color="#9CA3AF">
-            {icon}
-            <Text fontSize="11px" fontWeight="medium">{label}</Text>
-          </Flex>
-        ))}
-      </Flex>
-    </>
-  )
-}
-
 function PageFooter() {
   return (
     <Box as="footer" bg="white" borderTop="1px solid" borderColor="#E5E7EB" mt="48px">
@@ -744,7 +541,7 @@ function PageFooter() {
       >
         <Box>
           <Text fontWeight="bold" fontSize="16px" color="#0D1B3E" mb="12px">
-            AgenAsuransi
+            Agentra
           </Text>
           <Text fontSize="13px" color="#5D6D7E" lineHeight="1.75" maxW="240px">
             Platform digital terbaik untuk para agen asuransi profesional di Indonesia.
@@ -756,7 +553,7 @@ function PageFooter() {
             Perusahaan
           </Text>
           {["Tentang Kami", "Karir", "Blog"].map((item) => (
-            <Text key={item} fontSize="13px" color="#5D6D7E" mb="10px" cursor="pointer" _hover={{ color: "#0D1B3E" }}>
+            <Text key={item} fontSize="13px" color="#5D6D7E" mb="10px">
               {item}
             </Text>
           ))}
@@ -767,7 +564,7 @@ function PageFooter() {
             Layanan
           </Text>
           {["Manajemen Polis", "CRM Nasabah", "Laporan Penjualan"].map((item) => (
-            <Text key={item} fontSize="13px" color="#5D6D7E" mb="10px" cursor="pointer" _hover={{ color: "#0D1B3E" }}>
+            <Text key={item} fontSize="13px" color="#5D6D7E" mb="10px">
               {item}
             </Text>
           ))}
@@ -778,10 +575,11 @@ function PageFooter() {
             Hubungi Kami
           </Text>
           <Text fontSize="13px" color="#5D6D7E" mb="16px">
-            support@agenasuransi.id
+            halo@agentra.id
           </Text>
           <Flex gap="8px">
             <Button
+              asChild
               variant="outline"
               size="sm"
               w="36px"
@@ -791,15 +589,17 @@ function PageFooter() {
               borderColor="#D1D5DB"
               color="#5D6D7E"
               _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
-              aria-label="Website"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <a href="https://agentra.id" target="_blank" rel="noopener noreferrer" aria-label="Website">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="2" y1="12" x2="22" y2="12" />
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
+              </a>
             </Button>
             <Button
+              asChild
               variant="outline"
               size="sm"
               w="36px"
@@ -809,12 +609,13 @@ function PageFooter() {
               borderColor="#D1D5DB"
               color="#5D6D7E"
               _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
-              aria-label="Email"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <a href="mailto:halo@agentra.id" aria-label="Email">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
+              </a>
             </Button>
           </Flex>
         </Box>
@@ -822,7 +623,7 @@ function PageFooter() {
 
       <Box borderTop="1px solid" borderColor="#F3F4F6" py="16px">
         <Text textAlign="center" fontSize="12px" color="#9CA3AF">
-          © 2024 AgenAsuransi (Agentra Group). Seluruh Hak Cipta Dilindungi.
+          © {new Date().getFullYear()} Agentra. Seluruh Hak Cipta Dilindungi.
         </Text>
       </Box>
     </Box>
@@ -839,12 +640,18 @@ export default function Register() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [loadingPlans, setLoadingPlans] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [alert, setAlert] = useState<{ status: "success" | "error"; message: string } | null>(null)
+  const [alert, setAlert] = useState<{ status: "success" | "error"; message: string; requestId?: string } | null>(null)
+  // Read once on mount (window, not useSearchParams, so the page needs no Suspense boundary).
+  const [initialPlanId] = useState(() =>
+    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("plan"),
+  )
 
   useEffect(() => {
+    let active = true
     getPlans()
-      .then(setPlans)
-      .finally(() => setLoadingPlans(false))
+      .then((p) => { if (active) setPlans(p) })
+      .finally(() => { if (active) setLoadingPlans(false) })
+    return () => { active = false }
   }, [])
 
   const [formData, setFormData] = useState({
@@ -878,13 +685,22 @@ export default function Register() {
       errs.password = "Password wajib diisi"
     } else if (formData.password.length < 8) {
       errs.password = "Min 8 karakter"
+    } else if (!/[A-Za-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
+      errs.password = "Harus mengandung huruf dan angka"
     }
     if (!formData.password_confirmation) {
       errs.password_confirmation = "Konfirmasi password wajib diisi"
     } else if (formData.password !== formData.password_confirmation) {
       errs.password_confirmation = "Konfirmasi password tidak cocok"
     }
-    if (!formData.phone.trim()) errs.phone = "Nomor telepon wajib diisi"
+    if (!formData.phone.trim()) {
+      errs.phone = "Nomor telepon wajib diisi"
+    } else {
+      const digits = formData.phone.replace(/\D/g, "")
+      if (digits.length < 8 || digits.length > 15) {
+        errs.phone = "Nomor telepon tidak valid (8-15 digit)"
+      }
+    }
     setFieldErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -892,7 +708,6 @@ export default function Register() {
   function validateStep1(): boolean {
     const errs: Record<string, string> = {}
     if (!formData.business_name.trim()) errs.business_name = "Nama bisnis wajib diisi"
-    if (!formData.city.trim()) errs.city = "Kota wajib diisi"
     setFieldErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -913,14 +728,24 @@ export default function Register() {
         city: formData.city,
         plan: planToUse?.plan_id ?? "",
       })
-      setAlert({ status: "success", message: "Akun berhasil dibuat! Anda akan diarahkan ke halaman login..." })
+      setAlert({
+        status: "success",
+        message: (planToUse?.price_idr ?? 0) > 0
+          ? "Akun berhasil dibuat! Setelah login, selesaikan pembayaran paket untuk mengaktifkan fitur. Anda akan diarahkan ke halaman login..."
+          : "Akun berhasil dibuat! Anda akan diarahkan ke halaman login...",
+      })
       setTimeout(() => router.push("/login"), 2500)
-    } catch (err: any) {
-      if (err.errors && Object.keys(err.errors).length > 0) {
-        setFieldErrors(err.errors)
+    } catch (err: unknown) {
+      const errors = (err as { errors?: Record<string, string> })?.errors
+      if (errors && Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
         setCurrentStep(0)
       }
-      setAlert({ status: "error", message: err.message || "Pendaftaran gagal. Silakan coba lagi." })
+      setAlert({
+        status: "error",
+        message: err instanceof Error && err.message ? err.message : "Pendaftaran gagal. Silakan coba lagi.",
+        requestId: (err as { requestId?: string })?.requestId,
+      })
     } finally {
       setLoading(false)
     }
@@ -934,10 +759,7 @@ export default function Register() {
           <Stepper currentStep={currentStep} />
 
           {alert && (
-            <Alert.Root status={alert.status} mb="16px" borderRadius="8px">
-              <Alert.Indicator />
-              <Alert.Description fontSize="14px">{alert.message}</Alert.Description>
-            </Alert.Root>
+            <ErrorAlert status={alert.status} message={alert.message} requestId={alert.requestId} />
           )}
 
           {currentStep === 0 && (
@@ -994,6 +816,8 @@ export default function Register() {
                         endElement={
                           <button
                             type="button"
+                            aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                            aria-pressed={showPassword}
                             onClick={() => setShowPassword((v) => !v)}
                             style={{ color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer" }}
                           >
@@ -1003,6 +827,7 @@ export default function Register() {
                       >
                         <Input
                           type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
                           placeholder="Min. 8 karakter"
                           fontSize="14px"
                           value={formData.password}
@@ -1023,6 +848,8 @@ export default function Register() {
                         endElement={
                           <button
                             type="button"
+                            aria-label={showPasswordConfirm ? "Sembunyikan password" : "Tampilkan password"}
+                            aria-pressed={showPasswordConfirm}
                             onClick={() => setShowPasswordConfirm((v) => !v)}
                             style={{ color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer" }}
                           >
@@ -1032,6 +859,7 @@ export default function Register() {
                       >
                         <Input
                           type={showPasswordConfirm ? "text" : "password"}
+                          autoComplete="new-password"
                           placeholder="Ulangi kata sandi"
                           fontSize="14px"
                           value={formData.password_confirmation}
@@ -1079,7 +907,7 @@ export default function Register() {
                         Keamanan Data
                       </Text>
                       <Text fontSize="13px" color="#004B73" lineHeight="1.6">
-                        Data Anda dilindungi dengan enkripsi standar industri dan hanya digunakan untuk keperluan verifikasi akun AgenAsuransi.
+                        Data Anda dilindungi dengan enkripsi standar industri dan hanya digunakan untuk keperluan verifikasi akun Agentra.
                       </Text>
                     </Flex>
                   </Flex>
@@ -1140,6 +968,7 @@ export default function Register() {
               plans={plans}
               loadingPlans={loadingPlans}
               submitting={loading}
+              initialPlanId={initialPlanId}
             />
           )}
         </Flex>

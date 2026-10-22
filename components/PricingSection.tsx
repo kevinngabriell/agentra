@@ -10,9 +10,11 @@ export function PricingSection() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let active = true
     getPlans()
-      .then(setPlans)
-      .finally(() => setLoading(false))
+      .then((p) => { if (active) setPlans(p) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
   }, [])
 
   return (
@@ -36,7 +38,7 @@ export function PricingSection() {
             Harga
           </Text>
           <Heading as="h2" fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="#0D1B3E">
-            Pilih Paket yang Tepat untuk Anda
+            Pilih Paket CRM Asuransi yang Tepat untuk Anda
           </Heading>
           <Text fontSize="md" color="gray.500" lineHeight="1.75">
             Mulai gratis, upgrade kapan saja. Tidak ada biaya tersembunyi.
@@ -106,7 +108,7 @@ export function PricingSection() {
                       px={4}
                       py={1.5}
                       borderRadius="full"
-                      fontSize="xs"
+                      fontSize="sm"
                       fontWeight="semibold"
                       whiteSpace="nowrap"
                     >
@@ -117,13 +119,15 @@ export function PricingSection() {
                   <VStack align="flex-start" gap={6}>
                     {/* Plan name & description */}
                     <VStack align="flex-start" gap={2}>
-                      <Text
+                      <Heading
+                        as="h3"
                         fontSize="sm"
                         fontWeight="semibold"
+                        lineHeight="1.5"
                         color={highlighted ? "blue.300" : "#3B82F6"}
                       >
                         {plan.name}
-                      </Text>
+                      </Heading>
                       <HStack align="baseline" gap={1}>
                         <Text
                           fontSize="3xl"
@@ -148,23 +152,22 @@ export function PricingSection() {
                     </VStack>
 
                     {/* CTA */}
-                    <Link href={`/register?plan=${plan.plan_id}`} style={{ width: "100%" }}>
-                      <Button
-                        w="100%"
-                        size="lg"
-                        minH="48px"
-                        bg={highlighted ? "#3B82F6" : "transparent"}
-                        color={highlighted ? "white" : "#0D1B3E"}
-                        border={highlighted ? "none" : "2px solid"}
-                        borderColor={highlighted ? "transparent" : "#0D1B3E"}
-                        _hover={{
-                          bg: highlighted ? "#2563EB" : "gray.50",
-                        }}
-                        fontWeight="semibold"
-                      >
-                        {ctaLabel}
-                      </Button>
-                    </Link>
+                    <Button
+                      asChild
+                      w="100%"
+                      size="lg"
+                      minH="48px"
+                      bg={highlighted ? "#3B82F6" : "transparent"}
+                      color={highlighted ? "white" : "#0D1B3E"}
+                      border={highlighted ? "none" : "2px solid"}
+                      borderColor={highlighted ? "transparent" : "#0D1B3E"}
+                      _hover={{
+                        bg: highlighted ? "#2563EB" : "gray.50",
+                      }}
+                      fontWeight="semibold"
+                    >
+                      <Link href={`/register?plan=${encodeURIComponent(plan.plan_id)}`}>{ctaLabel}</Link>
+                    </Button>
 
                     {/* Divider */}
                     <Box w="100%" h="1px" bg={highlighted ? "rgba(255,255,255,0.1)" : "gray.100"} />
@@ -182,7 +185,7 @@ export function PricingSection() {
                             justify="center"
                             flexShrink={0}
                           >
-                            <Text fontSize="10px" color="#3B82F6">✓</Text>
+                            <Text fontSize="14px" color="#3B82F6">✓</Text>
                           </Flex>
                           <Text
                             fontSize="sm"

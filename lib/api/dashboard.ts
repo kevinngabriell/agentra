@@ -1,20 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
-
-async function apiGet<T>(path: string, token: string): Promise<T> {
-    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as T
-}
+import { apiFetch, withQuery } from "./client"
 
 export interface RenewalBreakdown {
     total: number
@@ -32,6 +16,8 @@ export interface DashboardStats {
     total_active_policies: number
     renewals_this_month: number
     expiring_this_week: number
+    open_claims: number
+    claims_pending_documents: number
     pending_commissions_amount: number
     renewal_breakdown: RenewalBreakdown
     trends: {
@@ -63,22 +49,22 @@ export interface TodayAction {
 }
 
 export async function getDashboardStats(token: string): Promise<DashboardStats> {
-    return apiGet<DashboardStats>('/dashboard/stats', token)
+    return apiFetch<DashboardStats>('/dashboard/stats', { token })
 }
 
 export async function getDashboardActivity(
     token: string,
     limit = 10,
 ): Promise<{ items: ActivityItem[] }> {
-    return apiGet<{ items: ActivityItem[] }>(`/dashboard/activity?limit=${limit}`, token)
+    return apiFetch<{ items: ActivityItem[] }>(withQuery('/dashboard/activity', new URLSearchParams({ limit: String(limit) })), { token })
 }
 
 export async function getTodayActions(
     token: string,
     limit = 10,
 ): Promise<{ items: TodayAction[]; total_today: number; total_week: number }> {
-    return apiGet<{ items: TodayAction[]; total_today: number; total_week: number }>(
-        `/dashboard/today-actions?limit=${limit}`,
-        token,
+    return apiFetch<{ items: TodayAction[]; total_today: number; total_week: number }>(
+        withQuery('/dashboard/today-actions', new URLSearchParams({ limit: String(limit) })),
+        { token },
     )
 }

@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+import { apiFetch, apiFetchOr } from "./client"
 
 export interface UserProfile {
     user_id: string
@@ -11,28 +11,20 @@ export interface UserProfile {
     account_status: string
 }
 
-async function apiReq<T>(
-    method: string,
-    path: string,
-    token: string,
-    body?: Record<string, unknown>,
-): Promise<T> {
-    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
-        method,
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as T
+// TopBar mounts on every page (there is no shared /agentra layout), so the profile is
+// cached for the session instead of re-fetching /users/me on every navigation.
+let profileCache: Promise<UserProfile> | null = null
+
+export function clearProfileCache() {
+    profileCache = null
 }
 
 export async function getMyProfile(token: string): Promise<UserProfile> {
-    return apiReq<UserProfile>('GET', '/users/me', token)
+    if (!profileCache) {
+        profileCache = apiFetch<UserProfile>('/users/me', { token })
+        profileCache.catch(() => { profileCache = null })
+    }
+    return profileCache
 }
 
 export interface UpdateProfilePayload {
@@ -42,7 +34,10 @@ export interface UpdateProfilePayload {
 }
 
 export async function updateProfile(token: string, data: UpdateProfilePayload): Promise<UserProfile> {
-    return apiReq<UserProfile>('PUT', '/users/me', token, data as unknown as Record<string, unknown>)
+    const updated = await apiFetch<UserProfile>('/users/me', { method: 'PUT', token, body: data })
+    if (updated) profileCache = Promise.resolve(updated)
+    else clearProfileCache()
+    return updated
 }
 
 export async function changePassword(
@@ -50,9 +45,10 @@ export async function changePassword(
     currentPassword: string,
     newPassword: string,
 ): Promise<void> {
-    await apiReq<unknown>('PUT', '/users/me/password', token, {
-        current_password: currentPassword,
-        new_password: newPassword,
+    await apiFetch<unknown>('/users/me/password', {
+        method: 'PUT',
+        token,
+        body: { current_password: currentPassword, new_password: newPassword },
     })
 }
 
@@ -64,6 +60,7 @@ export interface NotificationSettingsPayload {
     monthly_digest_day?: number
     monthly_digest_time?: string
     whatsapp_target_number?: string
+    renewal_reminder_enabled?: boolean
     renewal_reminder_days?: number
     renewal_wa_message_template?: string
 }
@@ -79,6 +76,7 @@ export interface NotificationSettings {
     monthly_digest_day: number | null
     monthly_digest_time: string | null
     whatsapp_target_number: string | null
+    renewal_reminder_enabled?: boolean
     renewal_reminder_days: number
     renewal_wa_message_template: string | null
     updated_by?: string
@@ -89,19 +87,10 @@ export async function updateNotificationSettings(
     token: string,
     data: NotificationSettingsPayload,
 ): Promise<void> {
-    await apiReq<unknown>('PUT', '/users/me/notification-settings', token, data as unknown as Record<string, unknown>)
+    await apiFetch<unknown>('/users/me/notification-settings', { method: 'PUT', token, body: data })
 }
 
+// 404 = the user never saved notification settings yet.
 export async function getNotificationSettings(token: string): Promise<NotificationSettings | null> {
-    const res = await fetch(`${BASE_URL}/api/v1/users/me/notification-settings`, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    })
-    const json = await res.json()
-    if (res.status === 404) return null
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as NotificationSettings
+    return apiFetchOr<NotificationSettings | null>('/users/me/notification-settings', { token }, null)
 }
