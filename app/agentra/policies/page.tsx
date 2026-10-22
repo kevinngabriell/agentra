@@ -217,7 +217,7 @@ export default function Policies() {
       <Sidebar />
       <MobileHeader />
 
-      <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
         <Box display={{ base: "none", md: "block" }}>
           <TopBar title="Policies" />
         </Box>

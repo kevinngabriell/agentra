@@ -522,7 +522,7 @@ function CustomerDetailForm() {
 
     if (fetchLoading) {
         return (
-            <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
+            <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Detail Nasabah" /></Box>
                 <Flex p={{ base: "16px", md: "32px" }} gap="24px" flexDir="column">
                     <Skeleton h="32px" w="220px" borderRadius="8px" />
@@ -547,7 +547,7 @@ function CustomerDetailForm() {
 
     if (fetchError) {
         return (
-            <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
+            <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Detail Nasabah" /></Box>
                 <Flex p={{ base: "16px", md: "32px" }} flexDir="column" gap="16px">
                     <Text color="#DC2626" fontSize="16px">{fetchError}</Text>
@@ -610,7 +610,7 @@ function CustomerDetailForm() {
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <Box ml={{ base: 0, md: "250px" }} paddingY={{ base: "56px", md: 0 }}>
+        <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
             <Box display={{ base: "none", md: "block" }}>
                 <TopBar title={isEdit ? "Detail Nasabah" : "Tambah Nasabah"} />
             </Box>

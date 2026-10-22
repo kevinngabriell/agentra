@@ -1,15 +1,17 @@
 "use client"
 
+import { TodayTasksCard } from "@/components/tasks"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Box, Button, Center, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
+import { Box, Button, Center, Flex, Grid, IconButton, Spinner, Text } from "@chakra-ui/react"
+import Link from "next/link"
 import {
   FiBell, FiFileText, FiRefreshCw, FiDollarSign,
-  FiMessageSquare, FiCheckCircle, FiCalendar, FiFilter, FiPlus, FiAlertCircle,
+  FiMessageSquare, FiCheckCircle, FiCalendar, FiFilter, FiPlus, FiAlertCircle, FiAlertTriangle,
 } from "react-icons/fi"
 import { Sidebar, TopBar, MobileHeader, MobileBottomNav } from "@/components/layout"
-import { getAccessToken, getRefreshToken, clearTokens, saveTokens, isTokenExpired, wasPersisted } from "@/lib/auth/session"
-import { RefreshToken } from "@/lib/auth/auth"
+import { getAccessToken } from "@/lib/auth/session"
+import { errorStatus } from "@/lib/api/client"
 import {
   getDashboardStats, getDashboardActivity, getTodayActions,
   type DashboardStats, type ActivityItem, type TodayAction, type RenewalBreakdown,
@@ -25,6 +27,8 @@ const PRODUCT_LABELS: Record<string, string> = {
   travel: "Asuransi Perjalanan",
   cargo: "Asuransi Kargo",
   other: "Asuransi Lainnya",
+  kecelakaan: "Asuransi Kecelakaan",
+  aep: "AEP",
 }
 
 function formatCommission(amount: number): string {
@@ -48,6 +52,8 @@ function formatActivityTime(iso: string): string {
 }
 
 function getActionStatus(days: number) {
+  if (days < 0) return { label: `Lewat ${Math.abs(days)} hari`, color: "#991B1B", bg: "#FEE2E2" }
+  if (days === 0) return { label: "Berakhir Hari Ini", color: "#991B1B", bg: "#FEE2E2" }
   if (days <= 2) return { label: `H-${days} Expired`, color: "#991B1B", bg: "#FEE2E2" }
   if (days <= 4) return { label: `H-${days} Renewal`, color: "#92400E", bg: "#FEF3C7" }
   return { label: `H-${days} Renewal`, color: "#C2410C", bg: "#FFF7ED" }
@@ -60,9 +66,9 @@ function getActivityConfig(type: string) {
     case "policy_updated":
       return { icon: <FiFileText size={18} />, bg: "#EEF2FF", color: "#4F46E5", title: "Polis Diperbarui" }
     case "renewal_completed":
-      return { icon: <FiRefreshCw size={18} />, bg: "#EEF2FF", color: "#4F46E5", title: "Renewal Berhasil" }
+      return { icon: <FiRefreshCw size={18} />, bg: "#EEF2FF", color: "#4F46E5", title: "Perpanjangan Berhasil" }
     case "follow_up_added":
-      return { icon: <FiCalendar size={18} />, bg: "#FEF3C7", color: "#D97706", title: "Follow-up Dijadwalkan" }
+      return { icon: <FiCalendar size={18} />, bg: "#FEF3C7", color: "#D97706", title: "Jadwal Hubungi Lagi" }
     default:
       return { icon: <FiAlertCircle size={18} />, bg: "#F1F5F9", color: "#64748B", title: "Aktivitas" }
   }
@@ -87,13 +93,35 @@ function StatCard({ stat }: { stat: StatCardData }) {
         <Flex w="32px" h="36px" borderRadius="8px" bg={stat.iconBg} align="center" justify="center" flexShrink={0} padding="8px">
           <Box color={stat.iconColor}>{stat.icon}</Box>
         </Flex>
-        <Text fontSize="12px" fontWeight="semibold" color={stat.subColor ?? "#8B9BB4"}>{stat.sub}</Text>
+        <Text fontSize="14px" fontWeight="semibold" color={stat.subColor ?? "#8B9BB4"}>{stat.sub}</Text>
       </Flex>
       <Box w="100%">
-        <Text color="#5D6D7E" fontSize="12px">{stat.label}</Text>
+        <Text color="#5D6D7E" fontSize="14px">{stat.label}</Text>
         <Text color="#1C2833" fontSize="24px" fontWeight="bold">{stat.value}</Text>
       </Box>
     </Flex>
+  )
+}
+
+function KlaimBerjalan({ open, pendingDocs }: { open: number; pendingDocs: number }) {
+  return (
+    <Link href="/agentra/claims" style={{ display: "block" }}>
+      <Flex bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" paddingX="24px" paddingY="16px" align="center" gap="16px" flexWrap="wrap">
+        <Flex w="36px" h="36px" borderRadius="8px" bg="#FEE2E2" align="center" justify="center" flexShrink={0} color="#DC2626">
+          <FiAlertTriangle size={18} />
+        </Flex>
+        <Box flex="1" minW="160px">
+          <Text color="#001F40" fontWeight="semibold" fontSize="16px">Klaim Berjalan</Text>
+          <Text color="#5D6D7E" fontSize="15px">
+            {open === 0 ? "Tidak ada klaim yang sedang diproses" : `${open} klaim sedang diproses`}
+          </Text>
+        </Box>
+        <Box textAlign="right">
+          <Text color={pendingDocs > 0 ? "#B45309" : "#16A34A"} fontSize="20px" fontWeight="bold">{pendingDocs}</Text>
+          <Text color="#5D6D7E" fontSize="14px">menunggu dokumen</Text>
+        </Box>
+      </Flex>
+    </Link>
   )
 }
 
@@ -103,18 +131,18 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
     <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" overflow="hidden">
       <Flex justify="space-between" align="center" paddingX="24px" paddingY="16px" borderBottom="1px solid" borderColor="#DDE1E7">
         <Text color="#001F40" fontWeight="semibold" fontSize="18px">Aksi Hari Ini</Text>
-        <Text color="#006397" fontSize="14px" cursor="pointer" onClick={() => router.push("/agentra/renewals")}>Lihat Semua</Text>
+        <Link href="/agentra/renewals" style={{ color: "#006397", fontSize: "16px" }}>Lihat Semua</Link>
       </Flex>
 
       <Grid templateColumns="1fr 160px 140px" borderBottom="1px solid" borderColor="#DDE1E7">
-        <Text color="#5D6D7E" fontSize="13px" fontWeight="medium" paddingX="24px" paddingY="12px">Nama Nasabah</Text>
-        <Text color="#5D6D7E" fontSize="13px" fontWeight="medium" paddingX="16px" paddingY="12px">Status</Text>
-        <Text color="#5D6D7E" fontSize="13px" fontWeight="medium" paddingX="16px" paddingY="12px" textAlign="right">Aksi</Text>
+        <Text color="#5D6D7E" fontSize="15px" fontWeight="medium" paddingX="24px" paddingY="12px">Nama Nasabah</Text>
+        <Text color="#5D6D7E" fontSize="15px" fontWeight="medium" paddingX="16px" paddingY="12px">Status</Text>
+        <Text color="#5D6D7E" fontSize="15px" fontWeight="medium" paddingX="16px" paddingY="12px" textAlign="right">Aksi</Text>
       </Grid>
 
       {actions.length === 0 ? (
         <Flex align="center" justify="center" py="40px">
-          <Text color="#8B9BB4" fontSize="14px">Tidak ada aksi mendesak hari ini</Text>
+          <Text color="#8B9BB4" fontSize="16px">Tidak ada aksi mendesak hari ini</Text>
         </Flex>
       ) : (
         <Flex flexDir="column">
@@ -131,12 +159,12 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
                 _hover={{ bg: "#F8FAFC" }}
               >
                 <Box paddingX="24px" paddingY="20px">
-                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{a.customer_name}</Text>
-                  <Text color="#5D6D7E" fontSize="12px" mt="2px">{productLabel} — {a.insurer_name}</Text>
+                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{a.customer_name}</Text>
+                  <Text color="#5D6D7E" fontSize="14px" mt="2px">{productLabel} — {a.insurer_name}</Text>
                 </Box>
                 <Box paddingX="16px" paddingY="20px">
                   <Flex display="inline-flex" px="12px" py="5px" borderRadius="full" bg={status.bg} align="center">
-                    <Text color={status.color} fontSize="12px" fontWeight="semibold">{status.label}</Text>
+                    <Text color={status.color} fontSize="14px" fontWeight="semibold">{status.label}</Text>
                   </Flex>
                 </Box>
                 <Flex paddingX="16px" paddingY="20px" justify="flex-end">
@@ -144,7 +172,7 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
                     size="sm"
                     bg="#001F40"
                     color="white"
-                    fontSize="13px"
+                    fontSize="15px"
                     fontWeight="medium"
                     borderRadius="8px"
                     px="16px"
@@ -180,34 +208,34 @@ function StatusPerpanjangan({ breakdown }: { breakdown: RenewalBreakdown }) {
       <Flex flexDir="column" gap="24px">
         <Box>
           <Flex justify="space-between" mb="8px">
-            <Text color="#1C2833" fontSize="13px" fontWeight="medium">Berhasil Diperbarui</Text>
-            <Text color="#27AE60" fontSize="13px" fontWeight="bold">{renewedPct}%</Text>
+            <Text color="#1C2833" fontSize="15px" fontWeight="medium">Berhasil Diperbarui</Text>
+            <Text color="#27AE60" fontSize="15px" fontWeight="bold">{renewedPct}%</Text>
           </Flex>
           <Box h="8px" bg="#F1F5F9" borderRadius="full" overflow="hidden">
             <Box h="100%" w={`${renewedPct}%`} bg="#27AE60" borderRadius="full" />
           </Box>
-          <Text color="#8B9BB4" fontSize="12px" mt="6px">{breakdown.renewed} dari {breakdown.total} Polis</Text>
+          <Text color="#8B9BB4" fontSize="14px" mt="6px">{breakdown.renewed} dari {breakdown.total} Polis</Text>
         </Box>
 
         <Box>
           <Flex justify="space-between" mb="8px">
-            <Text color="#1C2833" fontSize="13px" fontWeight="medium">Sedang Proses</Text>
-            <Text color="#006397" fontSize="13px" fontWeight="bold">{inProgressPct}%</Text>
+            <Text color="#1C2833" fontSize="15px" fontWeight="medium">Sedang Proses</Text>
+            <Text color="#006397" fontSize="15px" fontWeight="bold">{inProgressPct}%</Text>
           </Flex>
           <Box h="8px" bg="#F1F5F9" borderRadius="full" overflow="hidden">
             <Box h="100%" w={`${inProgressPct}%`} bg="#006397" borderRadius="full" />
           </Box>
-          <Text color="#8B9BB4" fontSize="12px" mt="6px">{breakdown.in_progress} dari {breakdown.total} Polis</Text>
+          <Text color="#8B9BB4" fontSize="14px" mt="6px">{breakdown.in_progress} dari {breakdown.total} Polis</Text>
         </Box>
       </Flex>
 
       <Box bg="#0C4A6E" borderRadius="12px" mt="32px" padding="16px">
-        <Text color="#7DD3FC" fontSize="11px" textTransform="uppercase" fontWeight="semibold" letterSpacing="0.05em" mb="8px">
+        <Text color="#7DD3FC" fontSize="14px" textTransform="uppercase" fontWeight="semibold" letterSpacing="0.05em" mb="8px">
           Omzet Perpanjangan Tercapai
         </Text>
         <Flex justify="space-between" align="center" mb="12px">
           <Text color="white" fontSize="18px" fontWeight="bold">Rp {Math.round(breakdown.achieved_omzet).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</Text>
-          <Text color="#BAE6FD" fontSize="12px">{breakdown.renewed} Polis</Text>
+          <Text color="#BAE6FD" fontSize="14px">{breakdown.renewed} Polis</Text>
         </Flex>
         <Box h="4px" bg="rgba(255,255,255,0.2)" borderRadius="full" overflow="hidden">
           <Box h="100%" w={`${Math.min(renewedPct, 100)}%`} bg="white" borderRadius="full" />
@@ -222,12 +250,12 @@ function AktivitasTerbaru({ activities }: { activities: ActivityItem[] }) {
     <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" p="24px">
       <Flex justify="space-between" align="center" mb="20px">
         <Text color="#001F40" fontWeight="semibold" fontSize="18px">Aktivitas Terbaru</Text>
-        <Box color="#8B9BB4" cursor="pointer"><FiFilter size={18} /></Box>
+        <Box color="#8B9BB4" aria-hidden="true"><FiFilter size={18} /></Box>
       </Flex>
 
       {activities.length === 0 ? (
         <Flex align="center" justify="center" py="24px">
-          <Text color="#8B9BB4" fontSize="14px">Belum ada aktivitas</Text>
+          <Text color="#8B9BB4" fontSize="16px">Belum ada aktivitas</Text>
         </Flex>
       ) : (
         <Flex flexDir="column">
@@ -246,15 +274,15 @@ function AktivitasTerbaru({ activities }: { activities: ActivityItem[] }) {
                   <Box color={cfg.color}>{cfg.icon}</Box>
                 </Flex>
                 <Box flex={1} minW={0}>
-                  <Text color="#1C2833" fontSize="14px" fontWeight="bold" mb="4px">{cfg.title}</Text>
-                  <Text color="#5D6D7E" fontSize="13px" lineHeight="1.6">
+                  <Text color="#1C2833" fontSize="16px" fontWeight="bold" mb="4px">{cfg.title}</Text>
+                  <Text color="#5D6D7E" fontSize="15px" lineHeight="1.6">
                     {a.description}
                     {a.actor?.name && (
                       <Text as="span" color="#1C2833" fontWeight="bold"> ({a.actor.name})</Text>
                     )}
                   </Text>
                 </Box>
-                <Text color="#8B9BB4" fontSize="12px" flexShrink={0} whiteSpace="nowrap" pt="2px">
+                <Text color="#8B9BB4" fontSize="14px" flexShrink={0} whiteSpace="nowrap" pt="2px">
                   {formatActivityTime(a.created_at)}
                 </Text>
               </Flex>
@@ -281,33 +309,15 @@ export default function DashboardPage() {
   const [data, setData] = useState<PageData | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     async function init() {
-      const at = getAccessToken()
-      const rt = getRefreshToken()
-
-      if (!at) {
-        router.push("/")
+      const token = getAccessToken()
+      if (!token) {
+        if (!cancelled) router.replace("/login")
         return
       }
 
-      let token = at
-      if (isTokenExpired(at)) {
-        if (!rt) {
-          clearTokens()
-          router.push("/")
-          return
-        }
-        try {
-          const newTokens = await RefreshToken(rt)
-          saveTokens(newTokens.access_token, newTokens.refresh_token, wasPersisted())
-          token = newTokens.access_token
-        } catch {
-          clearTokens()
-          router.push("/login")
-          return
-        }
-      }
-
+      // Token refresh and an unrecoverable 401 (→ /login) are handled by lib/api/client.
       try {
         const [stats, activityRes, todayRes, user] = await Promise.all([
           getDashboardStats(token),
@@ -315,25 +325,23 @@ export default function DashboardPage() {
           getTodayActions(token, 10),
           getMyProfile(token),
         ])
+        if (cancelled) return
         setData({ stats, actions: todayRes.items, activities: activityRes.items, user })
         setPageStatus("ready")
-      } catch (err: any) {
-        if (err.status === 401) {
-          clearTokens()
-          router.push("/login")
-        } else {
-          setPageStatus("error")
-        }
+      } catch (err: unknown) {
+        if (cancelled || errorStatus(err) === 401) return
+        setPageStatus("error")
       }
     }
     init()
+    return () => { cancelled = true }
   }, [router])
 
   const shell = (children: React.ReactNode) => (
     <Box bg="#F4F6F9" minH="100vh">
       <Sidebar />
       <MobileHeader />
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
         {children}
       </Box>
       <MobileBottomNav />
@@ -351,7 +359,7 @@ export default function DashboardPage() {
   if (pageStatus === "error") {
     return shell(
       <Center h="calc(100vh - 56px)" flexDir="column" gap="16px">
-        <Text color="#E74C3C" fontSize="18px" fontWeight="semibold">Gagal memuat data dashboard</Text>
+        <Text color="#E74C3C" fontSize="18px" fontWeight="semibold">Data dashboard belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.</Text>
         <Button onClick={() => window.location.reload()} bg="#006397" color="white" borderRadius="8px" px="20px">
           Coba Lagi
         </Button>
@@ -364,7 +372,7 @@ export default function DashboardPage() {
   const statsCards: StatCardData[] = [
     {
       label: "TOTAL POLIS",
-      value: stats.total_active_policies.toLocaleString(),
+      value: stats.total_active_policies.toLocaleString("id-ID"),
       sub: stats.trends.policies_vs_last_month,
       icon: <FiFileText size={20} />,
       iconBg: "#E5EFF5",
@@ -404,7 +412,7 @@ export default function DashboardPage() {
       <Sidebar />
       <MobileHeader />
 
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
         <Box display={{ base: "none", md: "block" }}>
           <TopBar title="Dashboard" userName={user.first_name} />
         </Box>
@@ -421,11 +429,17 @@ export default function DashboardPage() {
             <StatusPerpanjangan breakdown={stats.renewal_breakdown} />
           </Grid>
 
+          <TodayTasksCard />
+
+          <KlaimBerjalan open={stats.open_claims ?? 0} pendingDocs={stats.claims_pending_documents ?? 0} />
+
           <AktivitasTerbaru activities={activities} />
         </Flex>
       </Box>
 
-      <Flex
+      <IconButton
+        asChild
+        aria-label="Tambah polis baru"
         display={{ base: "flex", md: "none" }}
         position="fixed"
         bottom="80px"
@@ -434,16 +448,14 @@ export default function DashboardPage() {
         h="52px"
         borderRadius="full"
         bg="#0D1826"
-        align="center"
-        justify="center"
-        cursor="pointer"
         zIndex={19}
         boxShadow="0 4px 12px rgba(0,0,0,0.25)"
         _hover={{ bg: "#1a2f4a" }}
-        onClick={() => router.push("/agentra/policies/new")}
       >
-        <FiPlus size={22} color="white" />
-      </Flex>
+        <Link href="/agentra/policies/new">
+          <FiPlus size={22} color="white" />
+        </Link>
+      </IconButton>
 
       <MobileBottomNav />
     </Box>

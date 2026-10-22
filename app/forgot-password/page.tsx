@@ -11,6 +11,11 @@ import iconImg from "@/assets/icon.svg"
 
 type Step = 1 | 2 | 3
 
+// The API has no verify-OTP endpoint, so a wrong code is only detected when the reset
+// is submitted. After this many rejected codes the user must request a fresh one.
+// (Client-side only: real brute-force protection must be enforced by the API.)
+const MAX_OTP_ATTEMPTS = 5
+
 function StepDots({ current }: { current: Step }) {
     return (
         <Flex gap="6px" justify="center" mb="28px">
@@ -50,6 +55,7 @@ export default function ForgotPasswordPage() {
     const [canResend, setCanResend] = useState(false)
     const [alert, setAlert] = useState<{ status: "success" | "error"; message: string } | null>(null)
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+    const [otpAttempts, setOtpAttempts] = useState(0)
 
     const otpRefs = useRef<(HTMLInputElement | null)[]>([])
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -89,11 +95,14 @@ export default function ForgotPasswordPage() {
         try {
             await ForgotPassword(email.trim())
             setOtp(Array(6).fill(""))
+            setOtpAttempts(0)
             startCountdown()
             setStep(2)
+            // Same wording whether or not the email exists, so the form can't enumerate accounts.
+            setAlert({ status: "success", message: "Jika email terdaftar, kode OTP telah dikirim." })
             setTimeout(() => otpRefs.current[0]?.focus(), 120)
-        } catch (err: any) {
-            setAlert({ status: "error", message: err.message || "Gagal mengirim kode OTP." })
+        } catch (err: unknown) {
+            setAlert({ status: "error", message: err instanceof Error && err.message ? err.message : "Gagal mengirim kode OTP." })
         } finally {
             setLoading(false)
         }
@@ -105,10 +114,11 @@ export default function ForgotPasswordPage() {
         try {
             await ForgotPassword(email.trim())
             setOtp(Array(6).fill(""))
+            setOtpAttempts(0)
             startCountdown()
             setTimeout(() => otpRefs.current[0]?.focus(), 120)
-        } catch (err: any) {
-            setAlert({ status: "error", message: err.message || "Gagal mengirim ulang kode OTP." })
+        } catch (err: unknown) {
+            setAlert({ status: "error", message: err instanceof Error && err.message ? err.message : "Gagal mengirim ulang kode OTP." })
         } finally {
             setLoading(false)
         }
@@ -155,6 +165,8 @@ export default function ForgotPasswordPage() {
         const errs: Record<string, string> = {}
         if (!newPassword) { errs.newPassword = "Password wajib diisi" }
         else if (newPassword.length < 8) { errs.newPassword = "Password minimal 8 karakter" }
+        // Same rule as registration.
+        else if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) { errs.newPassword = "Password harus mengandung huruf dan angka" }
         if (!confirmPassword) { errs.confirmPassword = "Konfirmasi password wajib diisi" }
         else if (newPassword !== confirmPassword) { errs.confirmPassword = "Konfirmasi password tidak cocok" }
         setFieldErrors(errs)
@@ -168,9 +180,26 @@ export default function ForgotPasswordPage() {
         try {
             await ResetPassword({ token: otp.join(""), password: newPassword, password_confirmation: confirmPassword })
             setAlert({ status: "success", message: "Password berhasil diubah! Mengarahkan ke halaman login..." })
-            setTimeout(() => router.push("/login"), 2000)
-        } catch (err: any) {
-            setAlert({ status: "error", message: err.message || "Gagal mengatur ulang password." })
+            setTimeout(() => router.replace("/login"), 2000)
+        } catch (err: unknown) {
+            const status = (err as { status?: number })?.status
+            const message = err instanceof Error && err.message ? err.message : "Gagal mengatur ulang password."
+            // 4xx (other than rate limiting) means the code was rejected: send the user back to re-enter it.
+            if (status && status >= 400 && status < 500 && status !== 429) {
+                const attempts = otpAttempts + 1
+                setOtpAttempts(attempts)
+                setOtp(Array(6).fill(""))
+                if (attempts >= MAX_OTP_ATTEMPTS) {
+                    setStep(1)
+                    setAlert({ status: "error", message: "Terlalu banyak kode salah. Silakan minta kode OTP baru." })
+                } else {
+                    setStep(2)
+                    setAlert({ status: "error", message })
+                    setTimeout(() => otpRefs.current[0]?.focus(), 120)
+                }
+            } else {
+                setAlert({ status: "error", message })
+            }
         } finally {
             setLoading(false)
         }
@@ -193,10 +222,10 @@ export default function ForgotPasswordPage() {
             minH="100vh"
             alignItems="center"
             justifyContent="center"
-            p={16}
+            p={{ base: 4, md: 16 }}
             gap="24px"
         >
-            <Card.Root backgroundColor="#FFFFFF" p="32px" w={{ base: "420px", md: "460px" }}>
+            <Card.Root backgroundColor="#FFFFFF" p={{ base: "20px", md: "32px" }} w="100%" maxW={{ base: "420px", md: "460px" }}>
                 <Card.Body alignItems="center" w="100%" p={0}>
                     <StepDots current={step} />
 
@@ -204,7 +233,7 @@ export default function ForgotPasswordPage() {
                     {step === 1 && (
                         <>
                             <Flex flexDir="column" alignItems="center" mb="28px" gap="6px">
-                                <Image src={iconImg.src} alt="Agentra" w="44px" h="44px" mb="2px" />
+                                <Image src={iconImg.src} alt="" w="44px" h="44px" mb="2px" />
                                 <Text color="#001F40" fontSize="22px" fontWeight="bold" lineHeight="1">Agentra</Text>
                                 <Text color="#001F40" fontSize="19px" fontWeight="bold" mt="8px">Lupa Password?</Text>
                                 <Text color="#5D6D7E" fontSize="13px" textAlign="center" lineHeight="1.6">
@@ -296,6 +325,8 @@ export default function ForgotPasswordPage() {
                                         value={digit}
                                         onChange={(e) => handleOtpChange(i, e.target.value)}
                                         onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                                        aria-label={`Digit kode OTP ${i + 1} dari 6`}
+                                        autoComplete={i === 0 ? "one-time-code" : "off"}
                                         maxLength={1}
                                         textAlign="center"
                                         fontSize="22px"

@@ -6,21 +6,25 @@ import {
 } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { LuUser, LuLock, LuBell, LuCheck, LuBuilding2, LuChevronDown, LuChevronUp, LuPencil, LuTrash2, LuPlus, LuX, LuCircle, LuPackage } from "react-icons/lu"
+import { LuUser, LuLock, LuBell, LuCheck, LuBuilding2, LuChevronDown, LuChevronUp, LuPencil, LuTrash2, LuPlus, LuX, LuCircle, LuPackage, LuCrown } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
+import { errorMessage, errorStatus } from "@/lib/api/client"
 import { SearchSelect } from "@/components/ui/search-select"
 import { getMyProfile, updateProfile, changePassword, updateNotificationSettings, getNotificationSettings, type UserProfile } from "@/lib/api/user"
 import {
   getInsurers, createInsurer, updateInsurer, deleteInsurer,
   getInsurerProducts, upsertInsurerProduct,
-  type ApiInsurer, type ApiInsurerProduct, type ApiInsurerProductType,
+  type ApiInsurer, type ApiInsurerProductType,
 } from "@/lib/api/insurers"
+import { getCurrentSubscription, type ApiSubscription } from "@/lib/api/subscription"
+import { getPlans, formatPlanPrice, formatBillingCycle, type Plan } from "@/lib/plans/plans"
+import { startPlanPayment } from "@/components/layout/PlanGate"
 import {
   getMasterProducts, createMasterProduct, updateMasterProduct, deleteMasterProduct,
   type ApiMasterProduct,
 } from "@/lib/api/master-products"
 
-const lbl = { color: "#5D6D7E", fontSize: "12px", fontWeight: "semibold" } as const
+const lbl = { color: "#5D6D7E", fontSize: "14px", fontWeight: "semibold" } as const
 
 function Toast({ type, message }: { type: "success" | "error"; message: string }) {
   return (
@@ -33,7 +37,7 @@ function Toast({ type, message }: { type: "success" | "error"; message: string }
         ? <LuCheck size={14} color="#16A34A" />
         : <LuCircle size={14} color="#DC2626" />
       }
-      <Text fontSize="13px" color={type === "success" ? "#16A34A" : "#DC2626"}>{message}</Text>
+      <Text fontSize="15px" color={type === "success" ? "#16A34A" : "#DC2626"}>{message}</Text>
     </Flex>
   )
 }
@@ -46,12 +50,8 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
   const [language, setLanguage]     = useState(user.language ?? "id")
   const [saving, setSaving]         = useState(false)
   const [feedback, setFeedback]     = useState<{ type: "success" | "error"; msg: string } | null>(null)
-
-  useEffect(() => {
-    setFirstName(user.first_name ?? "")
-    setPhone(user.phone_number ?? "")
-    setLanguage(user.language ?? "id")
-  }, [user])
+  // The form is initialised from `user` once; after a save the API's response is what the
+  // user just typed, so there is nothing to re-sync (the old effect only caused a re-render).
 
   async function handleSave() {
     const token = getAccessToken()
@@ -65,10 +65,11 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
         phone_number: phone || undefined,
         language,
       })
-      onUpdate(updated)
+      // Some deployments answer the PUT without echoing the profile; never replace the user with undefined.
+      onUpdate(updated ?? { ...user, first_name: firstName, phone_number: phone, language })
       setFeedback({ type: "success", msg: "Profil berhasil diperbarui." })
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal memperbarui profil" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal memperbarui profil") })
     } finally {
       setSaving(false)
     }
@@ -84,13 +85,13 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
         <Flex flexDir="column" gap="16px" maxW="480px">
           <Field.Root>
             <Field.Label {...lbl}>EMAIL</Field.Label>
-            <Input value={user.email} disabled bg="#F8FAFC" fontSize="14px" />
-            <Field.HelperText fontSize="11px" color="#94A3B8">Email tidak dapat diubah</Field.HelperText>
+            <Input value={user.email} disabled bg="#F8FAFC" fontSize="16px" />
+            <Field.HelperText fontSize="14px" color="#64748B">Email tidak dapat diubah</Field.HelperText>
           </Field.Root>
 
           <Field.Root>
             <Field.Label {...lbl}>USERNAME</Field.Label>
-            <Input value={user.username} disabled bg="#F8FAFC" fontSize="14px" />
+            <Input value={user.username} disabled bg="#F8FAFC" fontSize="16px" />
           </Field.Root>
 
           <Field.Root>
@@ -98,7 +99,7 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
             <Input
               value={firstName} placeholder="Nama lengkap Anda"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
-              fontSize="14px"
+              fontSize="16px"
             />
           </Field.Root>
 
@@ -107,14 +108,14 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
             <Input
               value={phone} placeholder="081234567890"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
-              fontSize="14px"
+              fontSize="16px"
             />
           </Field.Root>
 
           <Field.Root>
             <Field.Label {...lbl}>BAHASA</Field.Label>
             <SearchSelect
-              fontSize="14px"
+              fontSize="16px"
               value={language}
               onChange={setLanguage}
               options={[
@@ -127,7 +128,7 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
           {feedback && <Toast type={feedback.type} message={feedback.msg} />}
 
           <Button
-            bg="#1A3557" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px"
+            bg="#1A3557" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
             px="24px" w="max-content"
             loading={saving}
             onClick={handleSave}
@@ -150,8 +151,17 @@ function SecurityTab() {
   const [feedback, setFeedback]     = useState<{ type: "success" | "error"; msg: string } | null>(null)
 
   async function handleChange() {
+    if (!currentPwd) {
+      setFeedback({ type: "error", msg: "Password saat ini wajib diisi" })
+      return
+    }
     if (!newPwd || newPwd.length < 8) {
       setFeedback({ type: "error", msg: "Password baru minimal 8 karakter" })
+      return
+    }
+    // Same rule as registration and password reset.
+    if (!/[A-Za-z]/.test(newPwd) || !/[0-9]/.test(newPwd)) {
+      setFeedback({ type: "error", msg: "Password baru harus mengandung huruf dan angka" })
       return
     }
     if (newPwd !== confirmPwd) {
@@ -168,8 +178,8 @@ function SecurityTab() {
       await changePassword(token, currentPwd, newPwd)
       setFeedback({ type: "success", msg: "Password berhasil diubah." })
       setCurrentPwd(""); setNewPwd(""); setConfirmPwd("")
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal mengubah password" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal mengubah password") })
     } finally {
       setSaving(false)
     }
@@ -184,29 +194,29 @@ function SecurityTab() {
       <Flex flexDir="column" gap="16px" maxW="480px">
         <Field.Root>
           <Field.Label {...lbl}>PASSWORD SAAT INI</Field.Label>
-          <Input type="password" value={currentPwd} placeholder="••••••••"
+          <Input type="password" autoComplete="current-password" value={currentPwd} placeholder="••••••••"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentPwd(e.target.value)}
-            fontSize="14px" />
+            fontSize="16px" />
         </Field.Root>
 
         <Field.Root>
           <Field.Label {...lbl}>PASSWORD BARU</Field.Label>
-          <Input type="password" value={newPwd} placeholder="Minimal 8 karakter"
+          <Input type="password" autoComplete="new-password" value={newPwd} placeholder="Minimal 8 karakter, huruf dan angka"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPwd(e.target.value)}
-            fontSize="14px" />
+            fontSize="16px" />
         </Field.Root>
 
         <Field.Root>
           <Field.Label {...lbl}>KONFIRMASI PASSWORD BARU</Field.Label>
-          <Input type="password" value={confirmPwd} placeholder="Ulangi password baru"
+          <Input type="password" autoComplete="new-password" value={confirmPwd} placeholder="Ulangi password baru"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPwd(e.target.value)}
-            fontSize="14px" />
+            fontSize="16px" />
         </Field.Root>
 
         {feedback && <Toast type={feedback.type} message={feedback.msg} />}
 
         <Button
-          bg="#1A3557" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px"
+          bg="#1A3557" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
           px="24px" w="max-content"
           loading={saving}
           onClick={handleChange}
@@ -230,15 +240,21 @@ function NotificationsTab() {
   const [monthlyTime, setMonthlyTime]     = useState("09:00")
   const [renewalReminderDays, setRenewalReminderDays] = useState(30)
   const [renewalWaTemplate, setRenewalWaTemplate]     = useState("")
-  const [loading, setLoading]             = useState(true)
+  // "error": the current settings could not be read. Saving then would overwrite the
+  // user's real settings with these defaults, so saving is blocked until a reload works.
+  const [loadState, setLoadState]         = useState<"loading" | "ready" | "error">("loading")
+  const loading = loadState === "loading"
   const [saving, setSaving]               = useState(false)
   const [feedback, setFeedback]           = useState<{ type: "success" | "error"; msg: string } | null>(null)
 
   useEffect(() => {
     const token = getAccessToken()
-    if (!token) { setLoading(false); return }
+    if (!token) return
+    let cancelled = false
     getNotificationSettings(token)
       .then((s) => {
+        if (cancelled) return
+        setLoadState("ready")
         if (!s) return
         setWaNumber(s.whatsapp_target_number ?? "")
         setDailyEnabled(s.daily_digest_enabled)
@@ -250,13 +266,25 @@ function NotificationsTab() {
         setRenewalReminderDays(s.renewal_reminder_days ?? 30)
         setRenewalWaTemplate(s.renewal_wa_message_template ?? "")
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      .catch(() => { if (!cancelled) setLoadState("error") })
+    return () => { cancelled = true }
   }, [])
 
   async function handleSave() {
     const token = getAccessToken()
-    if (!token) return
+    if (!token || loadState !== "ready") return
+    if (dailyEnabled && activeDays.length === 0) {
+      setFeedback({ type: "error", msg: "Pilih minimal satu hari pengiriman ringkasan harian" })
+      return
+    }
+    if (!Number.isInteger(monthlyDay) || monthlyDay < 1 || monthlyDay > 28) {
+      setFeedback({ type: "error", msg: "Tanggal ringkasan bulanan harus antara 1 dan 28" })
+      return
+    }
+    if (!Number.isInteger(renewalReminderDays) || renewalReminderDays < 1 || renewalReminderDays > 90) {
+      setFeedback({ type: "error", msg: "Pengingat perpanjangan harus antara 1 dan 90 hari" })
+      return
+    }
 
     setSaving(true)
     setFeedback(null)
@@ -273,8 +301,8 @@ function NotificationsTab() {
         renewal_wa_message_template: renewalWaTemplate,
       })
       setFeedback({ type: "success", msg: "Pengaturan notifikasi berhasil disimpan." })
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menyimpan pengaturan" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menyimpan pengaturan") })
     } finally {
       setSaving(false)
     }
@@ -312,8 +340,8 @@ function NotificationsTab() {
           <Field.Label {...lbl}>NOMOR WHATSAPP (dengan kode negara)</Field.Label>
           <Input value={waNumber} placeholder="628123456789"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWaNumber(e.target.value)}
-            fontSize="14px" />
-          <Field.HelperText fontSize="11px" color="#94A3B8">
+            fontSize="16px" />
+          <Field.HelperText fontSize="14px" color="#64748B">
             Notifikasi digest akan dikirim ke nomor ini
           </Field.HelperText>
         </Field.Root>
@@ -330,7 +358,7 @@ function NotificationsTab() {
             onCheckedChange={(e) => setDailyEnabled(e.checked)}
             colorPalette="blue"
           >
-            <Switch.HiddenInput />
+            <Switch.HiddenInput aria-label="Aktifkan ringkasan harian" />
             <Switch.Control />
           </Switch.Root>
         </Flex>
@@ -342,7 +370,7 @@ function NotificationsTab() {
                 <Field.Label {...lbl}>WAKTU PENGIRIMAN</Field.Label>
                 <Input type="time" value={dailyTime}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDailyTime(e.target.value)}
-                  fontSize="14px" />
+                  fontSize="16px" />
               </Field.Root>
             </Flex>
 
@@ -354,7 +382,7 @@ function NotificationsTab() {
                   const active = activeDays.includes(num)
                   return (
                     <Box
-                      key={num} as="button" w="40px" h="40px" borderRadius="full" fontSize="12px"
+                      key={num} as="button" aria-pressed={active} w="40px" h="40px" borderRadius="full" fontSize="14px"
                       fontWeight={active ? "bold" : "normal"} border="1px solid" cursor="pointer"
                       bg={active ? "#1D4ED8" : "white"}
                       color={active ? "white" : "#374151"}
@@ -382,7 +410,7 @@ function NotificationsTab() {
             onCheckedChange={(e) => setMonthlyEnabled(e.checked)}
             colorPalette="purple"
           >
-            <Switch.HiddenInput />
+            <Switch.HiddenInput aria-label="Aktifkan ringkasan bulanan" />
             <Switch.Control />
           </Switch.Root>
         </Flex>
@@ -393,14 +421,14 @@ function NotificationsTab() {
               <Field.Label {...lbl}>TANGGAL PENGIRIMAN</Field.Label>
               <Input type="number" min={1} max={28} value={monthlyDay}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyDay(Number(e.target.value))}
-                fontSize="14px" />
-              <Field.HelperText fontSize="11px" color="#94A3B8">1–28</Field.HelperText>
+                fontSize="16px" />
+              <Field.HelperText fontSize="14px" color="#64748B">1–28</Field.HelperText>
             </Field.Root>
             <Field.Root maxW="160px">
               <Field.Label {...lbl}>WAKTU PENGIRIMAN</Field.Label>
               <Input type="time" value={monthlyTime}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyTime(e.target.value)}
-                fontSize="14px" />
+                fontSize="16px" />
             </Field.Root>
           </Flex>
         )}
@@ -416,8 +444,8 @@ function NotificationsTab() {
             <Field.Label {...lbl}>KIRIM PENGINGAT (HARI SEBELUM JATUH TEMPO)</Field.Label>
             <Input type="number" min={1} max={90} value={renewalReminderDays}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewalReminderDays(Number(e.target.value))}
-              fontSize="14px" />
-            <Field.HelperText fontSize="11px" color="#94A3B8">
+              fontSize="16px" />
+            <Field.HelperText fontSize="14px" color="#64748B">
               Digest WhatsApp harian ke agen untuk polis yang jatuh tempo dalam N hari ini (1–90, default 30)
             </Field.HelperText>
           </Field.Root>
@@ -425,24 +453,28 @@ function NotificationsTab() {
           <Field.Root>
             <Field.Label {...lbl}>TEMPLATE PESAN WHATSAPP DEFAULT</Field.Label>
             <Textarea
-              rows={4} fontSize="14px"
+              rows={4} fontSize="16px"
               placeholder="Halo {customer_name}, polis Anda {policy_number} akan berakhir {days_until_expiry} hari lagi. Konfirmasi perpanjangan ya!"
               value={renewalWaTemplate}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRenewalWaTemplate(e.target.value)}
             />
-            <Field.HelperText fontSize="11px" color="#94A3B8">
+            <Field.HelperText fontSize="14px" color="#64748B">
               Dipakai saat tombol &ldquo;Kirim WhatsApp&rdquo; di halaman Perpanjangan diklik tanpa pesan kustom. Placeholder: {"{customer_name} {policy_number} {product_type} {insurer_name} {coverage_end} {days_until_expiry}"}. Kosongkan untuk memakai template bawaan sistem.
             </Field.HelperText>
           </Field.Root>
         </Flex>
       </Box>
 
+      {loadState === "error" && (
+        <Toast type="error" message="Pengaturan notifikasi gagal dimuat. Muat ulang halaman sebelum menyimpan agar pengaturan Anda tidak tertimpa." />
+      )}
       {feedback && <Toast type={feedback.type} message={feedback.msg} />}
 
       <Button
-        bg="#1A3557" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px"
+        bg="#1A3557" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
         px="24px" w="max-content"
         loading={saving}
+        disabled={loadState !== "ready"}
         onClick={handleSave}
       >
         Simpan Pengaturan Notifikasi
@@ -469,24 +501,34 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
   const [drafts, setDrafts] = useState<ProductDraft[]>(
     PRODUCT_TYPES.map((pt) => ({ product_type: pt, commission_rate: "0", is_active: false }))
   )
-  const [loading, setLoading] = useState(true)
+  // Which insurer the drafts were loaded for (or failed for). Saving defaults after a failed
+  // load would reset every product of this insurer to 0% / inactive, so it is blocked.
+  const [loadedFor, setLoadedFor] = useState<{ insurerId: string; ok: boolean } | null>(null)
+  const loading    = loadedFor?.insurerId !== insurerId
+  const loadFailed = !loading && loadedFor?.ok === false
   const [saving, setSaving]   = useState(false)
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null)
 
   useEffect(() => {
     const token = getAccessToken()
     if (!token) return
-    setLoading(true)
+    let cancelled = false
     getInsurerProducts(token, insurerId)
       .then((products) => {
+        if (cancelled) return
         const map = new Map(products.map((p) => [p.product_type, p]))
         setDrafts(PRODUCT_TYPES.map((pt) => {
           const ex = map.get(pt)
           return { insurer_product_id: ex?.insurer_product_id, product_type: pt, commission_rate: String(ex?.commission_rate ?? "0"), is_active: ex?.is_active ?? false }
         }))
+        setLoadedFor({ insurerId, ok: true })
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      .catch(() => {
+        if (cancelled) return
+        setLoadedFor({ insurerId, ok: false })
+        setFeedback({ type: "error", msg: "Gagal memuat konfigurasi produk. Tutup lalu buka kembali untuk mencoba lagi." })
+      })
+    return () => { cancelled = true }
   }, [insurerId])
 
   function setDraft(pt: ApiInsurerProductType, field: "commission_rate" | "is_active", value: string | boolean) {
@@ -495,7 +537,15 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
 
   async function save() {
     const token = getAccessToken()
-    if (!token) return
+    if (!token || loading || loadFailed) return
+    const invalid = drafts.find((d) => {
+      const r = parseFloat(d.commission_rate)
+      return d.commission_rate !== "" && (Number.isNaN(r) || r < 0 || r > 100)
+    })
+    if (invalid) {
+      setFeedback({ type: "error", msg: `Komisi ${PRODUCT_LABELS_INS[invalid.product_type]} harus antara 0 dan 100%` })
+      return
+    }
     setSaving(true)
     setFeedback(null)
     try {
@@ -507,8 +557,8 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
         }))
       )
       setFeedback({ type: "success", msg: "Konfigurasi produk berhasil disimpan." })
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menyimpan" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menyimpan") })
     } finally {
       setSaving(false)
     }
@@ -517,9 +567,9 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
   return (
     <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
       <Flex px="16px" py="10px" borderBottom="1px solid" borderColor="#E2E8F0" bg="#F1F5F9" align="center">
-        <Text flex="1" color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em">PRODUK ASURANSI</Text>
-        <Text w="140px" textAlign="center" color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em">KOMISI DEFAULT (%)</Text>
-        <Text w="72px" textAlign="center" color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em">AKTIF</Text>
+        <Text flex="1" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">PRODUK ASURANSI</Text>
+        <Text w="140px" textAlign="center" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">KOMISI DEFAULT (%)</Text>
+        <Text w="72px" textAlign="center" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">AKTIF</Text>
       </Flex>
 
       {loading
@@ -532,16 +582,17 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
           ))
         : drafts.map((d) => (
             <Flex key={d.product_type} align="center" px="16px" py="10px" borderBottom="1px solid" borderColor="#F1F5F9" gap="12px">
-              <Text flex="1" fontSize="13px" color="#1C2833">{PRODUCT_LABELS_INS[d.product_type]}</Text>
+              <Text flex="1" fontSize="15px" color="#1C2833">{PRODUCT_LABELS_INS[d.product_type]}</Text>
               <Input
-                w="140px" h="32px" fontSize="13px" textAlign="center" type="number" min={0} max={100} step="0.1"
+                w="140px" h="32px" fontSize="15px" textAlign="center" type="number" min={0} max={100} step="0.1"
                 bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="6px" px="8px"
+                aria-label={`Komisi default ${PRODUCT_LABELS_INS[d.product_type]} (%)`}
                 value={d.commission_rate}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(d.product_type, "commission_rate", e.target.value)}
               />
               <Flex w="72px" justify="center">
                 <Switch.Root checked={d.is_active} onCheckedChange={(e) => setDraft(d.product_type, "is_active", e.checked)} colorPalette="blue" size="sm">
-                  <Switch.HiddenInput /><Switch.Control />
+                  <Switch.HiddenInput aria-label={`${PRODUCT_LABELS_INS[d.product_type]} aktif`} /><Switch.Control />
                 </Switch.Root>
               </Flex>
             </Flex>
@@ -554,8 +605,8 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
           : <Box />
         }
         <Flex gap="8px">
-          <Button size="sm" variant="ghost" color="#64748B" fontSize="12px" onClick={onClose}>Tutup</Button>
-          <Button size="sm" bg="#1A3557" color="white" fontSize="12px" loading={saving} onClick={save}>
+          <Button size="sm" variant="ghost" color="#64748B" fontSize="14px" onClick={onClose}>Tutup</Button>
+          <Button size="sm" bg="#1A3557" color="white" fontSize="14px" loading={saving} disabled={loading || loadFailed} onClick={save}>
             Simpan Konfigurasi
           </Button>
         </Flex>
@@ -565,6 +616,11 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
 }
 
 const INSURER_COLORS = ["#0369A1", "#047857", "#1D4ED8", "#7C3AED", "#B45309", "#BE123C"]
+// Light background tint of a brand colour; works for any CSS colour, unlike appending a hex alpha.
+function tint(color: string) {
+  return `color-mix(in srgb, ${color} 10%, white)`
+}
+
 function insurerColor(name: string) {
   const hash = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0)
   return INSURER_COLORS[hash % INSURER_COLORS.length]
@@ -581,14 +637,15 @@ function InsurersTab() {
   const [savingId, setSavingId]   = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [feedback, setFeedback]   = useState<{ type: "success" | "error"; msg: string } | null>(null)
 
   useEffect(() => {
     const token = getAccessToken()
     if (!token) return
     getInsurers(token)
-      .then((res) => setInsurers(Array.isArray(res) ? res : (res as any)?.data ?? []))
-      .catch(() => {})
+      .then(setInsurers)
+      .catch((err: unknown) => setFeedback({ type: "error", msg: errorMessage(err, "Daftar perusahaan asuransi belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.") }))
       .finally(() => setLoading(false))
   }, [])
 
@@ -613,8 +670,8 @@ function InsurersTab() {
       setAddForm({ name: "", short_name: "", agent_code: "", is_primary: false, notes: "" })
       setShowAdd(false)
       setFeedback({ type: "success", msg: `${addForm.name} berhasil ditambahkan.` })
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menambahkan insurer" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menambahkan insurer") })
     } finally {
       setAdding(false)
     }
@@ -636,12 +693,12 @@ function InsurersTab() {
         agent_code: editForm.agent_code || undefined,
         is_primary: editForm.is_primary,
         is_active: editForm.is_active,
-        notes: (editForm as any).notes || undefined,
+        notes: (editForm as Partial<ApiInsurer> & { notes?: string }).notes || undefined,
       })
       setInsurers((prev) => prev.map((ins) => ins.insurer_id === insurerId ? { ...ins, ...editForm } as ApiInsurer : ins))
       setEditingId(null)
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menyimpan" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menyimpan") })
     } finally {
       setSavingId(null)
     }
@@ -653,9 +710,10 @@ function InsurersTab() {
     const next = !ins.is_active
     setInsurers((prev) => prev.map((i) => i.insurer_id === ins.insurer_id ? { ...i, is_active: next } : i))
     try {
-      await updateInsurer(token, ins.insurer_id, { is_active: next } as any)
-    } catch {
+      await updateInsurer(token, ins.insurer_id, { is_active: next })
+    } catch (err: unknown) {
       setInsurers((prev) => prev.map((i) => i.insurer_id === ins.insurer_id ? { ...i, is_active: ins.is_active } : i))
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal mengubah status insurer") })
     }
   }
 
@@ -667,8 +725,9 @@ function InsurersTab() {
       await deleteInsurer(token, insurerId)
       setInsurers((prev) => prev.filter((i) => i.insurer_id !== insurerId))
       if (expandedId === insurerId) setExpandedId(null)
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menghapus insurer" })
+      setConfirmDeleteId(null)
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menghapus insurer") })
     } finally {
       setDeletingId(null)
     }
@@ -680,10 +739,10 @@ function InsurersTab() {
       <Flex justify="space-between" align="center">
         <Flex flexDir="column" gap="2px">
           <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Manajemen Asuransi</Text>
-          <Text color="#64748B" fontSize="13px">Kelola perusahaan asuransi dan konfigurasi produk & komisi</Text>
+          <Text color="#64748B" fontSize="15px">Kelola perusahaan asuransi dan konfigurasi produk & komisi</Text>
         </Flex>
         <Button
-          bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold" gap="6px"
+          bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold" gap="6px"
           onClick={() => { setShowAdd(true); setFeedback(null) }}
         >
           <LuPlus size={14} /> Tambah Insurer
@@ -696,32 +755,32 @@ function InsurersTab() {
       {showAdd && (
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#3B82F6" p="20px">
           <Flex align="center" gap="8px" mb="16px">
-            <Text color="#1D4ED8" fontSize="14px" fontWeight="semibold">Tambah Perusahaan Asuransi Baru</Text>
+            <Text color="#1D4ED8" fontSize="16px" fontWeight="semibold">Tambah Perusahaan Asuransi Baru</Text>
           </Flex>
           <Flex gap="12px" flexWrap="wrap" mb="12px">
             <Flex flexDir="column" gap="4px" flex="1" minW="180px">
               <Text {...lbl}>NAMA LENGKAP *</Text>
-              <Input fontSize="13px" placeholder="PT Asuransi XYZ" value={addForm.name}
+              <Input fontSize="15px" placeholder="PT Asuransi XYZ" value={addForm.name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, name: e.target.value }))} />
             </Flex>
             <Flex flexDir="column" gap="4px" w="140px">
               <Text {...lbl}>KODE SINGKAT *</Text>
-              <Input fontSize="13px" placeholder="XYZ" value={addForm.short_name}
+              <Input fontSize="15px" placeholder="XYZ" value={addForm.short_name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, short_name: e.target.value }))} />
             </Flex>
             <Flex flexDir="column" gap="4px" w="160px">
               <Text {...lbl}>KODE AGEN</Text>
-              <Input fontSize="13px" placeholder="AG-001" value={addForm.agent_code}
+              <Input fontSize="15px" placeholder="AG-001" value={addForm.agent_code}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddForm((f) => ({ ...f, agent_code: e.target.value }))} />
             </Flex>
           </Flex>
           <Flex gap="12px" align="center" justify="flex-end">
             <Switch.Root checked={addForm.is_primary} onCheckedChange={(e) => setAddForm((f) => ({ ...f, is_primary: e.checked }))} colorPalette="blue" size="sm">
               <Switch.HiddenInput /><Switch.Control />
-              <Text fontSize="12px" color="#374151" ml="6px">Insurer Utama</Text>
+              <Text fontSize="14px" color="#374151" ml="6px">Insurer Utama</Text>
             </Switch.Root>
-            <Button variant="ghost" color="#64748B" fontSize="13px" onClick={() => setShowAdd(false)}><LuX size={14} /></Button>
-            <Button bg="#1A3557" color="white" fontSize="13px" loading={adding} onClick={handleAdd}>Simpan</Button>
+            <Button variant="ghost" color="#64748B" fontSize="15px" onClick={() => setShowAdd(false)}><LuX size={14} /></Button>
+            <Button bg="#1A3557" color="white" fontSize="15px" loading={adding} onClick={handleAdd}>Simpan</Button>
           </Flex>
         </Box>
       )}
@@ -732,7 +791,7 @@ function InsurersTab() {
         : insurers.length === 0
           ? (
             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="40px" textAlign="center">
-              <Text color="#94A3B8" fontSize="14px">Belum ada insurer. Klik "Tambah Insurer" untuk mulai.</Text>
+              <Text color="#64748B" fontSize="16px">Belum ada insurer. Klik &quot;Tambah Insurer&quot; untuk mulai.</Text>
             </Box>
           )
           : insurers.map((ins) => {
@@ -746,8 +805,8 @@ function InsurersTab() {
                 <Flex p="16px" align="center" gap="14px">
                   {/* Avatar */}
                   <Flex w="44px" h="44px" borderRadius="10px" align="center" justify="center" flexShrink={0}
-                    bg={color + "18"} color={color}>
-                    <Text fontWeight="bold" fontSize="14px">{initials}</Text>
+                    bg={tint(color)} color={color}>
+                    <Text fontWeight="bold" fontSize="16px">{initials}</Text>
                   </Flex>
 
                   {/* Info / Edit form */}
@@ -755,17 +814,17 @@ function InsurersTab() {
                     {isEditing ? (
                       <Flex gap="8px" flexWrap="wrap">
                         <Input
-                          fontSize="13px" fontWeight="semibold" h="32px" flex="1" minW="160px"
+                          fontSize="15px" fontWeight="semibold" h="32px" flex="1" minW="160px"
                           placeholder="Nama Insurer" value={editForm.name ?? ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, name: e.target.value }))}
                         />
                         <Input
-                          fontSize="13px" h="32px" w="100px"
+                          fontSize="15px" h="32px" w="100px"
                           placeholder="Singkat" value={editForm.short_name ?? ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, short_name: e.target.value }))}
                         />
                         <Input
-                          fontSize="13px" h="32px" w="120px"
+                          fontSize="15px" h="32px" w="120px"
                           placeholder="Kode agen" value={editForm.agent_code ?? ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, agent_code: e.target.value }))}
                         />
@@ -773,15 +832,15 @@ function InsurersTab() {
                     ) : (
                       <>
                         <Flex align="center" gap="8px" flexWrap="wrap">
-                          <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{ins.name}</Text>
-                          <Box px="6px" py="1px" borderRadius="4px" fontSize="10px" fontWeight="bold"
-                            bg={color + "18"} color={color}>{ins.short_name}</Box>
+                          <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{ins.name}</Text>
+                          <Box px="6px" py="1px" borderRadius="4px" fontSize="14px" fontWeight="bold"
+                            bg={tint(color)} color={color}>{ins.short_name}</Box>
                           {ins.is_primary && (
-                            <Box px="6px" py="1px" borderRadius="4px" fontSize="10px" fontWeight="bold" bg="#FEF3C7" color="#D97706">UTAMA</Box>
+                            <Box px="6px" py="1px" borderRadius="4px" fontSize="14px" fontWeight="bold" bg="#FEF3C7" color="#D97706">UTAMA</Box>
                           )}
                         </Flex>
                         {ins.agent_code && (
-                          <Text color="#94A3B8" fontSize="11px">Kode Agen: {ins.agent_code}</Text>
+                          <Text color="#64748B" fontSize="14px">Kode Agen: {ins.agent_code}</Text>
                         )}
                       </>
                     )}
@@ -793,31 +852,31 @@ function InsurersTab() {
                       <>
                         <Switch.Root checked={editForm.is_primary ?? false} onCheckedChange={(e) => setEditForm((f) => ({ ...f, is_primary: e.checked }))} colorPalette="blue" size="sm">
                           <Switch.HiddenInput /><Switch.Control />
-                          <Text fontSize="11px" color="#64748B" ml="4px">Utama</Text>
+                          <Text fontSize="14px" color="#64748B" ml="4px">Utama</Text>
                         </Switch.Root>
                         <Button size="sm" variant="ghost" color="#64748B" onClick={() => setEditingId(null)} px="2">
                           <LuX size={14} />
                         </Button>
-                        <Button size="sm" bg="#1A3557" color="white" fontSize="12px" loading={savingId === ins.insurer_id} onClick={() => saveEdit(ins.insurer_id)}>
+                        <Button size="sm" bg="#1A3557" color="white" fontSize="14px" loading={savingId === ins.insurer_id} onClick={() => saveEdit(ins.insurer_id)}>
                           Simpan
                         </Button>
                       </>
                     ) : (
                       <>
                         <Flex align="center" gap="6px">
-                          <Text fontSize="11px" color="#94A3B8">{ins.is_active ? "Aktif" : "Nonaktif"}</Text>
+                          <Text fontSize="14px" color="#64748B">{ins.is_active ? "Aktif" : "Nonaktif"}</Text>
                           <Switch.Root checked={ins.is_active} onCheckedChange={() => toggleActive(ins)} colorPalette="blue" size="sm">
                             <Switch.HiddenInput /><Switch.Control />
                           </Switch.Root>
                         </Flex>
-                        <Button size="sm" variant="ghost" color="#64748B" gap="4px" fontSize="12px" onClick={() => startEdit(ins)}>
+                        <Button size="sm" variant="ghost" color="#64748B" gap="4px" fontSize="14px" onClick={() => startEdit(ins)}>
                           <LuPencil size={12} /> Edit
                         </Button>
                         <Button
                           size="sm" variant="ghost"
                           color={isExpanded ? "#1D4ED8" : "#64748B"}
                           bg={isExpanded ? "#EFF6FF" : "transparent"}
-                          gap="4px" fontSize="12px"
+                          gap="4px" fontSize="14px"
                           onClick={() => setExpandedId(isExpanded ? null : ins.insurer_id)}
                         >
                           {isExpanded ? <LuChevronUp size={12} /> : <LuChevronDown size={12} />} Produk
@@ -825,7 +884,7 @@ function InsurersTab() {
                         <Button
                           size="sm" variant="ghost" color="#EF4444" px="2"
                           loading={deletingId === ins.insurer_id}
-                          onClick={() => handleDelete(ins.insurer_id)}
+                          onClick={() => setConfirmDeleteId(ins.insurer_id)}
                         >
                           <LuTrash2 size={14} />
                         </Button>
@@ -837,7 +896,7 @@ function InsurersTab() {
                 {/* Product config */}
                 {isExpanded && (
                   <Box px="16px" pb="16px" borderTop="1px solid" borderColor="#F1F5F9">
-                    <Text color="#1C2833" fontSize="13px" fontWeight="semibold" py="12px">Konfigurasi Produk & Komisi</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold" py="12px">Konfigurasi Produk & Komisi</Text>
                     <ProductConfig insurerId={ins.insurer_id} onClose={() => setExpandedId(null)} />
                   </Box>
                 )}
@@ -845,6 +904,26 @@ function InsurersTab() {
             )
           })
       }
+
+      <Dialog.Root open={confirmDeleteId !== null} onOpenChange={({ open }) => { if (!open) setConfirmDeleteId(null) }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="16px" maxW="400px" mx="16px">
+            <Dialog.Header borderBottom="1px solid" borderColor="#E2E8F0" pb="16px">
+              <Dialog.Title fontSize="16px" fontWeight="semibold" color="#1C2833">Hapus Insurer?</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body py="20px">
+              <Text fontSize="16px" color="#64748B">Tindakan ini tidak dapat dibatalkan. Yakin ingin menghapus insurer ini?</Text>
+            </Dialog.Body>
+            <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
+              <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Batal</Button>
+              <Button bg="#EF4444" color="white" _hover={{ bg: "#DC2626" }} loading={deletingId === confirmDeleteId} onClick={() => { if (confirmDeleteId) handleDelete(confirmDeleteId) }}>
+                Hapus
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
     </Flex>
   )
 }
@@ -865,32 +944,32 @@ function ProductFormFields({
       <Flex gap="12px">
         <Field.Root flex="1">
           <Field.Label {...lbl}>KODE PRODUK *</Field.Label>
-          <Input fontSize="14px" color="#1C2833" placeholder="kebakaran" value={form.product_code}
+          <Input fontSize="16px" color="#1C2833" placeholder="kebakaran" value={form.product_code}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, product_code: e.target.value.toLowerCase() })} />
-          <Field.HelperText fontSize="11px" color="#94A3B8">Lowercase, unik per perusahaan</Field.HelperText>
+          <Field.HelperText fontSize="14px" color="#64748B">Lowercase, unik per perusahaan</Field.HelperText>
         </Field.Root>
         <Field.Root w="120px">
           <Field.Label {...lbl}>KOMISI (%) *</Field.Label>
-          <Input fontSize="14px" color="#1C2833" type="number" min={0} max={100} step="0.5" placeholder="15" value={form.commission_rate}
+          <Input fontSize="16px" color="#1C2833" type="number" min={0} max={100} step="0.5" placeholder="15" value={form.commission_rate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, commission_rate: e.target.value })} />
         </Field.Root>
         <Field.Root w="120px">
           <Field.Label {...lbl}>PPh / PAJAK (%)</Field.Label>
-          <Input fontSize="14px" color="#1C2833" type="number" min={0} max={100} step="0.5" placeholder="2.5" value={form.default_tax_rate}
+          <Input fontSize="16px" color="#1C2833" type="number" min={0} max={100} step="0.5" placeholder="2.5" value={form.default_tax_rate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, default_tax_rate: e.target.value })} />
-          <Field.HelperText fontSize="11px" color="#94A3B8">Default untuk polis baru</Field.HelperText>
+          <Field.HelperText fontSize="14px" color="#64748B">Default untuk polis baru</Field.HelperText>
         </Field.Root>
       </Flex>
       <Field.Root>
         <Field.Label {...lbl}>NAMA PRODUK *</Field.Label>
-        <Input fontSize="14px" color="#1C2833" placeholder="Asuransi Kebakaran" value={form.product_name}
+        <Input fontSize="16px" color="#1C2833" placeholder="Asuransi Kebakaran" value={form.product_name}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, product_name: e.target.value })} />
       </Field.Root>
       <Field.Root>
         <Field.Label {...lbl}>PREFIKS POLIS</Field.Label>
-        <Input fontSize="14px" color="#1C2833" placeholder="01,08,88" value={form.policy_prefixes}
+        <Input fontSize="16px" color="#1C2833" placeholder="01,08,88" value={form.policy_prefixes}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...form, policy_prefixes: e.target.value })} />
-        <Field.HelperText fontSize="11px" color="#94A3B8">Pisahkan dengan koma — dipakai untuk auto-deteksi komisi saat membuat polis</Field.HelperText>
+        <Field.HelperText fontSize="14px" color="#64748B">Pisahkan dengan koma — dipakai untuk auto-deteksi komisi saat membuat polis</Field.HelperText>
       </Field.Root>
     </Flex>
   )
@@ -906,6 +985,7 @@ function MasterProductsTab() {
   const [editForm, setEditForm]     = useState(EMPTY_PRODUCT_FORM)
   const [saving, setSaving]         = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [feedback, setFeedback]     = useState<{ type: "success" | "error"; msg: string } | null>(null)
 
   useEffect(() => {
@@ -913,7 +993,7 @@ function MasterProductsTab() {
     if (!token) return
     getMasterProducts(token)
       .then(setProducts)
-      .catch(() => {})
+      .catch((err: unknown) => setFeedback({ type: "error", msg: errorMessage(err, "Daftar produk belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.") }))
       .finally(() => setLoading(false))
   }, [])
 
@@ -946,8 +1026,8 @@ function MasterProductsTab() {
       setAddForm(EMPTY_PRODUCT_FORM)
       setAddOpen(false)
       setFeedback({ type: "success", msg: `${addForm.product_name} berhasil ditambahkan.` })
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menambahkan produk" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menambahkan produk") })
     } finally {
       setAdding(false)
     }
@@ -991,8 +1071,8 @@ function MasterProductsTab() {
           : p
       ))
       setEditTarget(null)
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menyimpan" })
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menyimpan") })
     } finally {
       setSaving(false)
     }
@@ -1005,8 +1085,9 @@ function MasterProductsTab() {
     setProducts((prev) => prev.map((prod) => prod.product_id === p.product_id ? { ...prod, is_active: next } : prod))
     try {
       await updateMasterProduct(token, p.product_id, { is_active: Boolean(next) })
-    } catch {
+    } catch (err: unknown) {
       setProducts((prev) => prev.map((prod) => prod.product_id === p.product_id ? { ...prod, is_active: p.is_active } : prod))
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal mengubah status produk") })
     }
   }
 
@@ -1017,8 +1098,9 @@ function MasterProductsTab() {
     try {
       await deleteMasterProduct(token, productId)
       setProducts((prev) => prev.filter((p) => p.product_id !== productId))
-    } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message ?? "Gagal menghapus produk" })
+      setConfirmDeleteId(null)
+    } catch (err: unknown) {
+      setFeedback({ type: "error", msg: errorMessage(err, "Gagal menghapus produk") })
     } finally {
       setDeletingId(null)
     }
@@ -1030,10 +1112,10 @@ function MasterProductsTab() {
       <Flex justify="space-between" align="center">
         <Flex flexDir="column" gap="2px">
           <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Produk & Komisi</Text>
-          <Text color="#64748B" fontSize="13px">Kelola katalog produk asuransi dan tarif komisi default</Text>
+          <Text color="#64748B" fontSize="15px">Kelola katalog produk asuransi dan tarif komisi default</Text>
         </Flex>
         <Button
-          bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold" gap="6px"
+          bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold" gap="6px"
           onClick={() => { setAddOpen(true); setFeedback(null) }}
         >
           <LuPlus size={14} /> Tambah Produk
@@ -1048,7 +1130,7 @@ function MasterProductsTab() {
         : products.length === 0
           ? (
             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="40px" textAlign="center">
-              <Text color="#94A3B8" fontSize="14px">Belum ada produk. Klik "Tambah Produk" untuk mulai.</Text>
+              <Text color="#64748B" fontSize="16px">Belum ada produk. Klik &quot;Tambah Produk&quot; untuk mulai.</Text>
             </Box>
           )
           : products.map((p) => {
@@ -1056,34 +1138,34 @@ function MasterProductsTab() {
             return (
               <Box key={p.product_id} bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0">
                 <Flex p="16px" align="center" gap="12px" flexWrap="wrap">
-                  <Box px="8px" py="2px" borderRadius="6px" bg="#1A3557" color="white" fontSize="11px" fontWeight="bold" flexShrink={0}>
+                  <Box px="8px" py="2px" borderRadius="6px" bg="#1A3557" color="white" fontSize="14px" fontWeight="bold" flexShrink={0}>
                     {p.product_code}
                   </Box>
-                  <Text color="#1C2833" fontSize="14px" fontWeight="semibold" flex="1" minW={0}>{p.product_name}</Text>
-                  <Box px="8px" py="2px" borderRadius="6px" bg="#DBEAFE" fontSize="12px" fontWeight="bold" color="#1D4ED8" flexShrink={0}>
+                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold" flex="1" minW={0}>{p.product_name}</Text>
+                  <Box px="8px" py="2px" borderRadius="6px" bg="#DBEAFE" fontSize="14px" fontWeight="bold" color="#1D4ED8" flexShrink={0}>
                     {parseFloat(p.commission_rate).toFixed(1)}%
                   </Box>
                   {p.default_tax_rate != null && (
-                    <Box px="8px" py="2px" borderRadius="6px" bg="#FEF3C7" fontSize="11px" color="#D97706" flexShrink={0}>
+                    <Box px="8px" py="2px" borderRadius="6px" bg="#FEF3C7" fontSize="14px" color="#D97706" flexShrink={0}>
                       PPh {(p.default_tax_rate * 100).toFixed(1)}%
                     </Box>
                   )}
                   {p.policy_prefixes && (
-                    <Box px="8px" py="2px" borderRadius="6px" bg="#F1F5F9" fontSize="11px" color="#64748B" flexShrink={0}>
+                    <Box px="8px" py="2px" borderRadius="6px" bg="#F1F5F9" fontSize="14px" color="#64748B" flexShrink={0}>
                       Prefiks: {p.policy_prefixes}
                     </Box>
                   )}
                   <Flex align="center" gap="10px" flexShrink={0}>
                     <Flex align="center" gap="6px">
-                      <Text fontSize="11px" color="#94A3B8">{isActive ? "Aktif" : "Nonaktif"}</Text>
+                      <Text fontSize="14px" color="#64748B">{isActive ? "Aktif" : "Nonaktif"}</Text>
                       <Switch.Root checked={isActive} onCheckedChange={() => toggleActive(p)} colorPalette="blue" size="sm">
                         <Switch.HiddenInput /><Switch.Control />
                       </Switch.Root>
                     </Flex>
-                    <Button size="sm" variant="ghost" color="#64748B" gap="4px" fontSize="12px" onClick={() => openEdit(p)}>
+                    <Button size="sm" variant="ghost" color="#64748B" gap="4px" fontSize="14px" onClick={() => openEdit(p)}>
                       <LuPencil size={12} /> Edit
                     </Button>
-                    <Button size="sm" variant="ghost" color="#EF4444" px="2" loading={deletingId === p.product_id} onClick={() => handleDelete(p.product_id)}>
+                    <Button size="sm" variant="ghost" color="#EF4444" px="2" loading={deletingId === p.product_id} onClick={() => setConfirmDeleteId(p.product_id)}>
                       <LuTrash2 size={14} />
                     </Button>
                   </Flex>
@@ -1092,6 +1174,27 @@ function MasterProductsTab() {
             )
           })
       }
+
+      {/* Delete confirmation dialog */}
+      <Dialog.Root open={confirmDeleteId !== null} onOpenChange={({ open }) => { if (!open) setConfirmDeleteId(null) }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="16px" maxW="400px" mx="16px">
+            <Dialog.Header borderBottom="1px solid" borderColor="#E2E8F0" pb="16px">
+              <Dialog.Title fontSize="16px" fontWeight="semibold" color="#1C2833">Hapus Produk?</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body py="20px">
+              <Text fontSize="16px" color="#64748B">Tindakan ini tidak dapat dibatalkan. Yakin ingin menghapus produk ini?</Text>
+            </Dialog.Body>
+            <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
+              <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Batal</Button>
+              <Button bg="#EF4444" color="white" _hover={{ bg: "#DC2626" }} loading={deletingId === confirmDeleteId} onClick={() => { if (confirmDeleteId) handleDelete(confirmDeleteId) }}>
+                Hapus
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
 
       {/* Add dialog */}
       <Dialog.Root open={addOpen} onOpenChange={({ open }) => { setAddOpen(open); if (!open) setAddForm(EMPTY_PRODUCT_FORM) }}>
@@ -1106,9 +1209,9 @@ function MasterProductsTab() {
             </Dialog.Body>
             <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button variant="ghost" color="#64748B" fontSize="14px">Batal</Button>
+                <Button variant="ghost" color="#64748B" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button bg="#1A3557" color="white" fontSize="14px" loading={adding} onClick={handleAdd}>
+              <Button bg="#1A3557" color="white" fontSize="16px" loading={adding} onClick={handleAdd}>
                 Simpan
               </Button>
             </Dialog.Footer>
@@ -1122,16 +1225,16 @@ function MasterProductsTab() {
         <Dialog.Positioner>
           <Dialog.Content borderRadius="16px" maxW="480px" mx="16px">
             <Dialog.Header borderBottom="1px solid" borderColor="#E2E8F0" pb="16px">
-              <Dialog.Title fontSize="16px" fontWeight="semibold" color="#1C2833">Edit Produk</Dialog.Title>
+              <Dialog.Title fontSize="16px" fontWeight="semibold" color="#1C2833">Ubah Produk</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body py="20px">
               <ProductFormFields form={editForm} onChange={setEditForm} />
             </Dialog.Body>
             <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button variant="ghost" color="#64748B" fontSize="14px">Batal</Button>
+                <Button variant="ghost" color="#64748B" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button bg="#1A3557" color="white" fontSize="14px" loading={saving} onClick={handleSaveEdit}>
+              <Button bg="#1A3557" color="white" fontSize="16px" loading={saving} onClick={handleSaveEdit}>
                 Simpan Perubahan
               </Button>
             </Dialog.Footer>
@@ -1144,27 +1247,160 @@ function MasterProductsTab() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// ─── Subscription Tab ─────────────────────────────────────────────────────────
+
+const planTier = (p: { name: string; price_idr: number }) =>
+  p.price_idr <= 0 ? 0 : /\b(tim|team)\b/i.test(p.name) ? 2 : 1
+
+function SubscriptionTab() {
+  const [sub, setSub] = useState<ApiSubscription | null>(null)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [payingId, setPayingId] = useState<string | null>(null)
+
+  const refresh = () => {
+    const token = getAccessToken()
+    if (!token) return Promise.resolve()
+    return getCurrentSubscription(token).then(setSub).catch((err: unknown) => setError(errorMessage(err, "Data langganan belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.")))
+  }
+
+  useEffect(() => {
+    Promise.all([refresh(), getPlans().then(setPlans)]).finally(() => setLoading(false))
+  }, [])
+
+  // While a payment is open in another tab, keep checking until the webhook activates the plan.
+  const waiting = !!sub?.pending_payment
+  useEffect(() => {
+    if (!waiting) return
+    const id = setInterval(refresh, 5000)
+    return () => clearInterval(id)
+  }, [waiting])
+
+  async function pay(serviceId: string) {
+    const token = getAccessToken()
+    if (!token) return
+    setPayingId(serviceId)
+    setError(null)
+    try {
+      await startPlanPayment(token, sub, serviceId)
+    } catch (err) {
+      setError(errorMessage(err, "Gagal membuat pembayaran"))
+      setPayingId(null)
+    }
+  }
+
+  if (loading) return <Skeleton h="320px" borderRadius="12px" />
+
+  const eff = sub?.effective
+  const used = sub?.usage.active_policy_count ?? 0
+  const cap = eff?.policy_limit ?? null
+  const currentRank = eff ? ({ starter: 0, pro: 1, team: 2 } as const)[eff.tier] : 0
+
+  return (
+    <Flex flexDir="column" gap="16px" pt="16px">
+      {error && <Toast type="error" message={error} />}
+
+      {sub && eff && (
+        <Box bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="12px" p="20px">
+          <Flex align="center" gap="8px" mb="4px">
+            <LuCrown size={16} color="#1D4ED8" />
+            <Text fontSize="16px" fontWeight="bold" color="#0F172A">Paket {eff.plan_name}</Text>
+          </Flex>
+          {!eff.in_effect ? (
+            <Text fontSize="16px" color="#B45309">
+              Paket {sub.plan.name} belum dibayar — akun memakai batas Starter sampai pembayaran selesai.
+            </Text>
+          ) : eff.tier === "starter" ? (
+            <Text fontSize="16px" color="#5D6D7E">Gratis selamanya.</Text>
+          ) : (
+            <Text fontSize="16px" color="#5D6D7E">
+              Aktif sampai {new Date(sub.next_billing_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}.
+            </Text>
+          )}
+          <Flex mt="12px" align="center" gap="12px">
+            <Text fontSize="16px" color="#334155">
+              Polis aktif: <b>{used}</b>{cap !== null ? ` / ${cap}` : " (tidak terbatas)"}
+            </Text>
+            {cap !== null && (
+              <Box flex="1" maxW="240px" h="6px" bg="#E2E8F0" borderRadius="full" overflow="hidden">
+                <Box h="100%" w={`${Math.min(100, (used / cap) * 100)}%`} bg={used >= cap ? "#DC2626" : "#1D4ED8"} />
+              </Box>
+            )}
+          </Flex>
+          {sub.pending_payment && (
+            <Text mt="12px" fontSize="16px" color="#5D6D7E">
+              Menunggu pembayaran… halaman ini akan diperbarui otomatis setelah pembayaran diterima.
+            </Text>
+          )}
+        </Box>
+      )}
+
+      <Flex gap="16px" flexWrap="wrap">
+        {plans.map((plan) => {
+          const rank = planTier(plan)
+          const isCurrent = eff?.in_effect ? plan.plan_id === sub?.plan.plan_id : rank === 0
+          const isAwaiting = !eff?.in_effect && plan.plan_id === sub?.plan.plan_id
+          const canBuy = rank > 0 && (isAwaiting || rank > currentRank || (rank === currentRank && !isCurrent))
+          return (
+            <Flex key={plan.plan_id} flexDir="column" flex="1" minW="240px" bg="white" borderRadius="12px" p="20px" gap="8px"
+              border="1px solid" borderColor={isCurrent ? "#1D4ED8" : "#E2E8F0"}>
+              <Text fontSize="16px" fontWeight="bold" color="#0F172A">{plan.name}</Text>
+              <Text fontSize="16px" color="#5D6D7E">{plan.tagline}</Text>
+              <Text fontSize="22px" fontWeight="bold" color="#0F172A">
+                {formatPlanPrice(plan.price_idr)} <Text as="span" fontSize="16px" fontWeight="normal" color="#64748B">{formatBillingCycle(plan.billing_cycle)}</Text>
+              </Text>
+              <Flex flexDir="column" gap="4px" flex="1" my="4px">
+                {plan.features.map((f) => (
+                  <Flex key={f.label} gap="6px" align="center">
+                    <LuCheck size={13} color="#16A34A" />
+                    <Text fontSize="16px" color="#334155">{f.label}</Text>
+                  </Flex>
+                ))}
+              </Flex>
+              {isCurrent ? (
+                <Button size="sm" variant="outline" disabled>Paket aktif</Button>
+              ) : canBuy ? (
+                <Button size="sm" bg="#0D1B3E" color="white" _hover={{ bg: "#1a2f5c" }}
+                  disabled={payingId !== null} onClick={() => pay(plan.plan_id)}>
+                  {payingId === plan.plan_id ? "Memproses…" : isAwaiting ? "Bayar Sekarang" : "Upgrade"}
+                </Button>
+              ) : null}
+            </Flex>
+          )
+        })}
+      </Flex>
+    </Flex>
+  )
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const [user, setUser]       = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  // ?tab=subscription (from the plan bar / upgrade dialog) opens that tab directly.
+  const [initialTab] = useState(() =>
+    typeof window === "undefined" ? "profile" : new URLSearchParams(window.location.search).get("tab") ?? "profile")
 
   useEffect(() => {
     const token = getAccessToken()
     if (!token) { router.push("/login"); return }
 
+    // A 401 is handled by lib/api/client (redirect to /login); anything else is shown
+    // here instead of logging the user out over e.g. a 500.
     getMyProfile(token)
       .then(setUser)
-      .catch(() => router.push("/login"))
+      .catch((err: unknown) => { if (errorStatus(err) !== 401) setLoadError(errorMessage(err, "Data profil belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.")) })
       .finally(() => setLoading(false))
-  }, [])
+  }, [router])
 
   return (
     <Box bg="#F4F6F9" minH="100vh">
       <Sidebar />
       <MobileHeader />
 
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: 0 }}>
         <Box display={{ base: "none", md: "block" }}>
           <TopBar title="Settings" />
         </Box>
@@ -1172,7 +1408,7 @@ export default function SettingsPage() {
         <Flex p="32px" flexDir="column" gap="24px">
           <Flex flexDir="column" gap="4px">
             <Text color="#1C2833" fontSize="24px" fontWeight="bold">Pengaturan Akun</Text>
-            <Text color="#5D6D7E" fontSize="14px">Kelola profil, keamanan, dan preferensi notifikasi Anda</Text>
+            <Text color="#5D6D7E" fontSize="16px">Kelola profil, keamanan, dan preferensi notifikasi Anda</Text>
           </Flex>
 
           {loading ? (
@@ -1181,7 +1417,7 @@ export default function SettingsPage() {
               <Skeleton h="320px" borderRadius="12px" />
             </Flex>
           ) : user ? (
-            <Tabs.Root defaultValue="profile" variant="plain">
+            <Tabs.Root defaultValue={initialTab} variant="plain">
               <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w="max-content" mb="4px">
                 {[
                   { value: "profile",       label: "Profil",      Icon: LuUser },
@@ -1189,9 +1425,10 @@ export default function SettingsPage() {
                   { value: "notifications", label: "Notifikasi",  Icon: LuBell },
                   { value: "insurers",      label: "Asuransi",    Icon: LuBuilding2 },
                   { value: "products",      label: "Produk",      Icon: LuPackage },
+                  { value: "subscription",  label: "Langganan",   Icon: LuCrown },
                 ].map(({ value, label, Icon }) => (
                   <Tabs.Trigger key={value} value={value}
-                    px="20px" py="8px" borderRadius="8px" fontSize="14px"
+                    px="20px" py="8px" borderRadius="8px" fontSize="16px"
                     fontWeight="medium" color="#64748B" gap="6px"
                     _selected={{ bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" }}>
                     <Icon size={14} /> {label}
@@ -1214,7 +1451,17 @@ export default function SettingsPage() {
               <Tabs.Content value="products">
                 <MasterProductsTab />
               </Tabs.Content>
+              <Tabs.Content value="subscription">
+                <SubscriptionTab />
+              </Tabs.Content>
             </Tabs.Root>
+          ) : loadError ? (
+            <Flex flexDir="column" gap="12px" align="flex-start">
+              <Text color="#DC2626" fontSize="16px">{loadError}</Text>
+              <Button size="sm" variant="outline" borderColor="#E2E8F0" onClick={() => window.location.reload()}>
+                Coba Lagi
+              </Button>
+            </Flex>
           ) : null}
         </Flex>
       </Box>
