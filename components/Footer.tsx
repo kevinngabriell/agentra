@@ -2,10 +2,14 @@
 
 import { Box, Flex, HStack, VStack, Text, Button } from "@chakra-ui/react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
+// Absolute "/#..." anchors so the links also resolve when the footer is rendered off the landing page.
 const footerLinks = [
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Fitur", href: "/#features" },
+  { label: "Harga", href: "/#pricing" },
+  { label: "Bantuan", href: "/help" },
+  { label: "Kontak", href: "/contact" },
   { label: "Kebijakan Privasi", href: "/privacy" },
   { label: "Syarat & Ketentuan", href: "/terms" },
 ]
@@ -21,16 +25,16 @@ const mobileNavItems = [
     label: "Beranda",
     href: "/",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     ),
   },
   {
     label: "Fitur",
-    href: "#features",
+    href: "/#features",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
@@ -40,9 +44,9 @@ const mobileNavItems = [
   },
   {
     label: "Harga",
-    href: "#pricing",
+    href: "/#pricing",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="12" y1="1" x2="12" y2="23" />
         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
       </svg>
@@ -52,7 +56,7 @@ const mobileNavItems = [
     label: "Bantuan",
     href: "/help",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="10" />
         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
         <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeWidth="3" />
@@ -62,6 +66,7 @@ const mobileNavItems = [
 ]
 
 export function Footer() {
+  const pathname = usePathname()
   return (
     <>
       {/* Main footer */}
@@ -89,7 +94,7 @@ export function Footer() {
               Agentra
             </Text>
             <Text fontSize="sm" color="gray.400">
-              © 2024 Agentra. Solusi CRM Asuransi Terpercaya.
+              © {new Date().getFullYear()} Agentra. Solusi CRM Asuransi Terpercaya.
             </Text>
           </VStack>
 
@@ -132,45 +137,45 @@ export function Footer() {
 
           {/* Icon buttons */}
           <HStack gap={2} display={{ base: "none", md: "flex" }}>
-            <Link href="https://agentra.id" target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size="sm"
-                w="36px"
-                h="36px"
-                p={0}
-                borderRadius="full"
-                borderColor="gray.300"
-                color="gray.500"
-                _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
-                aria-label="Website"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              w="36px"
+              h="36px"
+              p={0}
+              borderRadius="full"
+              borderColor="gray.300"
+              color="gray.500"
+              _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
+            >
+              <a href="https://agentra.id" target="_blank" rel="noopener noreferrer" aria-label="Website Agentra (agentra.id)">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="2" y1="12" x2="22" y2="12" />
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-              </Button>
-            </Link>
-            <Link href="mailto:halo@agentra.id">
-              <Button
-                variant="outline"
-                size="sm"
-                w="36px"
-                h="36px"
-                p={0}
-                borderRadius="full"
-                borderColor="gray.300"
-                color="gray.500"
-                _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
-                aria-label="Email"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              w="36px"
+              h="36px"
+              p={0}
+              borderRadius="full"
+              borderColor="gray.300"
+              color="gray.500"
+              _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
+            >
+              <a href="mailto:halo@agentra.id" aria-label="Kirim email ke halo@agentra.id">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
-              </Button>
-            </Link>
+              </a>
+            </Button>
           </HStack>
         </Flex>
       </Box>
@@ -192,25 +197,28 @@ export function Footer() {
         aria-label="Navigasi bawah"
       >
         <Flex w="100%" justify="space-around">
-          {mobileNavItems.map((item, i) => (
-            <Link key={item.label} href={item.href}>
+          {mobileNavItems.map((item) => {
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"))
+            return (
+            <Link key={item.label} href={item.href} aria-current={active ? "page" : undefined}>
               <VStack
                 gap={1}
                 px={4}
                 py={1}
-                color={i === 0 ? "#0D1B3E" : "gray.400"}
+                color={active ? "#0D1B3E" : "gray.400"}
                 _hover={{ color: "#0D1B3E" }}
                 transition="color 0.15s"
                 minW="44px"
                 align="center"
               >
                 {item.icon}
-                <Text fontSize="10px" fontWeight={i === 0 ? "semibold" : "normal"}>
+                <Text fontSize="14px" fontWeight={active ? "semibold" : "normal"}>
                   {item.label}
                 </Text>
               </VStack>
             </Link>
-          ))}
+            )
+          })}
         </Flex>
       </Box>
     </>

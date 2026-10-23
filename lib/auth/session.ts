@@ -1,12 +1,39 @@
 const AT_KEY = 'agentra_at'
 const RT_KEY = 'agentra_rt'
 const REMEMBER_EMAIL_KEY = 'agentra_remember_email'
+const AUTH_COOKIE = 'agentra_authed'
+
+// `agentra_authed` is only a presence flag that lets proxy.ts redirect signed-out visitors
+// before an /agentra page renders. It carries no credential; the API still authorizes every call.
+function setAuthCookie(persist: boolean) {
+    if (typeof document === 'undefined') return
+    const maxAge = persist ? '; max-age=2592000' : ''
+    const secure = window.location.protocol === 'https:' ? '; secure' : ''
+    document.cookie = `${AUTH_COOKIE}=1${maxAge}; path=/; samesite=lax${secure}`
+}
+
+function clearAuthCookie() {
+    if (typeof document === 'undefined') return
+    document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0; samesite=lax`
+}
 
 export function saveTokens(accessToken: string, refreshToken: string, persist: boolean) {
     if (typeof window === 'undefined') return
     const storage = persist ? localStorage : sessionStorage
+    const other = persist ? sessionStorage : localStorage
+    // Drop tokens from the other storage, otherwise getAccessToken() (which prefers
+    // localStorage) could keep returning a stale token from an earlier session.
+    other.removeItem(AT_KEY)
+    other.removeItem(RT_KEY)
     storage.setItem(AT_KEY, accessToken)
     storage.setItem(RT_KEY, refreshToken)
+    setAuthCookie(persist)
+}
+
+/** Re-creates the proxy presence cookie for a session that already has tokens (e.g. after the cookie expired). */
+export function restoreAuthCookie() {
+    if (typeof window === 'undefined') return
+    if (getAccessToken()) setAuthCookie(wasPersisted())
 }
 
 export function getAccessToken(): string | null {
@@ -25,15 +52,21 @@ export function clearTokens() {
     localStorage.removeItem(RT_KEY)
     sessionStorage.removeItem(AT_KEY)
     sessionStorage.removeItem(RT_KEY)
+    clearAuthCookie()
 }
 
+// UX hint only: decides whether to refresh *before* a request. The signature is not
+// (and cannot be) verified client-side; the API's 401 remains the authority.
+// Treats a token as expired 30s early so it doesn't lapse mid-request.
 export function isTokenExpired(token: string): boolean {
+    if (typeof window === 'undefined') return true
     try {
         const payloadB64 = token.split('.')[1]
         const base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/')
         const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
         const payload = JSON.parse(atob(padded))
-        return payload.exp * 1000 < Date.now()
+        if (typeof payload.exp !== 'number') return false
+        return payload.exp * 1000 < Date.now() + 30_000
     } catch {
         return true
     }

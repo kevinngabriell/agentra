@@ -1,18 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
-
-async function req<T>(method: string, path: string, token: string): Promise<T> {
-    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
-        method,
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as T
-}
+import { apiFetch, withQuery } from "./client"
 
 export interface RevenueTotals {
     policies_count: number
@@ -48,6 +34,7 @@ export interface RevenueSummaryResponse {
 }
 
 export async function getRevenueSummary(token: string, month?: string): Promise<RevenueSummaryResponse> {
-    const qs = month ? `?month=${month}` : ''
-    return req<RevenueSummaryResponse>('GET', `/revenue/summary${qs}`, token)
+    const qs = new URLSearchParams()
+    if (month) qs.set('month', month)
+    return apiFetch<RevenueSummaryResponse>(withQuery('/revenue/summary', qs), { token })
 }

@@ -1,9 +1,19 @@
 "use client"
 
-import { Box, Flex, Text } from "@chakra-ui/react"
-import { FiBell, FiShield } from "react-icons/fi"
+import { Box, Flex, IconButton, Text } from "@chakra-ui/react"
+import { useRouter } from "next/navigation"
+import { FiBell, FiLogOut, FiShield } from "react-icons/fi"
+import { logout } from "@/lib/auth/logout"
 
 export function MobileHeader() {
+  const router = useRouter()
+
+  // The Sidebar (and its logout) is hidden below md, so mobile needs its own way out.
+  async function handleLogout() {
+    await logout()
+    router.replace("/login")
+  }
+
   return (
     <Flex
       display={{ base: "flex", md: "none" }}
@@ -21,16 +31,24 @@ export function MobileHeader() {
       zIndex={15}
     >
       <Flex align="center" gap="8px">
-        <Flex w="28px" h="28px" borderRadius="6px" bg="#0D1826" align="center" justify="center">
+        <Flex w="28px" h="28px" borderRadius="6px" bg="#1D4ED8" align="center" justify="center" aria-hidden="true">
           <FiShield size={14} color="white" />
         </Flex>
-        <Text color="#0D1826" fontSize="13px" fontWeight="bold">InsureAgent CRM</Text>
+        <Text color="#0C4A6E" fontSize="18px" fontWeight="bold">Agentra CRM</Text>
       </Flex>
       <Flex gap="10px" align="center">
-        <Box color="#64748B" cursor="pointer"><FiBell size={18} /></Box>
-        <Flex w="30px" h="30px" borderRadius="full" bg="#0D1826" align="center" justify="center">
-          <Text color="white" fontSize="11px" fontWeight="bold">AD</Text>
-        </Flex>
+        <Box color="#64748B" aria-hidden="true"><FiBell size={22} /></Box>
+        <IconButton
+          aria-label="Keluar"
+          size="md"
+          variant="ghost"
+          borderRadius="full"
+          color="#EF4444"
+          _hover={{ bg: "#FEE2E2" }}
+          onClick={handleLogout}
+        >
+          <FiLogOut size={22} />
+        </IconButton>
       </Flex>
     </Flex>
   )

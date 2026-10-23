@@ -1,24 +1,7 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
-
-async function req<T>(
-    method: string,
-    path: string,
-    token: string,
-    body?: Record<string, unknown>,
-): Promise<T> {
-    const res = await fetch(`${BASE_URL}/api/v1${path}`, {
-        method,
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    })
-    const json = await res.json()
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-    return json.data as T
-}
+import { apiDownload, apiFetch, apiFetchOr, apiPath, withQuery } from "./client"
+import type { PolicyTermPayload } from "./policy-terms"
+import type { ChangeInfo } from "./policy-change"
+import type { RiskDetailsPayload } from "./risk-details"
 
 export type ApiProductType = 'fire' | 'motorcycle' | 'car' | 'travel' | 'cargo' | 'other' | 'kecelakaan' | 'aep'
 export type ApiRenewalStatus = 'pending' | 'renewed' | 'lapsed' | 'cancelled'
@@ -53,6 +36,9 @@ export interface ApiPolicy {
     risk_longitude?: number | null
     renewal_status: ApiRenewalStatus
     payment_status: ApiPaymentStatus
+    payment_due_date?: string | null
+    payment_date?: string | null
+    payment_reference?: string | null
     customer_id: string
     customer_name: string
     customer_type?: string
@@ -63,6 +49,10 @@ export interface ApiPolicy {
     insured_name?: string | null
     notes?: string
     policy_year?: number
+    // From policy_risk_details (list only); shown under the policy number and matched by the search box.
+    plate_number?: string | null
+    chassis_number?: string | null
+    bl_awb_number?: string | null
 }
 
 export interface ApiFollowUp {
@@ -112,6 +102,7 @@ export interface PoliciesListResponse {
 }
 
 export interface PoliciesListParams {
+    signal?: AbortSignal
     page?: number
     limit?: number
     search?: string
@@ -161,6 +152,12 @@ export interface CreatePolicyPayload {
     insured_name?: string | null
     coverage_notes?: string
     notes?: string
+    // Product-specific risk details and travellers / insured people, saved with the policy.
+    risk_details?: RiskDetailsPayload['risk_details']
+    members?: RiskDetailsPayload['members']
+    // Risiko sendiri / klausula / perluasan jaminan saved with the policy (not logged as endorsements).
+    // `coverage_index` is the 0-based position in `coverages` the term applies to; omit for the whole policy.
+    terms?: (PolicyTermPayload & { coverage_index?: number })[]
 }
 
 // ── Co-assurance ──────────────────────────────────────────────────────────────
@@ -209,7 +206,7 @@ export async function getCoassurance(
     token: string,
     policyId: string,
 ): Promise<{ data: ApiCoassurance[] }> {
-    return req<{ data: ApiCoassurance[] }>('GET', `/policies/${policyId}/coassurance`, token)
+    return apiFetch<{ data: ApiCoassurance[] }>(apiPath`/policies/${policyId}/coassurance`, { token })
 }
 
 export async function addCoassuranceParticipant(
@@ -217,9 +214,9 @@ export async function addCoassuranceParticipant(
     policyId: string,
     data: AddCoassurancePayload,
 ): Promise<{ coassurance_id: string }> {
-    return req<{ coassurance_id: string }>(
-        'POST', `/policies/${policyId}/coassurance`, token, data as unknown as Record<string, unknown>,
-    )
+    return apiFetch<{ coassurance_id: string }>(apiPath`/policies/${policyId}/coassurance`, {
+        method: 'POST', token, body: data,
+    })
 }
 
 export async function updateCoassuranceParticipant(
@@ -228,9 +225,9 @@ export async function updateCoassuranceParticipant(
     coassuranceId: string,
     data: UpdateCoassurancePayload,
 ): Promise<void> {
-    await req<unknown>(
-        'PUT', `/policies/${policyId}/coassurance/${coassuranceId}`, token, data as unknown as Record<string, unknown>,
-    )
+    await apiFetch<unknown>(apiPath`/policies/${policyId}/coassurance/${coassuranceId}`, {
+        method: 'PUT', token, body: data,
+    })
 }
 
 export async function removeCoassuranceParticipant(
@@ -238,7 +235,7 @@ export async function removeCoassuranceParticipant(
     policyId: string,
     coassuranceId: string,
 ): Promise<void> {
-    await req<unknown>('DELETE', `/policies/${policyId}/coassurance/${coassuranceId}`, token)
+    await apiFetch<unknown>(apiPath`/policies/${policyId}/coassurance/${coassuranceId}`, { method: 'DELETE', token })
 }
 
 export interface AddFollowUpPayload {
@@ -254,18 +251,15 @@ export interface PaymentSummaryParams {
     payment_status?: 'all' | ApiPaymentStatus
 }
 
-const EMPTY_POLICIES: PoliciesListResponse = {
-    data: [],
-    pagination: { total: 0, page: 1, limit: 10, total_pages: 0 },
-}
-
 export async function getPolicies(
     token: string,
     params: PoliciesListParams = {},
 ): Promise<PoliciesListResponse> {
+    const page = params.page ?? 1
+    const limit = params.limit ?? 10
     const qs = new URLSearchParams()
-    qs.set('page', String(params.page ?? 1))
-    qs.set('limit', String(params.limit ?? 10))
+    qs.set('page', String(page))
+    qs.set('limit', String(limit))
     if (params.search) qs.set('search', params.search)
     if (params.customer_id) qs.set('customer_id', params.customer_id)
     if (params.product_type) qs.set('product_type', params.product_type)
@@ -274,53 +268,48 @@ export async function getPolicies(
     if (params.expiry_month) qs.set('expiry_month', params.expiry_month)
     if (params.agent_id) qs.set('agent_id', params.agent_id)
 
-    const res = await fetch(`${BASE_URL}/api/v1/policies?${qs.toString()}`, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    // 404 = no policies match the filter.
+    return apiFetchOr<PoliciesListResponse>(withQuery('/policies', qs), { token, signal: params.signal }, {
+        data: [],
+        pagination: { total: 0, page, limit, total_pages: 0 },
     })
-    const json = await res.json()
-
-    if (res.status === 404) return EMPTY_POLICIES
-    if (!res.ok) {
-        const err: any = new Error(json.status_message || 'Request failed')
-        err.status = res.status
-        throw err
-    }
-
-    return json.data as PoliciesListResponse
 }
 
 export async function getPolicyDetail(token: string, policyId: string): Promise<ApiPolicyDetail> {
-    return req<ApiPolicyDetail>('GET', `/policies/${policyId}`, token)
+    return apiFetch<ApiPolicyDetail>(apiPath`/policies/${policyId}`, { token })
 }
 
 export async function createPolicy(
     token: string,
     data: CreatePolicyPayload,
 ): Promise<{ policy_id: string }> {
-    return req<{ policy_id: string }>('POST', '/policies', token, data as unknown as Record<string, unknown>)
+    return apiFetch<{ policy_id: string }>('/policies', { method: 'POST', token, body: data })
 }
 
 export async function updatePolicy(
     token: string,
     policyId: string,
     data: Partial<CreatePolicyPayload>,
+    change?: Partial<ChangeInfo>,
 ): Promise<void> {
-    await req<unknown>('PUT', `/policies/${policyId}`, token, data as unknown as Record<string, unknown>)
+    await apiFetch<unknown>(apiPath`/policies/${policyId}`, { method: 'PUT', token, body: { ...data, ...change } })
 }
 
+/** Corrects the agent's own input mistakes (no endorsement). `change.reason` is required by the API. */
 export async function directUpdatePolicy(
     token: string,
     policyId: string,
     data: Partial<CreatePolicyPayload>,
+    change?: Partial<ChangeInfo>,
 ): Promise<void> {
-    await req<unknown>('PATCH', `/policies/${policyId}`, token, data as unknown as Record<string, unknown>)
+    await apiFetch<unknown>(apiPath`/policies/${policyId}`, { method: 'PATCH', token, body: { ...data, ...change } })
 }
 
 export async function deletePolicy(
     token: string,
     policyId: string,
 ): Promise<void> {
-    await req<unknown>('DELETE', `/policies/${policyId}`, token)
+    await apiFetch<unknown>(apiPath`/policies/${policyId}`, { method: 'DELETE', token })
 }
 
 export interface RenewPolicyPayload {
@@ -362,9 +351,7 @@ export async function renewPolicy(
     policyId: string,
     data: RenewPolicyPayload,
 ): Promise<RenewPolicyResult> {
-    return req<RenewPolicyResult>(
-        'POST', `/policies/${policyId}/renew`, token, data as unknown as Record<string, unknown>,
-    )
+    return apiFetch<RenewPolicyResult>(apiPath`/policies/${policyId}/renew`, { method: 'POST', token, body: data })
 }
 
 export async function updateRenewalStatus(
@@ -372,15 +359,16 @@ export async function updateRenewalStatus(
     policyId: string,
     status: ApiRenewalStatus,
 ): Promise<void> {
-    await req<unknown>('PATCH', `/policies/${policyId}/renewal-status`, token, { renewal_status: status })
+    await apiFetch<unknown>(apiPath`/policies/${policyId}/renewal-status`, { method: 'PATCH', token, body: { renewal_status: status } })
 }
 
 export async function updatePaymentStatus(
     token: string,
     policyId: string,
     status: ApiPaymentStatus,
+    details?: { payment_date?: string; payment_reference?: string },
 ): Promise<void> {
-    await req<unknown>('PATCH', `/policies/${policyId}/payment-status`, token, { payment_status: status })
+    await apiFetch<unknown>(apiPath`/policies/${policyId}/payment-status`, { method: 'PATCH', token, body: { payment_status: status, ...details } })
 }
 
 export async function addPolicyFollowUp(
@@ -388,22 +376,21 @@ export async function addPolicyFollowUp(
     policyId: string,
     data: AddFollowUpPayload,
 ): Promise<{ follow_up_id: string }> {
-    return req<{ follow_up_id: string }>(
-        'POST',
-        `/policies/${policyId}/follow-ups`,
-        token,
-        data as unknown as Record<string, unknown>,
-    )
+    return apiFetch<{ follow_up_id: string }>(apiPath`/policies/${policyId}/follow-ups`, {
+        method: 'POST', token, body: data,
+    })
 }
 
+// The response shape is not documented yet and nothing in the UI consumes it, so it is
+// typed as `unknown`: callers must narrow it before use instead of trusting an `any`.
 export async function getPaymentSummary(
     token: string,
     params: PaymentSummaryParams,
-): Promise<any> {
+): Promise<unknown> {
     const qs = new URLSearchParams({ insurer_id: params.insurer_id })
     if (params.month) qs.set('month', params.month)
     if (params.payment_status) qs.set('payment_status', params.payment_status)
-    return req<any>('GET', `/policies/payment-summary?${qs.toString()}`, token)
+    return apiFetch<unknown>(withQuery('/policies/payment-summary', qs), { token })
 }
 
 // ── Coverages ──────────────────────────────────────────────────────────────
@@ -456,17 +443,18 @@ export async function getCoverages(
     token: string,
     policyId: string,
 ): Promise<ApiCoveragesResponse> {
-    return req<ApiCoveragesResponse>('GET', `/policies/${policyId}/coverages`, token)
+    return apiFetch<ApiCoveragesResponse>(apiPath`/policies/${policyId}/coverages`, { token })
 }
 
 export async function addCoverage(
     token: string,
     policyId: string,
     data: AddCoveragePayload,
+    change?: Partial<ChangeInfo>,
 ): Promise<{ coverage_id: string; premium_amount: number }> {
-    return req<{ coverage_id: string; premium_amount: number }>(
-        'POST', `/policies/${policyId}/coverages`, token, data as unknown as Record<string, unknown>,
-    )
+    return apiFetch<{ coverage_id: string; premium_amount: number }>(apiPath`/policies/${policyId}/coverages`, {
+        method: 'POST', token, body: { ...data, ...change },
+    })
 }
 
 export async function updateCoverage(
@@ -474,18 +462,20 @@ export async function updateCoverage(
     policyId: string,
     coverageId: string,
     data: UpdateCoveragePayload,
+    change?: Partial<ChangeInfo>,
 ): Promise<{ premium_amount: number }> {
-    return req<{ premium_amount: number }>(
-        'PUT', `/policies/${policyId}/coverages/${coverageId}`, token, data as unknown as Record<string, unknown>,
-    )
+    return apiFetch<{ premium_amount: number }>(apiPath`/policies/${policyId}/coverages/${coverageId}`, {
+        method: 'PUT', token, body: { ...data, ...change },
+    })
 }
 
 export async function deleteCoverage(
     token: string,
     policyId: string,
     coverageId: string,
+    change?: Partial<ChangeInfo>,
 ): Promise<void> {
-    await req<unknown>('DELETE', `/policies/${policyId}/coverages/${coverageId}`, token)
+    await apiFetch<unknown>(apiPath`/policies/${policyId}/coverages/${coverageId}`, { method: 'DELETE', token, body: change })
 }
 
 // ── Export ────────────────────────────────────────────────────────────────
@@ -515,23 +505,11 @@ export async function exportPolicies(
     if (params.renewal_status) qs.set('renewal_status', params.renewal_status)
     if (params.agent_id) qs.set('agent_id', params.agent_id)
 
-    const res = await fetch(`${BASE_URL}/api/v1/policies/export?${qs.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    })
-
-    if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        const err: any = new Error((json as any).status_message || 'Export failed')
-        err.status = res.status
-        throw err
-    }
-
-    const blob = await res.blob()
-    const disposition = res.headers.get('Content-Disposition') ?? ''
-    const match = disposition.match(/filename="?([^";\r\n]+)"?/)
-    const filename = match?.[1] ?? (params.month ? `${params.month}.xlsx` : 'DAFTAR POLIS.xlsx')
-
-    return { blob, filename }
+    return apiDownload(
+        withQuery('/policies/export', qs),
+        { token, errorMessage: 'Export failed' },
+        params.month ? `${params.month}.xlsx` : 'DAFTAR POLIS.xlsx',
+    )
 }
 
 // ── Policy Logs ───────────────────────────────────────────────────────────
@@ -565,5 +543,6 @@ export async function getPolicyLogs(
     page = 1,
     limit = 20,
 ): Promise<PolicyLogsResponse> {
-    return req<PolicyLogsResponse>('GET', `/policies/${policyId}/logs?page=${page}&limit=${limit}`, token)
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) })
+    return apiFetch<PolicyLogsResponse>(withQuery(apiPath`/policies/${policyId}/logs`, qs), { token })
 }

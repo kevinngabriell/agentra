@@ -28,7 +28,7 @@ The original requirements are in [insurance_crm_vendor_brief_v3.1.md](../insuran
 | Commissions | `/agentra/commisions` | Monthly commission list and summary. Mark a commission as received, with the amount and notes on any discrepancy. |
 | Reports | `/agentra/reports` | "Laporan Produksi": monthly production totals, weekly breakdown and per-agent breakdown. |
 | Settings | `/agentra/settings` | Five tabs: Profil, Keamanan, Notifikasi, Asuransi, Produk (see [Settings](#settings)). |
-| Sub-Agents | `/agentra/sub-agents` | **Placeholder** — page shell only. |
+| Sub-Agents | `/agentra/sub-agents` | Sub-agent list with network totals; `/agentra/sub-agents/{id}` is the profile (performance, referred customers, policies, commission by insurer). Add and edit through a dialog, including the commission split. |
 | Documents | `/agentra/documents` | **Placeholder** — page shell only. |
 
 Note the route spelling: the commissions folder is `commisions` (one "s" short), so that is the live URL.
@@ -49,7 +49,11 @@ Product types: `fire`, `motorcycle`, `car`, `travel`, `cargo`, `other`, `kecelak
 - **Coverage items**: bangunan (building), stok, inven/isi (contents), mesin (machinery) and others. Each has its own sum insured and per-mille rate, and can be counted in or out of the policy's total sum insured (TSI). When items are present, the premium is calculated from them.
 - **Co-insurance (koasuransi)**: participating insurers with their share percentages, one flagged as leader.
 - **Fire-specific fields**: construction class (I / II / III) and a **risk location**. The location uses a cascading province → city → district → village picker backed by the `master-wilayah` API, with manual entry as a fallback. Postal code and coordinates are optional. These fields also show whenever the policy number starts with `01`.
+- **Deductibles, clauses and extensions**: a *Risiko Sendiri, Klausula & Perluasan* panel on the policy detail page. Deductibles are a fixed amount or a percentage (of the claim or the sum insured, with a minimum). Clauses and extensions are picked from a catalog or typed in. Each applies to the whole policy or to one coverage item, and a search box answers "am I covered for X?". They carry over when the policy is renewed.
 - **Statuses**: renewal (`pending`, `renewed`, `lapsed`, `cancelled`) and payment (`unpaid`, `paid`, `confirmed`).
+
+### Prospects and quotes
+The *Prospects* page tracks leads (source, product interest, expected premium, stage) and policies held with other insurers, with their expiry dates, as future leads. A quote lists one offer per insurer side by side (rate, premium, fees, deductible, clauses); it prints to PDF from the browser and can be sent as a WhatsApp message. When the customer picks an offer, the prospect becomes a customer and the policy form opens prefilled from that offer. A lost prospect records why: price, competitor, no longer needed, no response or other.
 
 ### Renewals and WhatsApp
 Renewals are bucketed by urgency. From the list the agent can send a WhatsApp message to the customer (sent by the backend, with an optional custom text) or renew the policy. Message templates support placeholders such as `{customer_name}`, `{policy_number}` and `{days_until_expiry}`.
@@ -149,7 +153,7 @@ Two things to be aware of:
 
 ## Known gaps
 
-- **Sub-Agents and Documents** are empty pages, although the sidebar links to them and the brief treats them as core modules.
+- **Sub-agent logins are read-only.** They see their own customers, policies and commission at `/agentra/my`; creating or editing data stays with the main agent.
 - **Notification bell** in the top bar is decorative. There is no in-app notification feed.
 - **Customer CSV import** exists in `lib/api/customers.ts` but no screen uses it.
 - **Language toggle** (`contexts/language.tsx`) is provided but nothing reads it. All UI text is hard-coded Indonesian.

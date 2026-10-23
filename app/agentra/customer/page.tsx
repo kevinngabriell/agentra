@@ -3,6 +3,8 @@
 import { MobileBottomNav, MobileHeader, Sidebar, TopBar } from "@/components/layout";
 import { getAccessToken } from "@/lib/auth/session";
 import { getCustomers, deleteCustomer, exportCustomers, type ApiCustomer, type ApiCustomerStatus, type ApiCustomerType } from "@/lib/api/customers";
+import { ApiError, errorMessage, errorStatus, saveBlob } from "@/lib/api/client";
+import { getInitials } from "@/lib/format";
 import {
   Avatar,
   Badge,
@@ -22,7 +24,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaEye, FaFilter, FaPlus, FaUserPlus } from "react-icons/fa";
-import { LuChevronLeft, LuChevronRight, LuSearch, LuTrash2, LuX } from "react-icons/lu";
+import { LuChevronLeft, LuChevronRight, LuSearch, LuTrash2, LuUpload, LuX } from "react-icons/lu";
 import { TbFileExport } from "react-icons/tb";
 
 const PAGE_SIZE = 10
@@ -47,27 +49,41 @@ const TYPE_CONFIG: Record<ApiCustomerType, { bg: string; color: string; label: s
 
 const avatarColors = ["#1D4ED8", "#047857", "#B45309", "#7C3AED", "#BE123C", "#0369A1"]
 
-function getInitials(name: string) {
-  return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
-}
-
 function getAvatarColor(id: string) {
   const hash = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
   return avatarColors[hash % avatarColors.length]
 }
 
+function maskId(value: string | null | undefined): string {
+  if (!value || value === "—" || value.length <= 8) return value ?? "—"
+  return `${value.slice(0, 4)}****${value.slice(-4)}`
+}
+
+function maskPhone(value: string | null | undefined): string {
+  if (!value || value === "—") return "—"
+  if (value.length <= 4) return value
+  return `${value.slice(0, 3)}***${value.slice(-3)}`
+}
+
+function maskEmail(value: string | null | undefined): string {
+  if (!value || value === "—") return "—"
+  const at = value.indexOf("@")
+  if (at <= 1) return value
+  return `${value.slice(0, 1)}***${value.slice(at)}`
+}
+
 function getNik(c: ApiCustomer): string {
-  return c.nik ?? c.npwp_company ?? c.npwp_personal ?? "—"
+  return maskId(c.nik ?? c.npwp_company ?? c.npwp_personal ?? "—")
 }
 
 function getPic(c: ApiCustomer): string {
   if (c.customer_type === "company") return c.pic_name ?? "—"
-  return c.personal_phone ?? c.personal_whatsapp ?? "—"
+  return maskPhone(c.personal_phone ?? c.personal_whatsapp ?? "—")
 }
 
 function getPicSub(c: ApiCustomer): string {
-  if (c.customer_type === "company") return c.pic_role ?? c.pic_phone ?? "—"
-  return c.personal_email ?? "—"
+  if (c.customer_type === "company") return c.pic_role ?? maskPhone(c.pic_phone)
+  return maskEmail(c.personal_email)
 }
 
 function TableSkeleton() {
@@ -119,10 +135,9 @@ export default function Customer() {
   const [pendingType, setPendingType]       = useState<ApiCustomerType | "">("")
   const [pendingStatus, setPendingStatus]   = useState<ApiCustomerStatus | "">("")
 
-  const [customers, setCustomers]         = useState<ApiCustomer[]>([])
-  const [total, setTotal]                 = useState(0)
-  const [loading, setLoading]             = useState(true)
-  const [error, setError]                 = useState<string | null>(null)
+  // Result of the last list request, tagged with the query it answered: `loading` is
+  // derived from it, so a slow response for an old query can never overwrite a newer one.
+  const [result, setResult] = useState<{ key: string; customers: ApiCustomer[]; total: number; error: string | null } | null>(null)
   const [retryKey, setRetryKey]           = useState(0)
   const [customerToDelete, setCustomerToDelete] = useState<ApiCustomer | null>(null)
   const [deleting, setDeleting]                 = useState(false)
@@ -141,14 +156,14 @@ export default function Customer() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [query])
 
-  useEffect(() => { setPage(1) }, [filterType, filterStatus])
+  const queryKey = [debouncedQuery, filterType, filterStatus, page, retryKey].join("|")
 
   useEffect(() => {
     const token = getAccessToken()
-    if (!token) { router.push("/auth/login"); return }
+    if (!token) { router.push("/login"); return }
 
-    setLoading(true)
-    setError(null)
+    const key = [debouncedQuery, filterType, filterStatus, page, retryKey].join("|")
+    const controller = new AbortController()
 
     getCustomers(token, {
       params: debouncedQuery || undefined,
@@ -156,18 +171,22 @@ export default function Customer() {
       status: filterStatus || undefined,
       page,
       limit: PAGE_SIZE,
+      signal: controller.signal,
     })
       .then((res) => {
-        setCustomers(res.data ?? [])
-        setTotal(res.pagination?.total ?? 0)
+        setResult({ key, customers: res.data ?? [], total: res.pagination?.total ?? 0, error: null })
       })
-      .catch((err) => {
-        setError(err.message ?? "Gagal memuat data nasabah")
-        setCustomers([])
-        setTotal(0)
+      .catch((err: unknown) => {
+        if (controller.signal.aborted || errorStatus(err) === 401) return
+        setResult({ key, customers: [], total: 0, error: errorMessage(err, "Data nasabah belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.") })
       })
-      .finally(() => setLoading(false))
-  }, [debouncedQuery, filterType, filterStatus, page, retryKey])
+    return () => controller.abort()
+  }, [debouncedQuery, filterType, filterStatus, page, retryKey, router])
+
+  const loading   = result?.key !== queryKey
+  const customers = result?.customers ?? []
+  const total     = result?.total ?? 0
+  const error     = loading ? null : result?.error ?? null
 
   async function handleDelete() {
     if (!customerToDelete) return
@@ -177,11 +196,12 @@ export default function Customer() {
     setDeleteErrorMsg("")
     try {
       await deleteCustomer(token, customerToDelete.customer_id)
-      setCustomers((prev) => prev.filter((c) => c.customer_id !== customerToDelete.customer_id))
-      setTotal((t) => t - 1)
       setCustomerToDelete(null)
-    } catch (err: any) {
-      const raw: string = err.detail ?? err.message ?? ""
+      // Reload so pagination stays correct (e.g. deleting the last row of a page).
+      if (customers.length === 1 && page > 1) setPage(page - 1)
+      else setRetryKey((k) => k + 1)
+    } catch (err: unknown) {
+      const raw: string = (err instanceof ApiError ? err.detail : undefined) ?? errorMessage(err, "")
       const friendly = raw.toLowerCase().includes("foreign key")
         ? "Nasabah tidak dapat dihapus karena masih memiliki polis atau data terkait. Hapus polis nasabah terlebih dahulu."
         : raw || "Gagal menghapus nasabah. Coba lagi."
@@ -193,7 +213,7 @@ export default function Customer() {
 
   async function handleExport() {
     const token = getAccessToken()
-    if (!token) { router.push("/auth/login"); return }
+    if (!token) { router.push("/login"); return }
     setExporting(true)
     setExportErrorMsg("")
     try {
@@ -202,14 +222,9 @@ export default function Customer() {
         customer_type: filterType || undefined,
         status: filterStatus || undefined,
       })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = filename
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch (err: any) {
-      setExportErrorMsg(err.status === 404 ? "Tidak ada nasabah yang cocok untuk diekspor" : (err.message ?? "Gagal mengekspor data nasabah"))
+      saveBlob(blob, filename)
+    } catch (err: unknown) {
+      setExportErrorMsg(errorStatus(err) === 404 ? "Tidak ada nasabah yang cocok untuk diekspor" : errorMessage(err, "Gagal mengekspor data nasabah"))
     } finally {
       setExporting(false)
     }
@@ -223,6 +238,7 @@ export default function Customer() {
   function applyFilter() {
     setFilterType(pendingType)
     setFilterStatus(pendingStatus)
+    setPage(1)
   }
 
   function resetFilter() {
@@ -230,6 +246,7 @@ export default function Customer() {
     setPendingStatus("")
     setFilterType("")
     setFilterStatus("")
+    setPage(1)
   }
 
   return (
@@ -237,24 +254,25 @@ export default function Customer() {
       <Sidebar />
       <MobileHeader />
 
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: "96px" }}>
         <Box display={{ base: "none", md: "block" }}>
           <TopBar title="Customer" />
         </Box>
 
-        <Flex p="24px" gap="24px" flexDir="column">
+        <Flex p={{ base: "16px", md: "24px" }} gap="24px" flexDir="column">
           {/* Heading */}
           <Flex gap="4px" flexDir="column">
             <Text color="#1C2833" fontSize="24px" fontWeight="bold">Cari Nasabah</Text>
-            <Text color="#5D6D7E" fontSize="14px">Cari data nasabah atau entitas bisnis di seluruh database agensi</Text>
+            <Text color="#5D6D7E" fontSize="16px">Cari data nasabah atau entitas bisnis di seluruh database agensi</Text>
           </Flex>
 
           {/* Search bar */}
           <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" px="14px" py="5px">
-            <LuSearch size={16} color="#94A3B8" />
+            <LuSearch size={16} color="#64748B" />
             <Input
-              outline="none" border="none" fontSize="14px" color="#1C2833"
+              outline="none" border="none" fontSize="16px" color="#1C2833"
               placeholder="Cari Nama, NIK, NPWP, atau PIC..."
+              aria-label="Cari nasabah"
               value={query}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
               style={{ background: "transparent" }}
@@ -262,7 +280,7 @@ export default function Customer() {
             {query && (
               <IconButton
                 size="xs" variant="ghost" aria-label="Hapus pencarian"
-                color="#94A3B8" _hover={{ color: "#374151" }}
+                color="#64748B" _hover={{ color: "#374151" }}
                 onClick={() => setQuery("")}
               >
                 <LuX size={14} />
@@ -283,11 +301,11 @@ export default function Customer() {
               <Flex align="baseline" gap="6px">
                 <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Hasil Pencarian</Text>
                 {!loading && (
-                  <Text color="#5D6D7E" fontSize="13px">({total} ditemukan)</Text>
+                  <Text color="#5D6D7E" fontSize="15px">({total} ditemukan)</Text>
                 )}
               </Flex>
 
-              <Flex gap="8px" align="center">
+              <Flex gap="8px" align="center" flexWrap="wrap" w={{ base: "100%", md: "auto" }}>
                 {/* Filter */}
                 <Popover.Root onOpenChange={(d) => { if (d.open) { setPendingType(filterType); setPendingStatus(filterStatus) } }}>
                   <Popover.Trigger asChild>
@@ -296,12 +314,12 @@ export default function Customer() {
                       borderColor={hasActiveFilter ? "#1D4ED8" : "#E2E8F0"}
                       color={hasActiveFilter ? "#1D4ED8" : "#374151"}
                       bg={hasActiveFilter ? "#EFF6FF" : "white"}
-                      fontWeight="medium" fontSize="13px" gap="6px"
+                      fontWeight="medium" fontSize="15px" gap="6px"
                     >
                       <FaFilter size={12} />
                       Filter
                       {hasActiveFilter && (
-                        <Badge ml="2px" px="5px" py="0" borderRadius="full" fontSize="10px" bg="#1D4ED8" color="white">
+                        <Badge ml="2px" px="5px" py="0" borderRadius="full" fontSize="14px" bg="#1D4ED8" color="white">
                           {[filterType, filterStatus].filter(Boolean).length}
                         </Badge>
                       )}
@@ -313,11 +331,11 @@ export default function Customer() {
 
                         {/* Type */}
                         <Flex flexDir="column" gap="8px">
-                          <Text fontSize="11px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">TIPE NASABAH</Text>
+                          <Text fontSize="14px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">TIPE NASABAH</Text>
                           <Flex gap="6px" flexWrap="wrap">
                             {(["individual", "company"] as ApiCustomerType[]).map((t) => (
                               <Box
-                                key={t} as="button" px="10px" py="4px" borderRadius="full" fontSize="12px"
+                                key={t} as="button" aria-pressed={pendingType === t} px="10px" py="4px" borderRadius="full" fontSize="14px"
                                 border="1px solid" cursor="pointer"
                                 borderColor={pendingType === t ? "#1D4ED8" : "#E2E8F0"}
                                 bg={pendingType === t ? "#EFF6FF" : "white"}
@@ -333,11 +351,11 @@ export default function Customer() {
 
                         {/* Status */}
                         <Flex flexDir="column" gap="8px">
-                          <Text fontSize="11px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">STATUS</Text>
+                          <Text fontSize="14px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">STATUS</Text>
                           <Flex gap="6px" flexWrap="wrap">
                             {(["active", "inactive", "lapsed"] as ApiCustomerStatus[]).map((s) => (
                               <Box
-                                key={s} as="button" px="10px" py="4px" borderRadius="full" fontSize="12px"
+                                key={s} as="button" aria-pressed={pendingStatus === s} px="10px" py="4px" borderRadius="full" fontSize="14px"
                                 border="1px solid" cursor="pointer"
                                 borderColor={pendingStatus === s ? STATUS_CONFIG[s].color : "#E2E8F0"}
                                 bg={pendingStatus === s ? STATUS_CONFIG[s].bg : "white"}
@@ -353,11 +371,11 @@ export default function Customer() {
 
                         {/* Actions */}
                         <Flex gap="8px" borderTop="1px solid" borderColor="#F1F5F9" pt="12px">
-                          <Button flex="1" size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="12px" onClick={resetFilter}>
+                          <Button flex="1" size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px" onClick={resetFilter}>
                             Reset
                           </Button>
                           <Popover.CloseTrigger asChild>
-                            <Button flex="1" size="sm" bg="#1A3557" color="white" fontSize="12px" onClick={applyFilter}>
+                            <Button flex="1" size="sm" bg="#1A3557" color="white" fontSize="14px" onClick={applyFilter}>
                               Terapkan
                             </Button>
                           </Popover.CloseTrigger>
@@ -369,7 +387,7 @@ export default function Customer() {
                 </Popover.Root>
 
                 <Button
-                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="13px" gap="6px"
+                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="15px" gap="6px"
                   loading={exporting} loadingText="Mengekspor..."
                   onClick={handleExport}
                 >
@@ -377,9 +395,18 @@ export default function Customer() {
                   Ekspor
                 </Button>
 
+                <Button
+                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="16px" gap="6px"
+                  onClick={() => router.push("/agentra/import?type=customers")}
+                >
+                  <LuUpload size={14} />
+                  Impor
+                </Button>
+
                 {/* Always-visible create button */}
                 <Button
-                  size="sm" bg="#001F40" color="white" fontWeight="medium" fontSize="13px" gap="6px"
+                  size="sm" bg="#001F40" color="white" fontWeight="medium" fontSize="15px" gap="6px"
+                  w={{ base: "100%", md: "auto" }}
                   onClick={() => router.push("/agentra/customer/detail")}
                 >
                   <FaUserPlus size={13} />
@@ -390,17 +417,17 @@ export default function Customer() {
 
             {exportErrorMsg && (
               <Flex px="20px" py="10px" bg="#FEF2F2" borderBottom="1px solid" borderColor="#FECACA">
-                <Text fontSize="13px" color="#DC2626">{exportErrorMsg}</Text>
+                <Text fontSize="15px" color="#DC2626">{exportErrorMsg}</Text>
               </Flex>
             )}
 
             {/* Empty state — inside the card, no table rendered */}
             {isEmpty && (
               <Flex flexDir="column" align="center" gap="8px" py="64px" px="24px">
-                <Text color="#1C2833" fontWeight="semibold" fontSize="18px">
+                <Text color="#1C2833" fontWeight="semibold" fontSize="18px" textAlign="center">
                   Tidak menemukan yang Anda cari?
                 </Text>
-                <Text color="#5D6D7E" fontSize="14px" pb="16px" textAlign="center" maxW="360px">
+                <Text color="#5D6D7E" fontSize="16px" pb="16px" textAlign="center" maxW="360px">
                   Pastikan ejaan nama benar atau gunakan nomor identitas (NIK/NPWP) untuk hasil yang lebih akurat
                 </Text>
                 <Button
@@ -420,11 +447,11 @@ export default function Customer() {
             <Table.Root bg="white">
               <Table.Header>
                 <Table.Row bg="#F8FAFC">
-                  <Table.ColumnHeader color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NAMA NASABAH</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NIK / NPWP</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">PIC / KONTAK</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">STATUS</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="11px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px" textAlign="end">AKSI</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NAMA NASABAH</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NIK / NPWP</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">PIC / KONTAK</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">STATUS</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px" textAlign="end">AKSI</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
 
@@ -437,7 +464,7 @@ export default function Customer() {
                   <Table.Row>
                     <Table.Cell colSpan={5} px="20px" py="40px" textAlign="center">
                       <Flex flexDir="column" align="center" gap="10px">
-                        <Text color="#DC2626" fontSize="14px">{error}</Text>
+                        <Text color="#DC2626" fontSize="16px">{error}</Text>
                         <Button size="sm" variant="outline" borderColor="#E2E8F0" onClick={() => setRetryKey((k) => k + 1)}>
                           Coba Lagi
                         </Button>
@@ -457,30 +484,30 @@ export default function Customer() {
                     <Table.Cell px="20px" py="14px">
                       <Flex align="center" gap="12px">
                         <Avatar.Root w="36px" h="36px" bg={getAvatarColor(c.customer_id)} borderRadius="full">
-                          <Avatar.Fallback color="white" fontSize="12px" fontWeight="bold">
+                          <Avatar.Fallback color="white" fontSize="14px" fontWeight="bold">
                             {getInitials(c.display_name)}
                           </Avatar.Fallback>
                         </Avatar.Root>
                         <Flex flexDir="column" gap="2px">
-                          <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{c.display_name}</Text>
-                          <Badge px="6px" py="1px" borderRadius="4px" fontSize="10px" fontWeight="medium" w="max-content" bg={TYPE_CONFIG[c.customer_type].bg} color={TYPE_CONFIG[c.customer_type].color}>
+                          <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{c.display_name}</Text>
+                          <Badge px="6px" py="1px" borderRadius="4px" fontSize="14px" fontWeight="medium" w="max-content" bg={TYPE_CONFIG[c.customer_type].bg} color={TYPE_CONFIG[c.customer_type].color}>
                             {TYPE_CONFIG[c.customer_type].label}
                           </Badge>
                         </Flex>
                       </Flex>
                     </Table.Cell>
 
-                    <Table.Cell px="20px" py="14px" color="#64748B" fontSize="12px" fontFamily="mono">
+                    <Table.Cell px="20px" py="14px" color="#64748B" fontSize="14px" fontFamily="mono">
                       {getNik(c)}
                     </Table.Cell>
 
                     <Table.Cell px="20px" py="14px">
-                      <Text color="#1C2833" fontSize="13px">{getPic(c)}</Text>
-                      <Text color="#64748B" fontSize="11px">{getPicSub(c)}</Text>
+                      <Text color="#1C2833" fontSize="15px">{getPic(c)}</Text>
+                      <Text color="#64748B" fontSize="14px">{getPicSub(c)}</Text>
                     </Table.Cell>
 
                     <Table.Cell px="20px" py="14px">
-                      <Badge px="10px" py="3px" borderRadius="full" fontSize="11px" fontWeight="medium" bg={STATUS_CONFIG[c.status].bg} color={STATUS_CONFIG[c.status].color}>
+                      <Badge px="10px" py="3px" borderRadius="full" fontSize="14px" fontWeight="medium" bg={STATUS_CONFIG[c.status].bg} color={STATUS_CONFIG[c.status].color}>
                         {STATUS_LABELS[c.status]}
                       </Badge>
                     </Table.Cell>
@@ -490,19 +517,19 @@ export default function Customer() {
                         <IconButton
                           size="sm" variant="ghost" aria-label="Lihat detail"
                           color="#3B82F6" _hover={{ bg: "#EFF6FF" }}
-                          onClick={() => router.push(`/agentra/customer/detail?id=${c.customer_id}`)}
+                          onClick={() => router.push(`/agentra/customer/detail?id=${encodeURIComponent(c.customer_id)}`)}
                         >
                           <FaEye size={14} />
                         </IconButton>
                         <IconButton
                           size="sm" variant="ghost" aria-label="Tambah polis" color="#64748B" _hover={{ bg: "#F1F5F9" }}
-                          onClick={() => router.push(`/agentra/policies/new?customer_id=${c.customer_id}`)}
+                          onClick={() => router.push(`/agentra/policies/new?customer_id=${encodeURIComponent(c.customer_id)}`)}
                         >
                           <FaPlus size={14} />
                         </IconButton>
                         <IconButton
                           size="sm" variant="ghost" aria-label="Hapus nasabah"
-                          color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
+                          color="#64748B" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
                           onClick={() => { setDeleteErrorMsg(""); setCustomerToDelete(c) }}
                         >
                           <LuTrash2 size={14} />
@@ -518,18 +545,18 @@ export default function Customer() {
             {/* Pagination */}
             {!loading && !error && customers.length > 0 && (
               <Flex px="20px" py="14px" justify="space-between" align="center" borderTop="1px solid" borderColor="#E2E8F0">
-                <Text color="#64748B" fontSize="13px">
+                <Text color="#64748B" fontSize="15px">
                   Menampilkan {start}–{end} dari {total} nasabah
                 </Text>
                 <Pagination.Root count={total} pageSize={PAGE_SIZE} page={page} onPageChange={(e) => setPage(e.page)}>
                   <ButtonGroup variant="ghost" size="sm" gap="2px">
                     <Pagination.PrevTrigger asChild>
-                      <IconButton aria-label="Previous" borderRadius="6px" border="1px solid" borderColor="#E2E8F0" color="#374151" _hover={{ bg: "#F1F5F9" }}>
+                      <IconButton aria-label="Halaman sebelumnya" borderRadius="6px" border="1px solid" borderColor="#E2E8F0" color="#374151" _hover={{ bg: "#F1F5F9" }}>
                         <LuChevronLeft />
                       </IconButton>
                     </Pagination.PrevTrigger>
                     <Pagination.Items
-                      ellipsis={<Flex w="32px" h="32px" align="center" justify="center" color="#64748B" fontSize="13px">…</Flex>}
+                      ellipsis={<Flex w="32px" h="32px" align="center" justify="center" color="#64748B" fontSize="15px">…</Flex>}
                       render={(item) => (
                         <Pagination.Item key={item.value} type="page" value={item.value} asChild>
                           <Button
@@ -537,7 +564,7 @@ export default function Customer() {
                             borderColor={item.value === page ? "#1D4ED8" : "#E2E8F0"}
                             bg={item.value === page ? "#1D4ED8" : "white"}
                             color={item.value === page ? "white" : "#374151"}
-                            fontSize="13px" fontWeight={item.value === page ? "semibold" : "normal"}
+                            fontSize="15px" fontWeight={item.value === page ? "semibold" : "normal"}
                             _hover={{ bg: item.value === page ? "#1E40AF" : "#F1F5F9" }}
                           >
                             {item.value}
@@ -546,7 +573,7 @@ export default function Customer() {
                       )}
                     />
                     <Pagination.NextTrigger asChild>
-                      <IconButton aria-label="Next" borderRadius="6px" border="1px solid" borderColor="#E2E8F0" color="#374151" _hover={{ bg: "#F1F5F9" }}>
+                      <IconButton aria-label="Halaman berikutnya" borderRadius="6px" border="1px solid" borderColor="#E2E8F0" color="#374151" _hover={{ bg: "#F1F5F9" }}>
                         <LuChevronRight />
                       </IconButton>
                     </Pagination.NextTrigger>
@@ -576,7 +603,7 @@ export default function Customer() {
             </Dialog.Header>
 
             <Dialog.Body px="24px" py="16px">
-              <Text color="#5D6D7E" fontSize="14px" lineHeight="1.6">
+              <Text color="#5D6D7E" fontSize="16px" lineHeight="1.6">
                 Apakah Anda yakin ingin menghapus{" "}
                 <Text as="span" color="#1C2833" fontWeight="semibold">
                   {customerToDelete?.display_name}
@@ -589,7 +616,7 @@ export default function Customer() {
                   mt="14px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA"
                   borderRadius="8px" px="12px" py="10px"
                 >
-                  <Text fontSize="13px" color="#DC2626" lineHeight="1.5">
+                  <Text fontSize="15px" color="#DC2626" lineHeight="1.5">
                     {deleteErrorMsg}
                   </Text>
                 </Flex>
@@ -599,7 +626,7 @@ export default function Customer() {
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Button
                 flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
-                fontSize="14px" borderRadius="8px"
+                fontSize="16px" borderRadius="8px"
                 _hover={{ bg: "#F1F5F9" }}
                 disabled={deleting}
                 onClick={() => { setCustomerToDelete(null); setDeleteErrorMsg("") }}
@@ -608,7 +635,7 @@ export default function Customer() {
               </Button>
               <Button
                 flex="1" bg="#DC2626" color="white"
-                fontSize="14px" borderRadius="8px"
+                fontSize="16px" borderRadius="8px"
                 loading={deleting} loadingText="Menghapus..."
                 _hover={{ bg: "#B91C1C" }}
                 onClick={handleDelete}

@@ -1,23 +1,21 @@
-"use client"
-
 import { Box, Flex, VStack, Grid, Text, Heading } from "@chakra-ui/react"
 
 const features = [
   {
     icon: "🔔",
-    title: "Pelacakan Renewal Otomatis",
+    title: "Pengingat Perpanjangan Polis Otomatis",
     description:
-      "Pantau semua polis yang akan jatuh tempo secara real-time. Dapatkan notifikasi otomatis sebelum polis kadaluarsa sehingga tidak ada renewal yang terlewat.",
+      "Pantau semua polis yang akan jatuh tempo secara real-time. Dapatkan notifikasi otomatis sebelum polis kedaluwarsa sehingga tidak ada renewal yang terlewat.",
   },
   {
     icon: "💬",
-    title: "Notifikasi WhatsApp",
+    title: "Notifikasi WhatsApp ke Nasabah",
     description:
       "Kirim laporan dan pengingat renewal langsung ke WhatsApp nasabah secara otomatis. Hemat waktu dan tingkatkan respons nasabah tanpa keluar dari platform.",
   },
   {
     icon: "💰",
-    title: "Transparansi Komisi",
+    title: "Pelacakan & Transparansi Komisi",
     description:
       "Lihat rincian komisi setiap polis secara transparan dan akurat. Rekam jejak pembayaran komisi tersedia kapan saja sehingga Anda selalu tahu penghasilan Anda.",
   },
@@ -45,11 +43,11 @@ export function FeaturesSection() {
             Fitur Unggulan
           </Text>
           <Heading as="h2" fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="#0D1B3E">
-            Semua yang Anda Butuhkan dalam Satu Platform
+            Semua yang Dibutuhkan Agen Asuransi dalam Satu Platform
           </Heading>
           <Text fontSize="md" color="gray.500" lineHeight="1.75">
-            Agentra dirancang khusus untuk agen asuransi Indonesia agar bisnis Anda tumbuh lebih
-            cepat dengan lebih sedikit kerja manual.
+            Agentra dirancang khusus untuk agen asuransi Indonesia, dari manajemen polis dan nasabah
+            hingga tim sub-agen, agar bisnis Anda tumbuh lebih cepat dengan lebih sedikit kerja manual.
           </Text>
         </VStack>
 
@@ -79,6 +77,7 @@ export function FeaturesSection() {
                   align="center"
                   justify="center"
                   fontSize="22px"
+                  aria-hidden="true"
                 >
                   {feature.icon}
                 </Flex>

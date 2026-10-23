@@ -19,8 +19,8 @@ export async function getPlans(): Promise<Plan[]> {
 
     const json = await res.json()
     return (json.data ?? []).filter((p: Plan) => p.is_available !== false)
-  } catch {
-    // API unreachable (e.g. backend not running) — show the empty state instead of crashing
+  } catch (err) {
+    console.error('[plans] failed to load:', err)
     return []
   }
 }

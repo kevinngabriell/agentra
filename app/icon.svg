@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 2 192 192" width="192" height="192">
+  <title>Agentra</title>
+  <path d="M96 6 L182 36 L182 108 Q182 168 96 190 Q10 168 10 108 L10 36 Z" fill="#1A3557"/>
+  <path d="M96 18 L170 44 L170 108 Q170 160 96 178 Q22 160 22 108 L22 44 Z" fill="none" stroke="#2E86C1" stroke-width="2.5" opacity="0.55"/>
+  <line x1="58" y1="152" x2="96" y2="58" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <line x1="134" y1="152" x2="96" y2="58" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <line x1="67" y1="120" x2="125" y2="120" stroke="#2E86C1" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="96" cy="52" r="8" fill="#2E86C1"/>
+</svg>

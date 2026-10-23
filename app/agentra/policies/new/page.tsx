@@ -3,32 +3,47 @@
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
   Box, Button, Combobox, createListCollection, Dialog, Flex, Grid, IconButton,
-  Input, Switch, Table, Text, Textarea,
+  Input, Spinner, Switch, Table, Text, Textarea,
 } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { LuArrowLeft, LuFileText, LuZap, LuPlus, LuPencil, LuTrash2, LuX } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
 import { SearchSelect } from "@/components/ui/search-select"
+import { SubAgentSelect } from "@/components/sub-agents"
 import {
   createPolicy, addCoassuranceParticipant,
-  type CreatePolicyPayload, type ApiCoverageType, COVERAGE_TYPE_LABELS,
+  type CreatePolicyPayload, type ApiCoverageType, type ApiProductType, COVERAGE_TYPE_LABELS,
 } from "@/lib/api/policies"
-import { getCustomers, type ApiCustomer } from "@/lib/api/customers"
+import { getCustomers, getCustomerDetail, type ApiCustomer } from "@/lib/api/customers"
+import { errorMessage } from "@/lib/api/client"
+import { addToISODate } from "@/lib/format"
 import { getInsurers, type ApiInsurer } from "@/lib/api/insurers"
-import { getMasterProducts, type ApiMasterProduct } from "@/lib/api/master-products"
+import { getMasterProducts, getProductTypes, type ApiMasterProduct, type ApiProductTypeInfo } from "@/lib/api/master-products"
 import { useWilayahCascade } from "@/lib/hooks/useWilayahCascade"
+import { RISK_GROUP_LABELS } from "@/lib/api/risk-details"
+import { getQuote, linkQuotePolicy } from "@/lib/api/quotes"
+import { DraftTermsEditor, type DraftTerm } from "@/components/policy-terms"
+import {
+  EMPTY_RISK_FORM, RiskDetailsFields, membersToPayload, riskFormToPayload, validateRisk,
+  type MemberForm, type RiskForm,
+} from "@/components/risk-details"
+
+const uid = (): string => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID()
+  return Math.random().toString(36).slice(2) + Date.now().toString(36)
+}
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const INPUT = {
   bg: "white", border: "1px solid", borderColor: "#E2E8F0",
-  borderRadius: "8px", fontSize: "13px", color: "#1C2833", h: "40px",
+  borderRadius: "8px", fontSize: "15px", color: "#1C2833", h: "40px",
 } as const
 
-const INPUT_LG = { ...INPUT, fontSize: "15px" } as const
+const INPUT_LG = { ...INPUT, fontSize: "16px" } as const
 
-const LBL = { color: "#5D6D7E", fontSize: "11px", fontWeight: "semibold", letterSpacing: "0.04em" } as const
+const LBL = { color: "#5D6D7E", fontSize: "14px", fontWeight: "semibold", letterSpacing: "0.04em" } as const
 
 // ─── IDR number helpers ───────────────────────────────────────────────────────
 
@@ -54,7 +69,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
       <Box borderLeft="3px solid #1A3557" pl="10px" mb="20px">
-        <Text color="#1A3557" fontSize="14px" fontWeight="semibold">{title}</Text>
+        <Text color="#1A3557" fontSize="16px" fontWeight="semibold">{title}</Text>
       </Box>
       {children}
     </Box>
@@ -71,7 +86,7 @@ function FField({ label, required, hint, children }: {
         {required && <Text as="span" color="#DC2626"> *</Text>}
       </Text>
       {children}
-      {hint && <Text fontSize="10px" color="#94A3B8">{hint}</Text>}
+      {hint && <Text fontSize="14px" color="#64748B">{hint}</Text>}
     </Flex>
   )
 }
@@ -111,6 +126,14 @@ const EMPTY_COV_FORM = {
   count_in_tsi:   true,
 }
 
+const CUSTOMER_PAGE_SIZE = 50
+
+function mergeCustomers(prev: ApiCustomer[], incoming: ApiCustomer[]) {
+  const known = new Set(prev.map(c => c.customer_id))
+  const extra = incoming.filter(c => !known.has(c.customer_id))
+  return extra.length ? [...prev, ...extra] : prev
+}
+
 // ─── Fallback products ────────────────────────────────────────────────────────
 
 const FALLBACK_PRODUCTS = [
@@ -124,12 +147,6 @@ const FALLBACK_PRODUCTS = [
   { product_code: "other",      product_name: "Lainnya" },
 ]
 
-const FIRE_PRODUCT_TYPES = new Set(["fire", "kebakaran"])
-const CONSTRUCTION_CLASS_LABELS: Record<string, string> = {
-  "I":   "Kelas I – Konstruksi Keras (beton, bata, besi/baja)",
-  "II":  "Kelas II – Semi Keras (campuran beton & kayu)",
-  "III": "Kelas III – Konstruksi Ringan (kayu, seng/genteng)",
-}
 
 const EMPTY = {
   insurer_id: "", customer_id: "", policy_number: "", product_type: "",
@@ -145,6 +162,7 @@ const EMPTY = {
   risk_address: "", risk_village: "", risk_district: "", risk_city: "", risk_province: "",
   risk_postal_code: "", risk_latitude: "", risk_longitude: "",
   policy_year: "1", object_insured: "", insured_name: "", coverage_notes: "", notes: "",
+  issuing_agent_id: "",   // sub-agent; "" = main agent directly
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -153,11 +171,17 @@ export default function NewPolicy() {
   const router = useRouter()
 
   const [form, setForm]                     = useState(EMPTY)
+  // `customers` is a cache of every customer seen so far (so the selected card can show a name);
+  // `customerResults` is the page-by-page list behind the dropdown for the current search.
   const [customers, setCustomers]           = useState<ApiCustomer[]>([])
+  const [customerResults, setCustomerResults] = useState<ApiCustomer[]>([])
+  const [customerPage, setCustomerPage]     = useState({ page: 0, totalPages: 1 })
+  const [customerLoading, setCustomerLoading] = useState(false)
   const [customerSearch, setCustomerSearch] = useState("")
   const [comboKey, setComboKey]             = useState(0)  // increment to remount combobox
   const [insurers, setInsurers]             = useState<ApiInsurer[]>([])
   const [masterProducts, setMasterProducts] = useState<ApiMasterProduct[]>([])
+  const [productTypes, setProductTypes]     = useState<ApiProductTypeInfo[]>([])
 
   const [commissionSource, setCommissionSource] = useState<
     { kind: "product"; name: string } | { kind: "manual" } | null
@@ -165,7 +189,8 @@ export default function NewPolicy() {
   const [prefixHint, setPrefixHint]   = useState<ApiMasterProduct | null>(null)
   const [endDateAuto, setEndDateAuto] = useState(true)
 
-  const [isEndorsement, setIsEndorsement] = useState(false)
+  // The endorsement switch is currently hidden in the UI (see the commented-out block below).
+  const [isEndorsement] = useState(false)
 
   // Co-assurance state
   const [isCoassurance, setIsCoassurance]   = useState(false)
@@ -175,7 +200,12 @@ export default function NewPolicy() {
   const [caForm, setCaForm]                 = useState<LocalCoassurance>({ ...EMPTY_CA, _id: "" })
   const [caError, setCaError]               = useState<string | null>(null)
 
+  // Product-specific risk details (vehicle, shipment, travellers, insured people, property).
+  const [riskForm, setRiskForm]       = useState<RiskForm>(EMPTY_RISK_FORM)
+  const [riskMembers, setRiskMembers] = useState<MemberForm[]>([])
+
   const [localCoverages, setLocalCoverages] = useState<LocalCoverage[]>([])
+  const [draftTerms, setDraftTerms]         = useState<DraftTerm[]>([])
   const [covDialogOpen, setCovDialogOpen]   = useState(false)
   const [editingCov, setEditingCov]         = useState<LocalCoverage | null>(null)
   const [covForm, setCovForm]               = useState(EMPTY_COV_FORM)
@@ -184,40 +214,141 @@ export default function NewPolicy() {
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState<string | null>(null)
+  const [loadError, setLoadError]   = useState<string | null>(null)
+  // Set when this policy is being issued from an accepted quote ("Buat polis" on the quote page).
+  const [quoteId, setQuoteId]       = useState<string | null>(null)
 
   // ── Data load ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const token = getAccessToken()
     if (!token) { router.push("/login"); return }
+    let cancelled = false
+    // "Tambah polis" on the customer list links here with ?customer_id=… to preselect the customer.
+    const query = new URLSearchParams(window.location.search)
+    const preselectId = query.get("customer_id")
+    const fromQuoteId = query.get("quote_id")
+    // Product types drive the risk form and construction class.
+    getProductTypes(token).then(t => { if (!cancelled) setProductTypes(t) })
+      .catch(() => { if (!cancelled) setLoadError("Jenis produk belum bisa dimuat, sehingga kolom khusus produk (mis. kelas konstruksi) tidak tampil. Muat ulang halaman.") })
     Promise.all([
-      getCustomers(token, { limit: 200 }),
       getInsurers(token, true),
       getMasterProducts(token),
-    ]).then(([c, i, mp]) => {
-      setCustomers(c.data ?? [])
-      setInsurers(Array.isArray(i) ? i : (i as any)?.data ?? [])
-      setMasterProducts(Array.isArray(mp) ? mp.filter(p => Boolean(p.is_active)) : [])
-    }).catch(() => {})
-  }, [])
+    ]).then(async ([i, mp]) => {
+      if (cancelled) return
+      setInsurers(i)
+      const activeProducts = mp.filter(p => Boolean(p.is_active))
+      setMasterProducts(activeProducts)
+      if (fromQuoteId) {
+        // Prefill from the insurer offer the customer accepted. A failure just leaves the form empty.
+        try {
+          const quote = await getQuote(token, fromQuoteId)
+          const option = quote.options.find(o => o.option_id === quote.accepted_option_id)
+          if (cancelled) return
+          if (quote.status === "accepted" && option && !quote.policy_id) {
+            const product = activeProducts.find(p => p.product_code === quote.product_type)
+            setQuoteId(quote.quote_id)
+            setForm(f => ({
+              ...f,
+              insurer_id: option.insurer_id,
+              product_type: quote.product_type,
+              sum_insured: toIDR(String(quote.sum_insured)),
+              premium_amount: toIDR(String(option.premium_amount)),
+              biaya_polis: option.biaya_polis ? toIDR(String(option.biaya_polis)) : f.biaya_polis,
+              materai_amount: option.materai_amount ? toIDR(String(option.materai_amount)) : f.materai_amount,
+              coverage_start: quote.coverage_start ?? f.coverage_start,
+              coverage_end: quote.coverage_end ?? f.coverage_end,
+              object_insured: quote.object_description ?? f.object_insured,
+              commission_rate: product ? parseFloat(product.commission_rate).toString() : f.commission_rate,
+              commission_tax_rate: product?.default_tax_rate != null ? String(product.default_tax_rate * 100) : f.commission_tax_rate,
+            }))
+            if (quote.coverage_end) setEndDateAuto(false)
+            if (product) setCommissionSource({ kind: "product", name: product.product_name })
+          }
+        } catch (err) { console.error("quote prefill failed", err) }
+      }
+      if (preselectId) {
+        // The customer may not be on the first dropdown page: fetch it so the selected card can show its name.
+        try {
+          const d = await getCustomerDetail(token, preselectId)
+          if (cancelled) return
+          setCustomers(prev => prev.some(x => x.customer_id === d.customer_id) ? prev : [d, ...prev])
+        } catch { return }
+        setForm(f => f.customer_id ? f : { ...f, customer_id: preselectId })
+      }
+    }).catch((err: unknown) => {
+      if (!cancelled) setLoadError(errorMessage(err, "Gagal memuat data insurer atau produk. Muat ulang halaman."))
+    })
+    return () => { cancelled = true }
+  }, [router])
+
+  // The dropdown lists customers one page at a time: this effect loads page 1 for the current
+  // search (debounced while typing); scrolling to the bottom of the list loads the next page.
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!token) return
+    const q = customerSearch.trim()
+    const controller = new AbortController()
+    const t = setTimeout(() => {
+      setCustomerLoading(true)
+      getCustomers(token, { params: q || undefined, page: 1, limit: CUSTOMER_PAGE_SIZE, signal: controller.signal })
+        .then((res) => {
+          const found = res.data ?? []
+          setCustomerResults(found)
+          setCustomerPage({ page: 1, totalPages: res.pagination.total_pages })
+          setCustomers(prev => mergeCustomers(prev, found))
+          setCustomerLoading(false)
+        })
+        .catch(() => { if (!controller.signal.aborted) setCustomerLoading(false) })
+    }, q ? 300 : 0)
+    return () => { clearTimeout(t); controller.abort() }
+  }, [customerSearch])
+
+  function loadMoreCustomers() {
+    const token = getAccessToken()
+    if (!token || customerLoading || customerPage.page >= customerPage.totalPages) return
+    const next = customerPage.page + 1
+    setCustomerLoading(true)
+    getCustomers(token, { params: customerSearch.trim() || undefined, page: next, limit: CUSTOMER_PAGE_SIZE })
+      .then((res) => {
+        const found = res.data ?? []
+        setCustomerResults(prev => mergeCustomers(prev, found))
+        setCustomerPage({ page: next, totalPages: res.pagination.total_pages })
+        setCustomers(prev => mergeCustomers(prev, found))
+      })
+      .catch(() => { /* keep what is already listed; scrolling again retries */ })
+      .finally(() => setCustomerLoading(false))
+  }
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
-  const productOptions = masterProducts.length > 0 ? masterProducts : FALLBACK_PRODUCTS
+  // Master products can contain the same product twice (same code or same name); the dropdown lists each once.
+  const productOptions = useMemo(() => {
+    if (masterProducts.length === 0) return FALLBACK_PRODUCTS
+    const seen = new Set<string>()
+    return masterProducts.filter(p => {
+      const key = p.product_name.trim().toLowerCase()
+      if (seen.has(key) || seen.has(p.product_code)) return false
+      seen.add(key); seen.add(p.product_code)
+      return true
+    })
+  }, [masterProducts])
 
   const customerCollection = useMemo(() => {
     const q = customerSearch.toLowerCase()
-    const filtered = q ? customers.filter(c => c.display_name.toLowerCase().includes(q)) : customers
+    const filtered = q ? customerResults.filter(c => c.display_name.toLowerCase().includes(q)) : customerResults
     return createListCollection({
       items: filtered.map(c => ({ label: c.display_name, value: c.customer_id, type: c.customer_type })),
     })
-  }, [customers, customerSearch])
+  }, [customerResults, customerSearch])
 
   const selectedCustomer = customers.find(c => c.customer_id === form.customer_id)
 
-  // Fire-related fields (construction class, risk location) also apply when the
-  // policy number prefix is "01", regardless of the selected product type.
-  const isFireProduct = FIRE_PRODUCT_TYPES.has(form.product_type) || form.policy_number.startsWith("01")
+  // The product's classified type (master product type) decides which fields apply.
+  const typeInfo = productTypeInfo(form.product_type)
+  const isFireProduct = !!typeInfo && "construction_class" in typeInfo.options
+
+  const riskGroup = typeInfo?.risk_group ?? null
 
   // Coverage totals
   const covTotalSI      = localCoverages.filter(c => c.count_in_tsi).reduce((s, c) => s + c.sum_insured, 0)
@@ -229,23 +360,12 @@ export default function NewPolicy() {
   const displaySI      = hasAutoFill ? covTotalSI.toLocaleString("id-ID") : form.sum_insured
   const displayPremium = hasAutoFill ? covTotalPremium.toLocaleString("id-ID") : form.premium_amount
 
-  const commissionAmount = useMemo(() => {
-    const p = hasAutoFill ? covTotalPremium : rawIDR(form.premium_amount)
-    const r = parseFloat(form.commission_rate) || 0
-    return Math.round(p * r / 100)
-  }, [hasAutoFill, covTotalPremium, form.premium_amount, form.commission_rate])
-
-  const commissionTaxAmount = useMemo(() => {
-    const taxRate = parseFloat(form.commission_tax_rate) || 0
-    return Math.round(commissionAmount * taxRate / 100)
-  }, [commissionAmount, form.commission_tax_rate])
-
+  // Cheap arithmetic: plain expressions (the React Compiler memoizes them where useful).
+  const basePremium = hasAutoFill ? covTotalPremium : rawIDR(form.premium_amount)
+  const commissionAmount = Math.round(basePremium * (parseFloat(form.commission_rate) || 0) / 100)
+  const commissionTaxAmount = Math.round(commissionAmount * (parseFloat(form.commission_tax_rate) || 0) / 100)
   const netCommissionAmount = commissionAmount - commissionTaxAmount
-
-  const customerPremiumAmount = useMemo(() => {
-    const premium = hasAutoFill ? covTotalPremium : rawIDR(form.premium_amount)
-    return premium + rawIDR(form.materai_amount) + rawIDR(form.biaya_polis) - rawIDR(form.diskon)
-  }, [hasAutoFill, covTotalPremium, form.premium_amount, form.materai_amount, form.biaya_polis, form.diskon])
+  const customerPremiumAmount = basePremium + rawIDR(form.materai_amount) + rawIDR(form.biaya_polis) - rawIDR(form.diskon)
 
   const duration = useMemo(() => {
     if (!form.coverage_start || !form.coverage_end) return null
@@ -273,15 +393,37 @@ export default function NewPolicy() {
     (patch) => setForm(f => ({ ...f, ...patch })),
   )
 
+  // A customer referred by a sub-agent defaults the policy to that sub-agent (still changeable).
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!form.customer_id || !token) return
+    let cancelled = false
+    getCustomerDetail(token, form.customer_id)
+      .then(d => {
+        if (cancelled || !d.referred_by_agent_id) return
+        const agent = d.referred_by_agent_id
+        setForm(f => f.customer_id === d.customer_id && !f.issuing_agent_id ? { ...f, issuing_agent_id: agent } : f)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [form.customer_id])
+
   function clearCustomer() {
     set("customer_id", "")
     setCustomerSearch("")
     setComboKey(k => k + 1)
   }
 
+  function productTypeInfo(code: string): ApiProductTypeInfo | null {
+    const type = masterProducts.find(p => p.product_code === code)?.product_type
+    return (type && productTypes.find(t => t.product_type === type)) || null
+  }
+
   function handleProductChange(code: string) {
     set("product_type", code)
-    if (!FIRE_PRODUCT_TYPES.has(code) && !form.policy_number.startsWith("01")) set("construction_class", "")
+    const info = productTypeInfo(code)
+    const offersClass = !!info && "construction_class" in info.options
+    if (!offersClass) set("construction_class", "")
     const match = masterProducts.find(p => p.product_code === code)
     if (match) {
       set("commission_rate", parseFloat(match.commission_rate).toString())
@@ -297,10 +439,8 @@ export default function NewPolicy() {
   function handleStartDate(value: string) {
     set("coverage_start", value)
     if (endDateAuto && value) {
-      const d = new Date(value)
-      d.setFullYear(d.getFullYear() + 1)
-      d.setDate(d.getDate() - 1)
-      set("coverage_end", d.toISOString().split("T")[0])
+      // One year minus a day, computed on the calendar date (no time-zone shift).
+      set("coverage_end", addToISODate(value, { years: 1, days: -1 }))
     }
   }
 
@@ -357,7 +497,7 @@ export default function NewPolicy() {
     if (editingCa) {
       setCoassurances(prev => prev.map(c => c._id === editingCa._id ? { ...caForm } : c))
     } else {
-      setCoassurances(prev => [...prev, { ...caForm, _id: crypto.randomUUID() }])
+      setCoassurances(prev => [...prev, { ...caForm, _id: uid() }])
     }
     setCaDialog(false)
   }
@@ -406,7 +546,7 @@ export default function NewPolicy() {
       ))
     } else {
       setLocalCoverages(prev => [...prev, {
-        _id: crypto.randomUUID(),
+        _id: uid(),
         coverage_type:  covForm.coverage_type,
         coverage_label: covForm.coverage_label,
         sum_insured:    si,
@@ -432,8 +572,28 @@ export default function NewPolicy() {
     if (!form.customer_id || !form.insurer_id || !form.product_type) {
       setError("Nasabah, insurer, dan jenis produk wajib diisi"); return
     }
+    if (!form.policy_number.trim()) {
+      setError("Nomor polis wajib diisi"); return
+    }
+    // Must be one of the product codes offered in the dropdown (the agency's master
+    // products, or the built-in fallback list) — not a hard-coded enum, since master
+    // product codes are defined per agency.
+    if (!productOptions.some(p => p.product_code === form.product_type)) {
+      setError("Jenis produk tidak valid"); return
+    }
     if (!form.coverage_start || !form.coverage_end) {
       setError("Tanggal coverage wajib diisi"); return
+    }
+    if (form.coverage_end <= form.coverage_start) {
+      setError("Tanggal akhir coverage harus setelah tanggal mulai"); return
+    }
+    if (isFireProduct) {
+      if (!form.risk_address.trim()) { setError("Alamat lokasi risiko wajib diisi"); return }
+      const missing = ([
+        [form.risk_province, "Provinsi"], [form.risk_city, "Kota/Kabupaten"],
+        [form.risk_district, "Kecamatan"], [form.risk_village, "Kelurahan/Desa"],
+      ] as const).find(([v]) => !v.trim())
+      if (missing) { setError(`${missing[1]} lokasi risiko wajib diisi`); return }
     }
     if (form.risk_postal_code && !/^\d{5}$/.test(form.risk_postal_code)) {
       setError("Kode pos lokasi risiko harus 5 digit angka"); return
@@ -441,6 +601,12 @@ export default function NewPolicy() {
     if (Boolean(form.risk_latitude) !== Boolean(form.risk_longitude)) {
       setError("Latitude dan longitude lokasi risiko harus diisi bersamaan"); return
     }
+
+    // Members of a previously selected product (other roles) are dropped, like the fields of another group.
+    const allowedRoles = riskGroup === "travel" ? ["traveller"] : riskGroup === "pa" ? ["insured", "beneficiary"] : []
+    const members = riskMembers.filter(m => allowedRoles.includes(m.member_role))
+    const riskProblem = riskGroup ? validateRisk(riskForm, members, riskGroup) : null
+    if (riskProblem) { setError(riskProblem); return }
 
     setSubmitting(true)
     setError(null)
@@ -456,8 +622,8 @@ export default function NewPolicy() {
       const payload: CreatePolicyPayload = {
         insurer_id:          form.insurer_id,
         customer_id:         form.customer_id,
-        policy_number:       form.policy_number,
-        product_type:        form.product_type as any,
+        policy_number:       form.policy_number.trim(),
+        product_type:        form.product_type as ApiProductType,
         coverage_start:      form.coverage_start,
         coverage_end:        form.coverage_end,
         ...(inlineCoverages
@@ -491,36 +657,74 @@ export default function NewPolicy() {
         risk_latitude:       form.risk_latitude  ? Number(form.risk_latitude)  : undefined,
         risk_longitude:      form.risk_longitude ? Number(form.risk_longitude) : undefined,
         policy_year:         Number(form.policy_year) || 1,
-        object_insured:      form.object_insured  || undefined,
+        issuing_agent_id:    form.issuing_agent_id || undefined,
+        // Fire policies have no separate object: the risk address identifies the insured property.
+        object_insured:      (isFireProduct ? form.risk_address.trim() : form.object_insured) || undefined,
         insured_name:        form.insured_name    || undefined,
         coverage_notes:      form.coverage_notes  || undefined,
         notes:               form.notes           || undefined,
+        ...(!isEndorsement && draftTerms.length > 0
+          ? {
+              terms: draftTerms.map(t => {
+                const covIdx = inlineCoverages && t.coverage_id ? localCoverages.findIndex(c => c._id === t.coverage_id) : -1
+                return {
+                  term_type:          t.term_type,
+                  clause_code:        t.clause_code,
+                  title:              t.title,
+                  description:        t.description,
+                  deductible_type:    t.deductible_type,
+                  deductible_amount:  t.deductible_amount,
+                  deductible_percent: t.deductible_percent,
+                  ...(covIdx >= 0 ? { coverage_index: covIdx } : {}),
+                }
+              }),
+            }
+          : {}),
+        ...(riskGroup && riskGroup !== "pa" ? { risk_details: riskFormToPayload(riskForm, riskGroup) } : {}),
+        ...(members.length > 0 ? { members: membersToPayload(members) } : {}),
       }
 
       const { policy_id } = await createPolicy(token, payload)
 
+      // Remember which policy came out of the quote. If this fails the policy still stands.
+      if (quoteId) await linkQuotePolicy(token, quoteId, policy_id).catch((linkErr) => console.error("linkQuotePolicy failed", linkErr))
+
+      // The policy now exists. A failing co-assurance row must not surface as "Gagal membuat
+      // polis" — resubmitting would try to create the policy a second time.
+      let caFailed = 0
       if (isCoassurance && coassurances.length > 0) {
         for (const ca of coassurances) {
-          await addCoassuranceParticipant(token, policy_id, {
-            co_insurer_name:   ca.co_insurer_name,
-            is_leader:         ca.is_leader,
-            share_percent:     parseFloat(ca.share_percent) || 0,
-            sum_insured_share: rawIDR(ca.sum_insured_share) || undefined,
-            premium_share:     rawIDR(ca.premium_share) || undefined,
-            commission_rate:   parseFloat(ca.commission_rate) || undefined,
-          })
+          try {
+            await addCoassuranceParticipant(token, policy_id, {
+              co_insurer_name:   ca.co_insurer_name,
+              is_leader:         ca.is_leader,
+              share_percent:     parseFloat(ca.share_percent) || 0,
+              sum_insured_share: rawIDR(ca.sum_insured_share) || undefined,
+              premium_share:     rawIDR(ca.premium_share) || undefined,
+              commission_rate:   parseFloat(ca.commission_rate) || undefined,
+            })
+          } catch (caErr) {
+            console.error("addCoassuranceParticipant failed", caErr)
+            caFailed++
+          }
         }
       }
 
-      router.push(`/agentra/policies/${policy_id}`)
-    } catch (err: any) {
+      if (caFailed > 0) {
+        setError(`Polis berhasil dibuat, tetapi ${caFailed} peserta ko-asuransi gagal disimpan. Lengkapi di halaman detail polis — mengalihkan…`)
+        setTimeout(() => router.push(`/agentra/policies/${encodeURIComponent(policy_id)}`), 3000)
+        return
+      }
+      router.push(`/agentra/policies/${encodeURIComponent(policy_id)}`)
+    } catch (err: unknown) {
       // The API reports a bad coverage item as `coverages[<index>]: <reason>` (0-based,
       // in the order sent), so point at the row number the user sees in the table.
-      const covErr = /^coverages\[(\d+)\]:\s*(.*)$/.exec(err.message ?? "")
+      const message = errorMessage(err, "Gagal membuat polis")
+      const covErr = /^coverages\[(\d+)\]:\s*(.*)$/.exec(message)
       setError(
         covErr
           ? `Item pertanggungan baris ${Number(covErr[1]) + 1}: ${covErr[2]}`
-          : err.message ?? "Gagal membuat polis",
+          : message,
       )
       setSubmitting(false)
     }
@@ -532,7 +736,7 @@ export default function NewPolicy() {
     <Box bg="#F4F6F9" minH="100vh">
       <Sidebar /><MobileHeader />
 
-      <Box ml={{ base: 0, md: "200px" }} paddingY={{ base: "56px", md: 0 }}>
+      <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: "96px" }}>
         <Box display={{ base: "none", md: "block" }}>
           <TopBar title="Tambah Polis Baru" />
         </Box>
@@ -541,7 +745,7 @@ export default function NewPolicy() {
 
           {/* Header */}
           <Flex align="center" gap="12px">
-            <Button size="sm" variant="ghost" color="#64748B" onClick={() => router.back()} px="0">
+            <Button size="sm" variant="ghost" color="#64748B" onClick={() => router.back()} px="0" aria-label="Kembali">
               <LuArrowLeft size={16} />
             </Button>
             <Box p="8px" bg="#EFF6FF" borderRadius="10px" color="#1D4ED8">
@@ -549,9 +753,15 @@ export default function NewPolicy() {
             </Box>
             <Flex flexDir="column">
               <Text color="#1C2833" fontSize="18px" fontWeight="bold">Tambah Polis Baru</Text>
-              <Text color="#94A3B8" fontSize="12px">Lengkapi semua informasi polis</Text>
+              <Text color="#64748B" fontSize="14px">Lengkapi semua informasi polis</Text>
             </Flex>
           </Flex>
+
+          {loadError && (
+            <Box px="14px" py="10px" borderRadius="8px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA" role="alert">
+              <Text fontSize="15px" color="#DC2626">{loadError}</Text>
+            </Box>
+          )}
 
           <form onSubmit={submit}>
             <Flex flexDir="column" gap="16px">
@@ -572,10 +782,10 @@ export default function NewPolicy() {
                         borderColor={isEndorsement ? "#FDE68A" : "#E2E8F0"}
                       >
                         <Flex flexDir="column" gap="1px">
-                          <Text fontSize="13px" fontWeight="semibold" color={isEndorsement ? "#92400E" : "#1C2833"}>
+                          <Text fontSize="15px" fontWeight="semibold" color={isEndorsement ? "#92400E" : "#1C2833"}>
                             Endorsement
                           </Text>
-                          <Text fontSize="11px" color={isEndorsement ? "#B45309" : "#94A3B8"}>
+                          <Text fontSize="14px" color={isEndorsement ? "#B45309" : "#94A3B8"}>
                             {isEndorsement
                               ? "Item coverage tidak tersedia untuk endorsement"
                               : "Aktifkan jika ini adalah endorsement polis"}
@@ -602,14 +812,14 @@ export default function NewPolicy() {
                               <Text fontSize="18px" fontWeight="semibold" color="#14532D">
                                 {selectedCustomer?.display_name}
                               </Text>
-                              <Text fontSize="14px" fontWeight="medium" color="#166534">
+                              <Text fontSize="16px" fontWeight="medium" color="#166534">
                                 {selectedCustomer?.customer_type === "company" ? "Korporat" : "Individu"}
                               </Text>
                             </Flex>
                             <Button
                               size="sm" variant="outline" gap="6px" flexShrink={0}
                               bg="white" color="#DC2626" border="1px solid" borderColor="#DC2626"
-                              fontSize="14px" fontWeight="semibold"
+                              fontSize="16px" fontWeight="semibold"
                               _hover={{ bg: "#FEE2E2", color: "#B91C1C", borderColor: "#B91C1C" }}
                               onClick={clearCustomer}
                             >
@@ -633,20 +843,24 @@ export default function NewPolicy() {
                             >
                               <Combobox.Input
                                 placeholder="Ketik nama nasabah untuk mencari..."
-                                fontSize="13px" color="#1C2833"
+                                fontSize="15px" color="#1C2833"
                                 border="none" outline="none" bg="transparent" flex="1" h="100%"
                               />
                               <Combobox.IndicatorGroup>
-                                <Combobox.Trigger color="#94A3B8" />
+                                <Combobox.Trigger color="#64748B" />
                               </Combobox.IndicatorGroup>
                             </Combobox.Control>
                             <Combobox.Positioner>
                               <Combobox.Content
                                 bg="white" border="1px solid" borderColor="#E2E8F0"
                                 borderRadius="8px" shadow="lg" maxH="220px" overflowY="auto" zIndex={20}
+                                onScroll={(e: React.UIEvent<HTMLDivElement>) => {
+                                  const el = e.currentTarget
+                                  if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) loadMoreCustomers()
+                                }}
                               >
-                                <Combobox.Empty px="12px" py="10px" fontSize="13px" color="#94A3B8">
-                                  Nasabah tidak ditemukan
+                                <Combobox.Empty px="12px" py="10px" fontSize="15px" color="#64748B">
+                                  {customerLoading ? "Memuat…" : "Nasabah tidak ditemukan"}
                                 </Combobox.Empty>
                                 {customerCollection.items.map(item => (
                                   <Combobox.Item
@@ -655,9 +869,9 @@ export default function NewPolicy() {
                                     _hover={{ bg: "#F8FAFC" }} _highlighted={{ bg: "#EFF6FF" }}
                                   >
                                     <Flex align="center" justify="space-between" gap="8px">
-                                      <Combobox.ItemText fontSize="13px" color="#1C2833">{item.label}</Combobox.ItemText>
+                                      <Combobox.ItemText fontSize="15px" color="#1C2833">{item.label}</Combobox.ItemText>
                                       <Text
-                                        fontSize="10px" fontWeight="medium" px="6px" py="1px" borderRadius="4px"
+                                        fontSize="14px" fontWeight="medium" px="6px" py="1px" borderRadius="4px"
                                         bg={item.type === "company" ? "#F3E8FF" : "#E5EFF5"}
                                         color={item.type === "company" ? "#7E22CE" : "#006397"}
                                       >
@@ -667,10 +881,17 @@ export default function NewPolicy() {
                                     <Combobox.ItemIndicator color="#1D4ED8" />
                                   </Combobox.Item>
                                 ))}
+                                {customerLoading && customerCollection.items.length > 0 && (
+                                  <Flex justify="center" py="8px"><Spinner size="sm" color="#64748B" /></Flex>
+                                )}
                               </Combobox.Content>
                             </Combobox.Positioner>
                           </Combobox.Root>
                         )}
+                      </FField>
+
+                      <FField label="Sub-Agen" hint="Opsional — terisi otomatis dari sub-agen yang merujuk nasabah ini">
+                        <SubAgentSelect value={form.issuing_agent_id} onChange={(v) => set("issuing_agent_id", v)} />
                       </FField>
 
                       <FField label="Perusahaan Asuransi" required>
@@ -698,7 +919,7 @@ export default function NewPolicy() {
                             cursor="pointer" onClick={applyPrefixHint} _hover={{ bg: "#FEF3C7" }}
                           >
                             <LuZap size={11} color="#D97706" />
-                            <Text fontSize="11px" color="#92400E">
+                            <Text fontSize="14px" color="#92400E">
                               Prefiks &ldquo;{form.policy_number.slice(0, 2)}&rdquo; → <Text as="strong">{prefixHint.product_name}</Text>{" "}
                               ({parseFloat(prefixHint.commission_rate).toFixed(0)}%) — Klik terapkan
                             </Text>
@@ -735,20 +956,22 @@ export default function NewPolicy() {
                             value={form.construction_class}
                             onChange={v => set("construction_class", v)}
                             placeholder="Pilih kelas konstruksi"
-                            options={Object.entries(CONSTRUCTION_CLASS_LABELS).map(([value, label]) => ({ value, label }))}
+                            options={(typeInfo?.options.construction_class ?? []).map(value => ({ value, label: typeInfo?.option_labels?.construction_class?.[value] ?? value }))}
                             clearable
                           />
                         </FField>
                       )}
 
-                      <FField label="Objek Pertanggungan">
-                        <Input
-                          {...INPUT}
-                          placeholder="Mis: Honda Civic 2020 B 1234 ABC"
-                          value={form.object_insured}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("object_insured", e.target.value)}
-                        />
-                      </FField>
+                      {!isFireProduct && (
+                        <FField label="Objek Pertanggungan">
+                          <Input
+                            {...INPUT}
+                            placeholder="Mis: Honda Civic 2020 B 1234 ABC"
+                            value={form.object_insured}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("object_insured", e.target.value)}
+                          />
+                        </FField>
+                      )}
 
                       <FField label="Nama Tertanggung" hint="Opsional — kosongkan untuk memakai nama nasabah">
                         <Input
@@ -762,10 +985,21 @@ export default function NewPolicy() {
                     </Flex>
                   </Section>
 
+                  {riskGroup && (
+                    <Section title={RISK_GROUP_LABELS[riskGroup]}>
+                      <RiskDetailsFields
+                        group={riskGroup}
+                        form={riskForm} onChange={(p) => setRiskForm(f => ({ ...f, ...p }))}
+                        members={riskMembers} onMembersChange={setRiskMembers}
+                        coverage={{ start: form.coverage_start, end: form.coverage_end }}
+                      />
+                    </Section>
+                  )}
+
                   {isFireProduct && (
                     <Section title="Lokasi Risiko">
                       <Flex flexDir="column" gap="16px">
-                        <FField label="Alamat Lokasi Risiko" hint="Alamat properti yang dipertanggungkan">
+                        <FField label="Alamat Lokasi Risiko" hint="Alamat properti yang dipertanggungkan" required>
                           <Input
                             {...INPUT}
                             placeholder="Contoh: Jl. Industri No. 5, RT 003/RW 002"
@@ -775,20 +1009,33 @@ export default function NewPolicy() {
                         </FField>
                         <Flex gap="12px">
                           <Box flex="1">
-                            <FField label="Provinsi">
-                              <SearchSelect
-                                value={wilayah.provinceCode}
-                                onChange={wilayah.selectProvince}
-                                placeholder="Pilih provinsi"
-                                options={wilayah.provinces.map(p => ({ value: p.province_code, label: p.province_name }))}
-                                clearable
-                              />
+                            <FField
+                              label="Provinsi" required
+                              hint={wilayah.provinceManual ? "Wilayah belum tersedia — ketik manual" : undefined}
+                            >
+                              {wilayah.provinceManual ? (
+                                <Input
+                                  {...INPUT}
+                                  aria-label="Provinsi"
+                                  value={form.risk_province}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("risk_province", e.target.value)}
+                                />
+                              ) : (
+                                <SearchSelect
+                                  ariaLabel="Provinsi"
+                                  value={wilayah.provinceCode}
+                                  onChange={wilayah.selectProvince}
+                                  placeholder="Pilih provinsi"
+                                  options={wilayah.provinces.map(p => ({ value: p.province_code, label: p.province_name }))}
+                                  clearable
+                                />
+                              )}
                             </FField>
                           </Box>
                           <Box flex="1">
                             <FField
-                              label="Kota/Kabupaten"
-                              hint={wilayah.cityManual ? "Wilayah belum tersedia — ketik manual" : undefined}
+                              label="Kota/Kabupaten" required
+                              hint={wilayah.cityManual && !wilayah.provinceManual ? "Wilayah belum tersedia — ketik manual" : undefined}
                             >
                               {wilayah.cityManual ? (
                                 <Input
@@ -813,7 +1060,7 @@ export default function NewPolicy() {
                         <Flex gap="12px">
                           <Box flex="1">
                             <FField
-                              label="Kecamatan"
+                              label="Kecamatan" required
                               hint={wilayah.districtManual && !wilayah.cityManual ? "Wilayah belum tersedia — ketik manual" : undefined}
                             >
                               {wilayah.districtManual ? (
@@ -837,7 +1084,7 @@ export default function NewPolicy() {
                           </Box>
                           <Box flex="1">
                             <FField
-                              label="Kelurahan/Desa"
+                              label="Kelurahan/Desa" required
                               hint={wilayah.villageManual && !wilayah.districtManual ? "Wilayah belum tersedia — ketik manual" : undefined}
                             >
                               {wilayah.villageManual ? (
@@ -914,7 +1161,7 @@ export default function NewPolicy() {
                           required
                         />
                       </FField>
-                      <Text color="#94A3B8" fontSize="16px">→</Text>
+                      <Text color="#64748B" fontSize="16px">→</Text>
                       <FField
                         label="Selesai" required
                         
@@ -928,7 +1175,7 @@ export default function NewPolicy() {
                       </FField>
                       {duration && (
                         <Box px="12px" py="5px" borderRadius="20px" bg="#DBEAFE">
-                          <Text fontSize="12px" fontWeight="semibold" color="#1D4ED8">{duration}</Text>
+                          <Text fontSize="14px" fontWeight="semibold" color="#1D4ED8">{duration}</Text>
                         </Box>
                       )}
                     </Flex>
@@ -1011,8 +1258,8 @@ export default function NewPolicy() {
                           bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE"
                           w={{ base: "100%", sm: "auto" }} minW={{ sm: "240px" }} gap="16px"
                         >
-                          <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold">Tagihan Nasabah</Text>
-                          <Text fontSize="14px" color="#1D4ED8" fontWeight="bold">
+                          <Text fontSize="15px" color="#1D4ED8" fontWeight="semibold">Tagihan Nasabah</Text>
+                          <Text fontSize="16px" color="#1D4ED8" fontWeight="bold">
                             Rp {customerPremiumAmount.toLocaleString("id-ID")}
                           </Text>
                         </Flex>
@@ -1021,30 +1268,30 @@ export default function NewPolicy() {
                       {/* Commission */}
                       <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" p="14px">
                         <Flex align="center" gap="8px" mb="10px" flexWrap="wrap">
-                          <Text fontSize="13px" fontWeight="semibold" color="#1C2833">Komisi</Text>
+                          <Text fontSize="15px" fontWeight="semibold" color="#1C2833">Komisi</Text>
                           {commissionSource?.kind === "product" && (
                             <Flex align="center" gap="4px" px="8px" py="2px" borderRadius="20px" bg="#DBEAFE">
                               <LuZap size={10} color="#1D4ED8" />
-                              <Text fontSize="10px" color="#1D4ED8" fontWeight="semibold">Auto: {commissionSource.name}</Text>
+                              <Text fontSize="14px" color="#1D4ED8" fontWeight="semibold">Auto: {commissionSource.name}</Text>
                             </Flex>
                           )}
                           {commissionSource?.kind === "manual" && (
                             <Box px="8px" py="2px" borderRadius="20px" bg="#F1F5F9">
-                              <Text fontSize="10px" color="#64748B">Custom</Text>
+                              <Text fontSize="14px" color="#64748B">Custom</Text>
                             </Box>
                           )}
                           {!commissionSource && masterProducts.length > 0 && (
-                            <Text fontSize="10px" color="#94A3B8">Pilih produk untuk auto-isi</Text>
+                            <Text fontSize="14px" color="#64748B">Pilih produk untuk auto-isi</Text>
                           )}
                         </Flex>
                         <Grid templateColumns="repeat(auto-fit, minmax(min(100%, 150px), 1fr))" gap="16px">
                           {/* Rate inputs */}
                           <Flex flexDir="column" gap="4px">
-                            <Text fontSize="10px" color="#64748B">Rate Komisi</Text>
+                            <Text fontSize="14px" color="#64748B">Rate Komisi</Text>
                             <Flex align="center" gap="6px">
                               <Input
                                 bg="white" border="1px solid" borderColor="#E2E8F0"
-                                borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
+                                borderRadius="8px" fontSize="16px" fontWeight="semibold" color="#1C2833"
                                 h="40px" flex="1" minW="0" type="number" min={0} max={100} step="0.01"
                                 placeholder="0"
                                 value={form.commission_rate}
@@ -1053,15 +1300,15 @@ export default function NewPolicy() {
                                   setCommissionSource({ kind: "manual" })
                                 }}
                               />
-                              <Text fontSize="14px" color="#64748B">%</Text>
+                              <Text fontSize="16px" color="#64748B">%</Text>
                             </Flex>
                           </Flex>
                           <Flex flexDir="column" gap="4px">
-                            <Text fontSize="10px" color="#64748B">PPh / Pajak</Text>
+                            <Text fontSize="14px" color="#64748B">PPh / Pajak</Text>
                             <Flex align="center" gap="6px">
                               <Input
                                 bg="white" border="1px solid" borderColor="#E2E8F0"
-                                borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
+                                borderRadius="8px" fontSize="16px" fontWeight="semibold" color="#1C2833"
                                 h="40px" flex="1" minW="0" type="number" min={0} max={100} step="0.01"
                                 placeholder="2.5"
                                 value={form.commission_tax_rate}
@@ -1069,28 +1316,28 @@ export default function NewPolicy() {
                                   set("commission_tax_rate", e.target.value)
                                 }
                               />
-                              <Text fontSize="14px" color="#64748B">%</Text>
+                              <Text fontSize="16px" color="#64748B">%</Text>
                             </Flex>
                           </Flex>
 
                           {/* Breakdown preview */}
                           {commissionAmount > 0 && (
                             <Box gridColumn="1 / -1" px="14px" py="10px" borderRadius="10px" bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0">
-                              <Text fontSize="10px" color="#64748B" mb="6px" fontWeight="semibold">ESTIMASI KOMISI</Text>
+                              <Text fontSize="14px" color="#64748B" mb="6px" fontWeight="semibold">ESTIMASI KOMISI</Text>
                               <Flex justify="space-between" align="center" mb="2px">
-                                <Text fontSize="11px" color="#64748B">Gross</Text>
-                                <Text fontSize="13px" fontWeight="semibold" color="#16A34A">{fmt(commissionAmount)}</Text>
+                                <Text fontSize="14px" color="#64748B">Gross</Text>
+                                <Text fontSize="15px" fontWeight="semibold" color="#16A34A">{fmt(commissionAmount)}</Text>
                               </Flex>
                               {commissionTaxAmount > 0 && (
                                 <Flex justify="space-between" align="center" mb="2px">
-                                  <Text fontSize="11px" color="#64748B">PPh ({form.commission_tax_rate}%)</Text>
-                                  <Text fontSize="12px" color="#DC2626">−{fmt(commissionTaxAmount)}</Text>
+                                  <Text fontSize="14px" color="#64748B">PPh ({form.commission_tax_rate}%)</Text>
+                                  <Text fontSize="14px" color="#DC2626">−{fmt(commissionTaxAmount)}</Text>
                                 </Flex>
                               )}
                               <Box borderTop="1px solid" borderColor="#BBF7D0" pt="4px" mt="4px">
                                 <Flex justify="space-between" align="center">
-                                  <Text fontSize="11px" color="#15803D" fontWeight="semibold">Net</Text>
-                                  <Text fontSize="14px" fontWeight="bold" color="#15803D">{fmt(netCommissionAmount)}</Text>
+                                  <Text fontSize="14px" color="#15803D" fontWeight="semibold">Net</Text>
+                                  <Text fontSize="16px" fontWeight="bold" color="#15803D">{fmt(netCommissionAmount)}</Text>
                                 </Flex>
                               </Box>
                             </Box>
@@ -1109,10 +1356,10 @@ export default function NewPolicy() {
                         borderBottom="1px solid" borderColor="#E2E8F0"
                       >
                         <Box borderLeft="3px solid #1A3557" pl="10px">
-                          <Text color="#1A3557" fontSize="14px" fontWeight="semibold">Item Coverage</Text>
+                          <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Item Coverage</Text>
                         </Box>
                         <Button
-                          size="sm" bg="#1A3557" color="white" fontSize="12px" gap="4px"
+                          size="sm" bg="#1A3557" color="white" fontSize="14px" gap="4px"
                           borderRadius="6px" _hover={{ bg: "#162C47" }} onClick={openAddCov}
                         >
                           <LuPlus size={12} /> Tambah Item
@@ -1121,7 +1368,7 @@ export default function NewPolicy() {
 
                       {localCoverages.length === 0 ? (
                         <Flex px="16px" py="24px" align="center" justify="center">
-                          <Text color="#94A3B8" fontSize="13px">
+                          <Text color="#64748B" fontSize="15px">
                             Belum ada item. Klik &quot;+ Tambah Item&quot; untuk mulai.
                           </Text>
                         </Flex>
@@ -1137,16 +1384,16 @@ export default function NewPolicy() {
                               {/* Top row: name + action buttons */}
                               <Flex align="center" justify="space-between" gap="8px">
                                 <Flex align="center" gap="6px" minW="0">
-                                  <Text color="#1C2833" fontSize="13px" fontWeight="medium">
+                                  <Text color="#1C2833" fontSize="15px" fontWeight="medium">
                                     {COVERAGE_TYPE_LABELS[cov.coverage_type]}
                                   </Text>
                                   {cov.coverage_label && (
-                                    <Text color="#94A3B8" fontSize="11px" truncate>— {cov.coverage_label}</Text>
+                                    <Text color="#64748B" fontSize="14px" truncate>— {cov.coverage_label}</Text>
                                   )}
                                 </Flex>
                                 <Flex gap="4px" flexShrink={0}>
                                   <IconButton
-                                    size="xs" variant="ghost" aria-label="Edit"
+                                    size="xs" variant="ghost" aria-label="Ubah"
                                     color="#64748B" _hover={{ bg: "#EFF6FF", color: "#1D4ED8" }}
                                     onClick={() => openEditCov(cov)}
                                   >
@@ -1154,7 +1401,7 @@ export default function NewPolicy() {
                                   </IconButton>
                                   <IconButton
                                     size="xs" variant="ghost" aria-label="Hapus"
-                                    color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
+                                    color="#64748B" _hover={{ bg: "#FEF2F2", color: "#DC2626" }}
                                     onClick={() => setDeletingCov(cov)}
                                   >
                                     <LuTrash2 size={12} />
@@ -1163,23 +1410,23 @@ export default function NewPolicy() {
                               </Flex>
                               {/* Bottom row: financial details */}
                               <Flex gap="16px" flexWrap="wrap">
-                                <Text color="#64748B" fontSize="12px">
+                                <Text color="#64748B" fontSize="14px">
                                   UP: <Text as="span" color="#1C2833" fontWeight="medium">
                                     Rp {cov.sum_insured.toLocaleString("id-ID")}
                                   </Text>
                                 </Text>
-                                <Text color="#64748B" fontSize="12px">
+                                <Text color="#64748B" fontSize="14px">
                                   Rate: <Text as="span" color="#1C2833" fontWeight="medium">{cov.rate_permille}‰</Text>
                                 </Text>
                                 {!cov.count_in_tsi && (
                                   <Text
-                                    fontSize="10px" fontWeight="semibold" color="#92400E"
+                                    fontSize="14px" fontWeight="semibold" color="#92400E"
                                     bg="#FEF3C7" px="6px" py="2px" borderRadius="4px"
                                   >
                                     UP tidak dihitung
                                   </Text>
                                 )}
-                                <Text color="#64748B" fontSize="12px">
+                                <Text color="#64748B" fontSize="14px">
                                   Premi: <Text as="span" color="#1A3557" fontWeight="semibold">
                                     Rp {cov.premium_amount.toLocaleString("id-ID")}
                                   </Text>
@@ -1190,16 +1437,25 @@ export default function NewPolicy() {
 
                           {/* Total row */}
                           <Flex px="16px" py="10px" justify="space-between" align="center" bg="#F1F5F9">
-                            <Text color="#64748B" fontSize="12px" fontWeight="semibold">
+                            <Text color="#64748B" fontSize="14px" fontWeight="semibold">
                               Total UP: Rp {covTotalSI.toLocaleString("id-ID")}
                             </Text>
-                            <Text color="#1A3557" fontSize="13px" fontWeight="bold">
+                            <Text color="#1A3557" fontSize="15px" fontWeight="bold">
                               Total Premi: Rp {covTotalPremium.toLocaleString("id-ID")}
                             </Text>
                           </Flex>
                         </>
                       )}
                     </Box>
+                  )}
+
+                  {/* Risiko sendiri, klausula, perluasan jaminan (hidden when endorsement) */}
+                  {!isEndorsement && (
+                    <DraftTermsEditor
+                      terms={draftTerms}
+                      onChange={setDraftTerms}
+                      coverages={localCoverages.map(c => ({ coverage_id: c._id, coverage_type: c.coverage_type, coverage_label: c.coverage_label || null }))}
+                    />
                   )}
 
                   {/* Co-assurance */}
@@ -1211,9 +1467,9 @@ export default function NewPolicy() {
                     >
                       <Flex flexDir="column" gap="2px">
                         <Box borderLeft="3px solid #1A3557" pl="10px">
-                          <Text color="#1A3557" fontSize="14px" fontWeight="semibold">Ko-Asuransi</Text>
+                          <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Ko-Asuransi</Text>
                         </Box>
-                        <Text fontSize="11px" color="#94A3B8" pl="13px">Aktifkan jika ada ko-penanggung pada polis ini</Text>
+                        <Text fontSize="14px" color="#64748B" pl="13px">Aktifkan jika ada ko-penanggung pada polis ini</Text>
                       </Flex>
                       <Switch.Root
                         checked={isCoassurance}
@@ -1231,7 +1487,7 @@ export default function NewPolicy() {
                           <Flex gap="8px" align="center">
                             {coassurances.length > 0 && (
                               <Box
-                                px="8px" py="2px" borderRadius="full" fontSize="11px" fontWeight="semibold"
+                                px="8px" py="2px" borderRadius="full" fontSize="14px" fontWeight="semibold"
                                 bg={Math.abs(caTotalPct - 100) < 0.01 ? "#DCFCE7" : "#FEF3C7"}
                                 color={Math.abs(caTotalPct - 100) < 0.01 ? "#16A34A" : "#D97706"}
                               >
@@ -1241,10 +1497,10 @@ export default function NewPolicy() {
                             )}
                           </Flex>
                           <Button
-                            size="sm" bg="#1A3557" color="white" fontSize="12px" gap="4px"
+                            size="sm" bg="#1A3557" color="white" fontSize="14px" gap="4px"
                             borderRadius="6px" _hover={{ bg: "#162C47" }} onClick={openAddCa}
                           >
-                            <LuPlus size={12} /> Tambah Ko-Insurer
+                            <LuPlus size={12} /> Tambah Ko-Asuransi
                           </Button>
                         </Flex>
 
@@ -1254,7 +1510,7 @@ export default function NewPolicy() {
                               <Table.Header>
                                 <Table.Row bg="#F8FAFC">
                                   {["NAMA", "LEADER", "SHARE %", "AKSI"].map(h => (
-                                    <Table.ColumnHeader key={h} px="10px" py="8px" fontSize="10px" color="#64748B" fontWeight="bold" letterSpacing="0.05em">{h}</Table.ColumnHeader>
+                                    <Table.ColumnHeader key={h} px="10px" py="8px" fontSize="14px" color="#64748B" fontWeight="bold" letterSpacing="0.05em">{h}</Table.ColumnHeader>
                                   ))}
                                 </Table.Row>
                               </Table.Header>
@@ -1262,24 +1518,24 @@ export default function NewPolicy() {
                                 {coassurances.map(ca => (
                                   <Table.Row key={ca._id} borderBottom="1px solid" borderColor="#F1F5F9">
                                     <Table.Cell px="10px" py="8px">
-                                      <Text fontSize="12px" color="#1C2833" fontWeight="medium">{ca.co_insurer_name}</Text>
+                                      <Text fontSize="14px" color="#1C2833" fontWeight="medium">{ca.co_insurer_name}</Text>
                                     </Table.Cell>
                                     <Table.Cell px="10px" py="8px">
                                       {ca.is_leader && (
-                                        <Box px="6px" py="1px" borderRadius="4px" bg="#DBEAFE" fontSize="10px" fontWeight="bold" color="#1D4ED8" display="inline-block">
+                                        <Box px="6px" py="1px" borderRadius="4px" bg="#DBEAFE" fontSize="14px" fontWeight="bold" color="#1D4ED8" display="inline-block">
                                           Leader
                                         </Box>
                                       )}
                                     </Table.Cell>
                                     <Table.Cell px="10px" py="8px">
-                                      <Text fontSize="12px" color="#1C2833">{ca.share_percent}%</Text>
+                                      <Text fontSize="14px" color="#1C2833">{ca.share_percent}%</Text>
                                     </Table.Cell>
                                     <Table.Cell px="10px" py="8px">
                                       <Flex gap="4px">
-                                        <IconButton size="xs" variant="ghost" color="#64748B" _hover={{ bg: "#EFF6FF", color: "#1D4ED8" }} aria-label="Edit" onClick={() => openEditCa(ca)}>
+                                        <IconButton size="xs" variant="ghost" color="#64748B" _hover={{ bg: "#EFF6FF", color: "#1D4ED8" }} aria-label="Ubah" onClick={() => openEditCa(ca)}>
                                           <LuPencil size={11} />
                                         </IconButton>
-                                        <IconButton size="xs" variant="ghost" color="#94A3B8" _hover={{ bg: "#FEF2F2", color: "#DC2626" }} aria-label="Hapus" onClick={() => deleteCa(ca._id)}>
+                                        <IconButton size="xs" variant="ghost" color="#64748B" _hover={{ bg: "#FEF2F2", color: "#DC2626" }} aria-label="Hapus" onClick={() => deleteCa(ca._id)}>
                                           <LuTrash2 size={11} />
                                         </IconButton>
                                       </Flex>
@@ -1293,7 +1549,7 @@ export default function NewPolicy() {
 
                         {coassurances.length === 0 && (
                           <Flex py="16px" align="center" justify="center">
-                            <Text color="#94A3B8" fontSize="12px">Belum ada ko-insurer. Klik &quot;Tambah Ko-Insurer&quot;.</Text>
+                            <Text color="#64748B" fontSize="14px">Belum ada ko-insurer. Klik &quot;Tambah Ko-Asuransi&quot;.</Text>
                           </Flex>
                         )}
                       </Box>
@@ -1306,7 +1562,7 @@ export default function NewPolicy() {
                       <FField label="Catatan Coverage">
                         <Textarea
                           bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                          fontSize="13px" color="#1C2833" rows={3}
+                          fontSize="15px" color="#1C2833" rows={3}
                           placeholder="Klausul khusus, pengecualian, ekstensi coverage..."
                           value={form.coverage_notes}
                           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => set("coverage_notes", e.target.value)}
@@ -1315,7 +1571,7 @@ export default function NewPolicy() {
                       <FField label="Catatan Internal">
                         <Textarea
                           bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                          fontSize="13px" color="#1C2833" rows={3}
+                          fontSize="15px" color="#1C2833" rows={3}
                           placeholder="Catatan untuk agen, tidak terlihat oleh nasabah..."
                           value={form.notes}
                           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => set("notes", e.target.value)}
@@ -1329,20 +1585,20 @@ export default function NewPolicy() {
               </Flex>
 
               {error && (
-                <Box px="14px" py="10px" borderRadius="8px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA">
-                  <Text fontSize="13px" color="#DC2626">{error}</Text>
+                <Box px="14px" py="10px" borderRadius="8px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA" role="alert">
+                  <Text fontSize="15px" color="#DC2626">{error}</Text>
                 </Box>
               )}
 
               <Flex gap="12px" justify="flex-end" pb="16px">
                 <Button
-                  variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px"
+                  variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px"
                   onClick={() => router.back()} type="button"
                 >
                   Batal
                 </Button>
                 <Button
-                  type="submit" bg="#1A3557" color="white" fontSize="13px" fontWeight="semibold"
+                  type="submit" bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold"
                   loading={submitting} _hover={{ bg: "#162C47" }}
                 >
                   Simpan Polis
@@ -1365,7 +1621,7 @@ export default function NewPolicy() {
           <Dialog.Content bg="white" borderRadius="16px" maxW="420px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
               <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
-                {editingCov ? "Edit Item Coverage" : "Tambah Item Coverage"}
+                {editingCov ? "Ubah Item Pertanggungan" : "Tambah Item Pertanggungan"}
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="16px">
@@ -1392,7 +1648,7 @@ export default function NewPolicy() {
 
                 <FField label="Uang Pertanggungan (IDR)" required>
                   <Input
-                    {...INPUT} h="44px" fontSize="15px"
+                    {...INPUT} h="44px" fontSize="16px"
                     inputMode="numeric"
                     placeholder="0"
                     value={covForm.sum_insured}
@@ -1416,8 +1672,8 @@ export default function NewPolicy() {
                       mt="4px" px="12px" py="6px" borderRadius="8px"
                       bg="#EFF6FF" align="center" justify="space-between"
                     >
-                      <Text fontSize="11px" color="#64748B">Preview Premi</Text>
-                      <Text fontSize="13px" fontWeight="bold" color="#1D4ED8">
+                      <Text fontSize="14px" color="#64748B">Preview Premi</Text>
+                      <Text fontSize="15px" fontWeight="bold" color="#1D4ED8">
                         Rp {covPreviewPremium.toLocaleString("id-ID")}
                       </Text>
                     </Flex>
@@ -1439,8 +1695,8 @@ export default function NewPolicy() {
                     {covForm.count_in_tsi && <Box w="8px" h="8px" borderRadius="2px" bg="white" />}
                   </Box>
                   <Flex flexDir="column">
-                    <Text fontSize="13px" color="#1C2833" fontWeight="medium">Hitung UP dalam Total TSI</Text>
-                    <Text fontSize="11px" color="#64748B">
+                    <Text fontSize="15px" color="#1C2833" fontWeight="medium">Hitung UP dalam Total TSI</Text>
+                    <Text fontSize="14px" color="#64748B">
                       {covForm.count_in_tsi
                         ? "UP item ini menambah total uang pertanggungan polis"
                         : "Premi tetap dihitung, tapi UP tidak dihitung ganda (misal: klausula RSMD, OTHERS)"}
@@ -1448,15 +1704,15 @@ export default function NewPolicy() {
                   </Flex>
                 </Flex>
 
-                {covError && <Text fontSize="12px" color="#DC2626">{covError}</Text>}
+                {covError && <Text fontSize="14px" color="#DC2626">{covError}</Text>}
 
               </Flex>
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px">Batal</Button>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#1A3557" color="white" fontSize="14px" onClick={saveCov}>
+              <Button flex="1" bg="#1A3557" color="white" fontSize="16px" onClick={saveCov}>
                 Simpan
               </Button>
             </Dialog.Footer>
@@ -1476,7 +1732,7 @@ export default function NewPolicy() {
               <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Hapus Item Coverage</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="16px">
-              <Text color="#64748B" fontSize="14px" lineHeight="1.6">
+              <Text color="#64748B" fontSize="16px" lineHeight="1.6">
                 Hapus{" "}
                 <Text as="strong" color="#1C2833">
                   {deletingCov
@@ -1488,9 +1744,9 @@ export default function NewPolicy() {
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px">Batal</Button>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#DC2626" color="white" fontSize="14px"
+              <Button flex="1" bg="#DC2626" color="white" fontSize="16px"
                 onClick={() => deletingCov && deleteCov(deletingCov)}>
                 Ya, Hapus
               </Button>
@@ -1509,7 +1765,7 @@ export default function NewPolicy() {
           <Dialog.Content bg="white" borderRadius="16px" maxW="440px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
               <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
-                {editingCa ? "Edit Ko-Insurer" : "Tambah Ko-Insurer"}
+                {editingCa ? "Ubah Ko-Asuransi" : "Tambah Ko-Asuransi"}
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="16px">
@@ -1582,20 +1838,20 @@ export default function NewPolicy() {
                     <Switch.Control />
                   </Switch.Root>
                   <Flex flexDir="column" gap="1px">
-                    <Text fontSize="13px" color="#1C2833" fontWeight="medium">Leader</Text>
-                    <Text fontSize="11px" color="#94A3B8">Tandai sebagai insurer leader</Text>
+                    <Text fontSize="15px" color="#1C2833" fontWeight="medium">Leader</Text>
+                    <Text fontSize="14px" color="#64748B">Tandai sebagai insurer leader</Text>
                   </Flex>
                 </Flex>
 
-                {caError && <Text fontSize="12px" color="#DC2626">{caError}</Text>}
+                {caError && <Text fontSize="14px" color="#DC2626">{caError}</Text>}
 
               </Flex>
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px">Batal</Button>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#1A3557" color="white" fontSize="14px" onClick={saveCa}>
+              <Button flex="1" bg="#1A3557" color="white" fontSize="16px" onClick={saveCa}>
                 Simpan
               </Button>
             </Dialog.Footer>
