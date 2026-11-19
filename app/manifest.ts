@@ -3,10 +3,10 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Agentra – CRM Asuransi untuk Agen Indonesia",
+    name: "Agentra – CRM Asuransi untuk Agen Asuransi Umum",
     short_name: "Agentra",
     description:
-      "Kelola polis, pantau renewal, kirim notifikasi WhatsApp, dan lihat komisi secara transparan dalam satu platform CRM asuransi.",
+      "CRM asuransi untuk agen asuransi umum: kelola polis dan nasabah, pantau renewal, kirim pengingat via WhatsApp, dan lacak komisi.",
     lang: "id",
     start_url: "/agentra/dashboard",
     scope: "/",

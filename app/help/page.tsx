@@ -1,11 +1,12 @@
 import type { Metadata } from "next"
 import { Box, Text, Heading, VStack } from "@chakra-ui/react"
 import Link from "next/link"
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, SUPPORT_WHATSAPP_URL } from "../seo"
 
 export const metadata: Metadata = {
   title: "Pusat Bantuan & Panduan Memulai",
   description:
-    "Panduan memulai Agentra: daftar akun gratis, tambahkan nasabah pertama, dan kelola polis asuransi dalam hitungan menit. Butuh bantuan? Hubungi tim support kami.",
+    "Panduan Agentra untuk agen asuransi umum: tambah nasabah, catat polis, pantau renewal lewat WhatsApp, dan lihat komisi. Butuh bantuan? Hubungi kami.",
   alternates: {
     canonical: "/help",
   },
@@ -73,8 +74,13 @@ export default function HelpPage() {
           Butuh Bantuan Lebih Lanjut?
         </Heading>
         <Text fontSize="18px" color="gray.700" lineHeight="1.75">
-          Kirim email ke halo@agentra.id, atau tekan tombol hijau Butuh Bantuan di dalam aplikasi untuk
-          bertanya lewat WhatsApp.
+          Kirim email ke {SUPPORT_EMAIL}, kirim pesan WhatsApp ke{" "}
+          <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#3B82F6" }}>
+            {SUPPORT_WHATSAPP_DISPLAY}
+          </a>
+          , atau lihat halaman <Link href="/contact" style={{ color: "#3B82F6" }}>Hubungi Kami</Link>.
+          Belum punya akun?{" "}
+          <Link href="/register" style={{ color: "#3B82F6" }}>Daftar Agentra</Link>.
         </Text>
       </VStack>
     </Box>

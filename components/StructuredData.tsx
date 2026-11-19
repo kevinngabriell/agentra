@@ -1,5 +1,15 @@
 import { getPlans, type Plan } from "@/lib/plans/plans"
-import { HOME_DESCRIPTION, SITE_NAME, SITE_URL, SUPPORT_EMAIL } from "@/app/seo"
+import {
+  HOME_DESCRIPTION,
+  PARENT_NAME,
+  PARENT_URL,
+  SITE_NAME,
+  SITE_URL,
+  SUPPORT_EMAIL,
+  SUPPORT_WHATSAPP_E164,
+  SUPPORT_WHATSAPP_URL,
+} from "@/app/seo"
+import { FAQ_ITEMS } from "@/components/FaqSection"
 
 // Server Component: renders schema.org JSON-LD for the landing page.
 // Offers come from the same plans API the pricing section uses; if it is unavailable the
@@ -55,13 +65,30 @@ export async function StructuredData() {
         url: SITE_URL,
         logo: `${SITE_URL}/icons/icon-512.png`,
         email: SUPPORT_EMAIL,
-        contactPoint: {
-          "@type": "ContactPoint",
-          contactType: "customer support",
-          email: SUPPORT_EMAIL,
-          availableLanguage: ["Indonesian"],
-          areaServed: "ID",
+        telephone: SUPPORT_WHATSAPP_E164,
+        // Agentra is a product of Movira.
+        parentOrganization: {
+          "@type": "Organization",
+          name: PARENT_NAME,
+          url: PARENT_URL,
         },
+        contactPoint: [
+          {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            email: SUPPORT_EMAIL,
+            availableLanguage: ["Indonesian"],
+            areaServed: "ID",
+          },
+          {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            telephone: SUPPORT_WHATSAPP_E164,
+            url: SUPPORT_WHATSAPP_URL,
+            availableLanguage: ["Indonesian"],
+            areaServed: "ID",
+          },
+        ],
       },
       {
         "@type": "WebSite",
@@ -81,14 +108,34 @@ export async function StructuredData() {
         operatingSystem: "Web",
         inLanguage: "id-ID",
         publisher: { "@id": ORGANIZATION_ID },
+        brand: { "@type": "Brand", name: PARENT_NAME, url: PARENT_URL },
+        audience: {
+          "@type": "Audience",
+          audienceType: "Agen asuransi umum independen",
+          geographicArea: { "@type": "Country", name: "Indonesia" },
+        },
         featureList: [
-          "Manajemen polis dan nasabah",
+          "Manajemen polis dan nasabah (perorangan dan badan usaha)",
+          "Polis asuransi umum: kebakaran, kendaraan, cargo, perjalanan, kecelakaan",
+          "Koasuransi dengan porsi tiap penanggung",
           "Pengingat renewal dan jatuh tempo polis",
-          "Notifikasi WhatsApp ke nasabah",
+          "Pesan WhatsApp untuk renewal dan ringkasan harian dan bulanan",
           "Pelacakan komisi",
-          "Manajemen sub-agen",
+          "Manajemen sub-agen dengan pembagian komisi",
+          "Calon nasabah dan penawaran dari beberapa penanggung",
         ],
         ...(offers.length > 0 ? { offers } : {}),
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${SITE_URL}/#faq`,
+        url: `${SITE_URL}/#faq`,
+        inLanguage: "id-ID",
+        mainEntity: FAQ_ITEMS.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+        })),
       },
     ],
   }

@@ -1,23 +1,43 @@
-import { Box, Flex, VStack, Grid, Text, Heading } from "@chakra-ui/react"
+import { Box, Flex, VStack, HStack, Grid, Text, Heading } from "@chakra-ui/react"
+import Link from "next/link"
 
+// Every card describes something the app does today (see docs/APPLICATION_OVERVIEW.md).
 const features = [
   {
     icon: "🔔",
-    title: "Pengingat Perpanjangan Polis Otomatis",
+    title: "Pengingat Renewal Polis",
     description:
-      "Pantau semua polis yang akan jatuh tempo secara real-time. Dapatkan notifikasi otomatis sebelum polis kedaluwarsa sehingga tidak ada renewal yang terlewat.",
+      "Polis dikelompokkan berdasarkan kedekatan tanggal jatuh tempo, sehingga Anda tahu mana yang perlu ditindaklanjuti hari ini. Batas hari pengingat bisa Anda atur sendiri.",
   },
   {
     icon: "💬",
-    title: "Notifikasi WhatsApp ke Nasabah",
+    title: "Pesan WhatsApp untuk Renewal",
     description:
-      "Kirim laporan dan pengingat renewal langsung ke WhatsApp nasabah secara otomatis. Hemat waktu dan tingkatkan respons nasabah tanpa keluar dari platform.",
+      "Kirim pesan renewal ke nasabah lewat WhatsApp langsung dari daftar renewal, dengan template yang bisa diubah. Ringkasan harian dan bulanan juga dapat dikirim ke WhatsApp Anda.",
   },
   {
     icon: "💰",
-    title: "Pelacakan & Transparansi Komisi",
+    title: "Pelacakan Komisi",
     description:
-      "Lihat rincian komisi setiap polis secara transparan dan akurat. Rekam jejak pembayaran komisi tersedia kapan saja sehingga Anda selalu tahu penghasilan Anda.",
+      "Setiap polis menghasilkan catatan komisi dengan status pending, diterima, atau selisih. Catat jumlah yang benar-benar diterima agar perbedaannya terlihat.",
+  },
+  {
+    icon: "🏢",
+    title: "Polis Asuransi Umum dan Koasuransi",
+    description:
+      "Catat polis kebakaran, kendaraan, cargo, perjalanan, dan kecelakaan beserta item pertanggungannya, termasuk porsi tiap penanggung pada koasuransi.",
+  },
+  {
+    icon: "👥",
+    title: "Manajemen Sub-Agen",
+    description:
+      "Kelola sub-agen, lihat nasabah dan polis yang mereka bawa, lalu atur pembagian komisinya.",
+  },
+  {
+    icon: "📋",
+    title: "Calon Nasabah dan Penawaran",
+    description:
+      "Catat calon nasabah dan bandingkan penawaran dari beberapa perusahaan asuransi dalam satu tampilan, lalu kirim lewat WhatsApp.",
   },
 ]
 
@@ -40,14 +60,15 @@ export function FeaturesSection() {
             textTransform="uppercase"
             letterSpacing="wide"
           >
-            Fitur Unggulan
+            Fitur
           </Text>
           <Heading as="h2" fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="#0D1B3E">
-            Semua yang Dibutuhkan Agen Asuransi dalam Satu Platform
+            Fitur CRM untuk Agen Asuransi Umum
           </Heading>
           <Text fontSize="md" color="gray.500" lineHeight="1.75">
-            Agentra dirancang khusus untuk agen asuransi Indonesia, dari manajemen polis dan nasabah
-            hingga tim sub-agen, agar bisnis Anda tumbuh lebih cepat dengan lebih sedikit kerja manual.
+            Agentra dirancang untuk agen asuransi umum di Indonesia, dari polis dan nasabah
+            (perorangan maupun badan usaha) sampai tim sub-agen. Agentra tidak ditujukan untuk
+            asuransi jiwa.
           </Text>
         </VStack>
 
@@ -91,6 +112,20 @@ export function FeaturesSection() {
             </Box>
           ))}
         </Grid>
+
+        {/* Internal links to the next steps */}
+        <HStack gap={6} flexWrap="wrap" justify="center">
+          <Link href="/help">
+            <Text as="span" color="#3B82F6" fontWeight="medium" _hover={{ textDecoration: "underline" }}>
+              Lihat panduan penggunaan di Pusat Bantuan
+            </Text>
+          </Link>
+          <Link href="/register">
+            <Text as="span" color="#3B82F6" fontWeight="medium" _hover={{ textDecoration: "underline" }}>
+              Daftar dan coba Agentra
+            </Text>
+          </Link>
+        </HStack>
       </VStack>
     </Box>
   )

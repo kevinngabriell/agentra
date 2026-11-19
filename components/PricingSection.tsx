@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Box, Flex, VStack, HStack, Grid, Button, Text, Heading, Badge, Skeleton, SkeletonText } from "@chakra-ui/react"
+import { Box, Flex, VStack, HStack, Grid, Button, Text, Heading, Skeleton, SkeletonText } from "@chakra-ui/react"
 import Link from "next/link"
 import { getPlans, formatPlanPrice, formatBillingCycle, type Plan } from "@/lib/plans/plans"
 
@@ -41,7 +41,8 @@ export function PricingSection() {
             Pilih Paket CRM Asuransi yang Tepat untuk Anda
           </Heading>
           <Text fontSize="md" color="gray.500" lineHeight="1.75">
-            Mulai gratis, upgrade kapan saja. Tidak ada biaya tersembunyi.
+            Harga dan fitur setiap paket ditampilkan langsung dari sistem Agentra, jadi selalu sama
+            dengan yang berlaku saat Anda mendaftar.
           </Text>
         </VStack>
 
@@ -97,25 +98,7 @@ export function PricingSection() {
                   position="relative"
                   boxShadow={highlighted ? "0 20px 60px rgba(13,27,62,0.3)" : "none"}
                 >
-                  {highlighted && (
-                    <Badge
-                      position="absolute"
-                      top="-14px"
-                      left="50%"
-                      transform="translateX(-50%)"
-                      bg="#3B82F6"
-                      color="white"
-                      px={4}
-                      py={1.5}
-                      borderRadius="full"
-                      fontSize="sm"
-                      fontWeight="semibold"
-                      whiteSpace="nowrap"
-                    >
-                      Paling Populer
-                    </Badge>
-                  )}
-
+                  {/* No "most popular" badge: there is no data to back that claim. */}
                   <VStack align="flex-start" gap={6}>
                     {/* Plan name & description */}
                     <VStack align="flex-start" gap={2}>
@@ -206,10 +189,10 @@ export function PricingSection() {
 
         {/* Bottom note */}
         <Text fontSize="sm" color="gray.400" textAlign="center">
-          Semua paket sudah termasuk enkripsi data & kepatuhan regulasi OJK. Pertanyaan?{" "}
+          Ada pertanyaan soal paket atau cara memulai?{" "}
           <Link href="/contact">
             <Text as="span" color="#3B82F6" fontWeight="medium" _hover={{ textDecoration: "underline" }}>
-              Hubungi tim kami.
+              Hubungi kami lewat halaman kontak.
             </Text>
           </Link>
         </Text>

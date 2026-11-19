@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Provider } from "../components/ui/provider";
 import { LanguageProvider } from "../contexts/language";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL } from "./seo";
+import { HOME_DESCRIPTION, HOME_TITLE, PARENT_NAME, SITE_NAME, SITE_URL } from "./seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,20 +24,27 @@ export const metadata: Metadata = {
   description: HOME_DESCRIPTION,
   keywords: [
     "CRM asuransi",
+    "CRM agen asuransi umum",
     "aplikasi agen asuransi",
     "aplikasi CRM agen asuransi",
     "software agen asuransi",
+    "asuransi umum",
     "pengingat renewal polis",
     "pengingat jatuh tempo polis",
     "manajemen polis asuransi",
+    "polis kebakaran",
+    "polis kendaraan",
+    "polis cargo",
+    "koasuransi",
     "notifikasi WhatsApp nasabah",
+    "software komisi agen asuransi",
     "komisi agen asuransi",
     "manajemen sub-agen",
   ],
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME, url: SITE_URL }],
-  creator: SITE_NAME,
-  publisher: SITE_NAME,
+  creator: PARENT_NAME,
+  publisher: PARENT_NAME,
   category: "business",
   // Every public page overrides this with its own canonical. Do not rely on it for new pages.
   alternates: {

@@ -3,7 +3,7 @@ import { SITE_URL } from "./seo";
 
 // Root OG image: inherited by every route that doesn't define its own. Twitter/X reuses it
 // automatically (Next copies openGraph images into twitter:image), so no twitter-image file.
-export const alt = "Agentra – Aplikasi CRM Asuransi untuk Agen Indonesia";
+export const alt = "Agentra – Aplikasi CRM Asuransi untuk Agen Asuransi Umum";
 export const size = {
   width: 1200,
   height: 630,
@@ -54,10 +54,10 @@ export default function Image() {
         {/* Headline */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", fontSize: 68, fontWeight: 700, lineHeight: 1.1, maxWidth: 980 }}>
-            Aplikasi CRM Asuransi untuk Agen Indonesia
+            Aplikasi CRM Asuransi untuk Agen Asuransi Umum
           </div>
           <div style={{ display: "flex", fontSize: 30, color: MUTED, lineHeight: 1.4, maxWidth: 940 }}>
-            Kelola polis dan nasabah, pengingat renewal, notifikasi WhatsApp, dan komisi dalam satu platform.
+            Polis, koasuransi, pengingat renewal via WhatsApp, dan komisi dalam satu tempat.
           </div>
         </div>
 

@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation"
 const footerLinks = [
   { label: "Fitur", href: "/#features" },
   { label: "Harga", href: "/#pricing" },
+  { label: "Tanya Jawab", href: "/#faq" },
   { label: "Bantuan", href: "/help" },
   { label: "Kontak", href: "/contact" },
   { label: "Kebijakan Privasi", href: "/privacy" },
@@ -94,7 +95,7 @@ export function Footer() {
               Agentra
             </Text>
             <Text fontSize="sm" color="gray.400">
-              © {new Date().getFullYear()} Agentra. Solusi CRM Asuransi Terpercaya.
+              © {new Date().getFullYear()} Agentra. CRM untuk agen asuransi umum, dibuat oleh Movira.
             </Text>
           </VStack>
 
@@ -149,7 +150,7 @@ export function Footer() {
               color="gray.500"
               _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
             >
-              <a href="https://agentra.id" target="_blank" rel="noopener noreferrer" aria-label="Website Agentra (agentra.id)">
+              <a href="https://getmovira.com/agentra" target="_blank" rel="noopener noreferrer" aria-label="Agentra di situs Movira (getmovira.com)">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="2" y1="12" x2="22" y2="12" />
@@ -169,7 +170,7 @@ export function Footer() {
               color="gray.500"
               _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
             >
-              <a href="mailto:halo@agentra.id" aria-label="Kirim email ke halo@agentra.id">
+              <a href="mailto:kevin@getmovira.com" aria-label="Kirim email ke kevin@getmovira.com">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />

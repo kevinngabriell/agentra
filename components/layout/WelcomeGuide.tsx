@@ -10,7 +10,7 @@ const STEPS = [
   { title: "1. Catat nasabah", body: "Buka menu Nasabah di sebelah kiri (atau tombol Nasabah di bawah pada HP), lalu tekan Tambah Nasabah dan isi datanya." },
   { title: "2. Catat polis", body: "Buka menu Polis, tekan Tambah Polis, lalu ikuti langkah-langkahnya. Kolom bertanda * wajib diisi." },
   { title: "3. Perpanjangan polis", body: "Buka menu Perpanjangan Polis untuk melihat polis yang akan habis. Tekan WhatsApp untuk menghubungi nasabah." },
-  { title: "Butuh bantuan?", body: "Tekan tombol hijau Butuh Bantuan di pojok kanan bawah kapan saja. Langkah lengkap setiap pekerjaan ada di halaman Bantuan (agentra.id/help)." },
+  { title: "Butuh bantuan?", body: "Tekan tombol hijau Butuh Bantuan di pojok kanan bawah kapan saja. Langkah lengkap setiap pekerjaan ada di halaman Bantuan (agentra.getmovira.com/help)." },
 ]
 
 function readDone() {

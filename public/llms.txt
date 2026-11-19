@@ -1,0 +1,38 @@
+# Agentra
+
+> Agentra adalah CRM berbasis web untuk agen asuransi umum independen di Indonesia. Agentra membantu mencatat nasabah dan polis, memantau renewal, mengirim pesan WhatsApp, dan melacak komisi, sebagai pengganti berkas kertas dan spreadsheet. Agentra tidak ditujukan untuk asuransi jiwa.
+
+Agentra dibuat oleh Movira (https://getmovira.com), software house di Tangerang. Saat ini Agentra dipakai oleh seorang agen asuransi umum. Antarmuka dalam bahasa Indonesia.
+
+## Untuk siapa
+
+Agen asuransi umum (general insurance) di Indonesia yang mengelola banyak polis dengan tanggal jatuh tempo berbeda, bekerja dengan lebih dari satu perusahaan asuransi, dan perlu merekonsiliasi komisi.
+
+## Fitur
+
+- Nasabah perorangan (NIK) dan badan usaha (NPWP, dengan kontak PIC)
+- Polis asuransi umum: kebakaran, kendaraan (mobil dan motor), perjalanan, cargo, kecelakaan, AEP, dan lainnya, dengan item pertanggungan
+- Koasuransi: beberapa penanggung dengan porsi masing-masing
+- Renewal dikelompokkan menurut kedekatan jatuh tempo, dengan pesan renewal lewat WhatsApp
+- Ringkasan harian dan bulanan lewat WhatsApp (pengaturan di aplikasi)
+- Pelacakan komisi: status pending, diterima, atau selisih
+- Manajemen sub-agen dengan pembagian komisi
+- Calon nasabah dan penawaran dari beberapa perusahaan asuransi
+- Laporan produksi bulanan
+
+Harga dan paket tidak dicantumkan di file ini. Paket yang berlaku ditampilkan di bagian Harga pada halaman utama.
+
+## Tautan
+
+- [Beranda: fitur, harga, tanya jawab](https://agentra.getmovira.com/)
+- [Daftar akun](https://agentra.getmovira.com/register)
+- [Pusat Bantuan: panduan penggunaan](https://agentra.getmovira.com/help)
+- [Hubungi kami](https://agentra.getmovira.com/contact)
+- [Kebijakan Privasi](https://agentra.getmovira.com/privacy)
+- [Syarat dan Ketentuan](https://agentra.getmovira.com/terms)
+- [Agentra di situs Movira](https://getmovira.com/agentra)
+
+## Kontak
+
+- Email: kevin@getmovira.com
+- WhatsApp: +62 811-4411-307 (https://wa.me/628114411307)
