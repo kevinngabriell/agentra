@@ -1,6 +1,14 @@
 import { Box, Flex, VStack, HStack, Button, Text, Heading, Badge } from "@chakra-ui/react"
 import Link from "next/link"
 
+// Feature-based facts (verified against the app), not usage statistics.
+const heroFacts = [
+  { value: "WhatsApp", label: "Pengingat renewal dan ringkasan harian" },
+  { value: "Koasuransi", label: "Beberapa penanggung dan porsinya" },
+  { value: "Komisi", label: "Pending, diterima, atau ada selisih" },
+  { value: "Sub-agen", label: "Pembagian komisi per sub-agen" },
+]
+
 function DashboardMockup() {
   const rows = [
     { name: "Budi Santoso", policy: "PA-2024-001", due: "30 Apr", status: "Jatuh Tempo" },
@@ -12,7 +20,7 @@ function DashboardMockup() {
   return (
     <Box
       role="img"
-      aria-label="Contoh tampilan dashboard renewal Agentra: total polis, polis jatuh tempo, dan komisi bulan ini"
+      aria-label="Contoh tampilan dashboard renewal Agentra dengan data ilustrasi: total polis, polis jatuh tempo, dan komisi bulan ini"
       w="100%"
       maxW="520px"
       bg="#1a2f5c"
@@ -27,7 +35,7 @@ function DashboardMockup() {
           Dashboard Renewal
         </Text>
         <Box bg="#3B82F6" px={3} py={1} borderRadius="md">
-          <Text color="white" fontSize="sm" fontWeight="bold">Live</Text>
+          <Text color="white" fontSize="sm" fontWeight="bold">Contoh</Text>
         </Box>
       </HStack>
 
@@ -89,7 +97,7 @@ function DashboardMockup() {
 
       {/* Footer note */}
       <Text color="gray.500" fontSize="14px" textAlign="center" mt={3}>
-        Disbursement · Safe to work
+        Contoh tampilan · data hanya ilustrasi
       </Text>
     </Box>
   )
@@ -116,7 +124,7 @@ export function HeroSection() {
             fontSize="sm"
             border="1px solid rgba(255,255,255,0.12)"
           >
-            ✦ Solusi Digital No. 1 Indonesia
+            ✦ Dibuat khusus untuk agen asuransi umum
           </Badge>
 
           <Heading
@@ -126,7 +134,7 @@ export function HeroSection() {
             color="white"
             lineHeight="1.15"
           >
-            CRM Asuransi untuk Agen: Kelola Bisnis Lebih Cerdas dengan Agentra
+            CRM Asuransi untuk Agen Asuransi Umum: Polis, Renewal, Komisi
           </Heading>
 
           <Text
@@ -135,8 +143,9 @@ export function HeroSection() {
             lineHeight="1.75"
             maxW="480px"
           >
-            Aplikasi agen asuransi terintegrasi untuk pengingat renewal polis yang jatuh tempo,
-            notifikasi WhatsApp ke nasabah, dan transparansi komisi dalam satu platform yang aman.
+            Aplikasi agen asuransi untuk mencatat polis dan koasuransi, memantau renewal yang
+            jatuh tempo, mengirim pengingat lewat WhatsApp, dan melacak komisi per polis dalam
+            satu tempat.
           </Text>
 
           <HStack gap={4} flexWrap="wrap">
@@ -168,44 +177,19 @@ export function HeroSection() {
             </Button>
           </HStack>
 
-          {/* Social proof */}
-          <HStack gap={3} pt={2}>
-            <HStack gap={0}>
-              {["#94A3B8", "#64748B", "#475569"].map((color, i) => (
-                <Box
-                  key={i}
-                  w={9}
-                  h={9}
-                  borderRadius="full"
-                  bg={color}
-                  border="2px solid #0D1B3E"
-                  ml={i > 0 ? "-10px" : 0}
-                  position="relative"
-                  zIndex={3 - i}
-                />
-              ))}
-            </HStack>
-            <Text fontSize="sm" color="gray.400">
-              Bergabung dengan{" "}
-              <Text as="span" color="white" fontWeight="semibold">
-                500+ agen asuransi
-              </Text>{" "}
-              terkemuka.
-            </Text>
-          </HStack>
+          {/* Honest provenance line: no customer counts or ratings are claimed. */}
+          <Text fontSize="sm" color="gray.400" pt={2} maxW="480px">
+            Dibangun untuk agen asuransi umum dan sudah dipakai oleh seorang agen asuransi umum.
+          </Text>
 
-          {/* Stats */}
+          {/* Product facts (mobile) */}
           <HStack gap={8} pt={4} display={{ base: "flex", lg: "none" }}>
-            <VStack align="flex-start" gap={0}>
-              <HStack gap={1} align="baseline">
-                <Text fontSize="2xl" fontWeight="bold" color="white">5rb+</Text>
-              </HStack>
-              <Text fontSize="sm" color="gray.400">Agen Aktif</Text>
-            </VStack>
-            <VStack align="flex-start" gap={0}>
-              <Text fontSize="2xl" fontWeight="bold" color="white">99%</Text>
-              <Text fontSize="sm" color="gray.400">Tingkat Retensi</Text>
-            </VStack>
+            {heroFacts.slice(0, 2).map((fact) => (
+              <VStack key={fact.value} align="flex-start" gap={0}>
+                <Text fontSize="2xl" fontWeight="bold" color="white">{fact.value}</Text>
+                <Text fontSize="sm" color="gray.400">{fact.label}</Text>
+              </VStack>
+            ))}
           </HStack>
         </VStack>
 
@@ -230,12 +214,7 @@ export function HeroSection() {
         borderTop="1px solid rgba(255,255,255,0.08)"
         pt={10}
       >
-        {[
-          { value: "5rb+", label: "Agen Aktif" },
-          { value: "99%", label: "Tingkat Retensi" },
-          { value: "500+", label: "Perusahaan Asuransi" },
-          { value: "< 3 dtk", label: "Waktu Muat Halaman" },
-        ].map((stat) => (
+        {heroFacts.map((stat) => (
           <VStack key={stat.label} align="flex-start" gap={0} flex={1}>
             <Text fontSize="3xl" fontWeight="bold" color="white">{stat.value}</Text>
             <Text fontSize="sm" color="gray.400">{stat.label}</Text>

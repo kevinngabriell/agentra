@@ -43,6 +43,26 @@ export function Header() {
               Harga
             </Text>
           </Link>
+          <Link href="/#faq">
+            <Text
+              fontSize="sm"
+              fontWeight="medium"
+              color="gray.600"
+              _hover={{ color: "gray.900" }}
+            >
+              Tanya Jawab
+            </Text>
+          </Link>
+          <Link href="/help">
+            <Text
+              fontSize="sm"
+              fontWeight="medium"
+              color="gray.600"
+              _hover={{ color: "gray.900" }}
+            >
+              Bantuan
+            </Text>
+          </Link>
         </HStack>
 
         {/* CTA Buttons */}

@@ -7,7 +7,7 @@ import { Header } from "../../components/Header"
 import { ErrorAlert } from "@/components/ui/error-alert"
 import { SearchSelect } from "@/components/ui/search-select"
 import { FaShieldAlt } from "react-icons/fa"
-import { FiAward, FiCheck, FiEye, FiEyeOff, FiLock, FiShield, FiZap, FiMessageCircle } from "react-icons/fi"
+import { FiCheck, FiEye, FiEyeOff, FiLock, FiShield, FiZap, FiMessageCircle } from "react-icons/fi"
 import { MdSupportAgent } from "react-icons/md"
 import { RegisterAgent } from "@/lib/auth/auth"
 import { getWilayahProvinces, getWilayahCities, type ApiWilayahProvince, type ApiWilayahCity } from "@/lib/api/master-wilayah"
@@ -64,8 +64,8 @@ function TrustIndicators() {
           <FaShieldAlt size={16} color="#10B981" />
         </Flex>
         <Flex flexDir="column">
-          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Terverifikasi</Text>
-          <Text color="#5D6D7E" fontSize="12px">Sistem aman &amp; terpercaya</Text>
+          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Dibuat oleh Movira</Text>
+          <Text color="#5D6D7E" fontSize="12px">Software house di Tangerang</Text>
         </Flex>
       </Flex>
 
@@ -81,8 +81,8 @@ function TrustIndicators() {
           <MdSupportAgent size={18} color="#F97316" />
         </Flex>
         <Flex flexDir="column">
-          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Bantuan 24/7</Text>
-          <Text color="#5D6D7E" fontSize="12px">Siap membantu pendaftaran</Text>
+          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Bantuan via WhatsApp</Text>
+          <Text color="#5D6D7E" fontSize="12px">Tanya langsung saat mendaftar</Text>
         </Flex>
       </Flex>
 
@@ -98,8 +98,8 @@ function TrustIndicators() {
           <FiZap size={16} color="#3B82F6" />
         </Flex>
         <Flex flexDir="column">
-          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">Proses Cepat</Text>
-          <Text color="#5D6D7E" fontSize="12px">Akun aktif dalam 5 menit</Text>
+          <Text color="#1C2833" fontSize="13px" fontWeight="semibold">3 Langkah</Text>
+          <Text color="#5D6D7E" fontSize="12px">Akun, profil, lalu pilih paket</Text>
         </Flex>
       </Flex>
     </Flex>
@@ -143,10 +143,10 @@ function FeatureCards() {
         </Box>
         <Box position="relative" zIndex={1}>
           <Text fontWeight="bold" fontSize="16px" color="white" mb="4px">
-            Dashboard Canggih
+            Dashboard Polis
           </Text>
           <Text fontSize="12px" color="rgba(255,255,255,0.75)">
-            Kelola semua polis dan nasabah dalam satu tampilan intuitif.
+            Lihat polis, nasabah, dan renewal yang perlu ditindaklanjuti dalam satu tampilan.
           </Text>
         </Box>
       </Box>
@@ -174,10 +174,10 @@ function FeatureCards() {
         </Flex>
         <Box>
           <Text fontWeight="bold" fontSize="15px" color="#0D1B3E" mb="6px">
-            Komisi Cepat
+            Catatan Komisi
           </Text>
           <Text fontSize="13px" color="#5D6D7E" lineHeight="1.6">
-            Pantau pendapatan real-time setiap transaksi berhasil.
+            Pantau komisi per polis: pending, diterima, atau ada selisih.
           </Text>
         </Box>
       </Box>
@@ -205,10 +205,10 @@ function FeatureCards() {
         </Flex>
         <Box>
           <Text fontWeight="bold" fontSize="15px" color="#0D1B3E" mb="6px">
-            Integrasi WA
+            Pesan WhatsApp
           </Text>
           <Text fontSize="13px" color="#5D6D7E" lineHeight="1.6">
-            Follow-up otomatis ke nasabah via WhatsApp resmi.
+            Kirim pesan renewal ke nasabah lewat WhatsApp dari daftar renewal.
           </Text>
         </Box>
       </Box>
@@ -267,7 +267,7 @@ function Step2Form({
     <Card.Root boxShadow="sm" border="1px solid" borderColor="#E5E7EB">
       <Card.Body gap="0" p="32px">
         <Flex gap="8px" flexDir="column" mb="28px">
-          <Heading color="#001F40" fontWeight="bold" fontSize="22px">
+          <Heading as="h1" color="#001F40" fontWeight="bold" fontSize="22px">
             Lengkapi Profil Agen
           </Heading>
           <Text color="#5D6D7E" fontSize="14px">
@@ -373,8 +373,8 @@ function Step2TrustIndicators() {
         <Text fontSize="12px" color="#5D6D7E">Data Terenkripsi</Text>
       </Flex>
       <Flex gap="8px" align="center">
-        <FiAward size={14} color="#5D6D7E" />
-        <Text fontSize="12px" color="#5D6D7E">Berlisensi AAJI/AAUI</Text>
+        <FiShield size={14} color="#5D6D7E" />
+        <Text fontSize="12px" color="#5D6D7E">Dibuat oleh Movira</Text>
       </Flex>
     </Flex>
   )
@@ -401,7 +401,7 @@ function Step3Form({
   return (
     <>
       <Flex flexDir="column" align="center" textAlign="center" mb="32px">
-        <Heading color="#001F40" fontWeight="bold" fontSize="26px" mb="8px">
+        <Heading as="h1" color="#001F40" fontWeight="bold" fontSize="26px" mb="8px">
           Pilih Paket Langganan Anda
         </Heading>
         <Text color="#5D6D7E" fontSize="14px">
@@ -445,26 +445,7 @@ function Step3Form({
                 _hover={{ borderColor: "#0D1B3E", boxShadow: "sm" }}
                 transition="all 0.2s"
               >
-                {isFeatured && (
-                  <Box
-                    position="absolute"
-                    top="-13px"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    bg="#0D1B3E"
-                    color="white"
-                    px="14px"
-                    py="3px"
-                    borderRadius="full"
-                    fontSize="10px"
-                    fontWeight="bold"
-                    letterSpacing="0.06em"
-                    whiteSpace="nowrap"
-                  >
-                    TERPOPULER
-                  </Box>
-                )}
-
+                {/* No "TERPOPULER" label: there is no data to back that claim. */}
                 <Text fontWeight="bold" fontSize="16px" color="#0D1B3E" mb="2px">
                   {plan.name}
                 </Text>
@@ -544,7 +525,7 @@ function PageFooter() {
             Agentra
           </Text>
           <Text fontSize="13px" color="#5D6D7E" lineHeight="1.75" maxW="240px">
-            Platform digital terbaik untuk para agen asuransi profesional di Indonesia.
+            CRM untuk agen asuransi umum di Indonesia, dibuat oleh Movira.
           </Text>
         </Box>
 
@@ -575,7 +556,7 @@ function PageFooter() {
             Hubungi Kami
           </Text>
           <Text fontSize="13px" color="#5D6D7E" mb="16px">
-            halo@agentra.id
+            kevin@getmovira.com
           </Text>
           <Flex gap="8px">
             <Button
@@ -590,7 +571,7 @@ function PageFooter() {
               color="#5D6D7E"
               _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
             >
-              <a href="https://agentra.id" target="_blank" rel="noopener noreferrer" aria-label="Website">
+              <a href="https://getmovira.com/agentra" target="_blank" rel="noopener noreferrer" aria-label="Agentra di situs Movira">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="2" y1="12" x2="22" y2="12" />
@@ -610,7 +591,7 @@ function PageFooter() {
               color="#5D6D7E"
               _hover={{ borderColor: "#0D1B3E", color: "#0D1B3E" }}
             >
-              <a href="mailto:halo@agentra.id" aria-label="Email">
+              <a href="mailto:kevin@getmovira.com" aria-label="Kirim email ke kevin@getmovira.com">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
@@ -767,11 +748,11 @@ export default function Register() {
               <Card.Root boxShadow="sm" border="1px solid" borderColor="#E5E7EB">
                 <Card.Body gap="0" p="32px">
                   <Flex gap="8px" flexDir="column" mb="28px">
-                    <Heading color="#001F40" fontWeight="bold" fontSize="22px">
-                      Detail Akun
+                    <Heading as="h1" color="#001F40" fontWeight="bold" fontSize="22px">
+                      Daftar Akun Agentra
                     </Heading>
                     <Text color="#5D6D7E" fontSize="14px">
-                      Silakan lengkapi informasi dasar untuk memulai pendaftaran agen Anda.
+                      Lengkapi detail akun untuk memulai CRM asuransi umum Anda. Pendaftaran dilakukan dalam tiga langkah.
                     </Text>
                   </Flex>
 

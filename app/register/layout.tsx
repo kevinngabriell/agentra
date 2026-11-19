@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Daftar Gratis – Mulai Kelola Polis & Nasabah",
   description:
-    "Buat akun Agentra gratis dalam hitungan menit. Kelola polis dan nasabah, aktifkan pengingat renewal, dan kirim notifikasi WhatsApp dari satu dasbor.",
+    "Buat akun Agentra, CRM untuk agen asuransi umum. Kelola polis dan nasabah, pantau renewal, kirim pesan WhatsApp, dan lacak komisi dari satu dasbor.",
   alternates: {
     canonical: "/register",
   },

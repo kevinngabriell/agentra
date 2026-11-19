@@ -3,6 +3,7 @@ import { Header } from "../components/Header"
 import { HeroSection } from "../components/HeroSection"
 import { FeaturesSection } from "../components/FeaturesSection"
 import { PricingSection } from "../components/PricingSection"
+import { FaqSection } from "../components/FaqSection"
 import { Footer } from "../components/Footer"
 import { StructuredData } from "../components/StructuredData"
 import { HOME_DESCRIPTION, HOME_TITLE } from "./seo"
@@ -36,6 +37,7 @@ export default function Home() {
         <HeroSection />
         <FeaturesSection />
         <PricingSection />
+        <FaqSection />
       </main>
       <Footer />
     </>
