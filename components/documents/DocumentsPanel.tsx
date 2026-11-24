@@ -76,7 +76,7 @@ export function DocumentsPanel({ customer, policy, onChanged, refreshKey = 0 }: 
         <Box id="dokumen" bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden" scrollMarginTop="80px">
             <Flex justify="space-between" align="center" px="24px" pt="20px" pb="16px" gap="12px" flexWrap="wrap">
                 <Flex gap="10px" align="center">
-                    <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuFolderOpen size={18} /></Box>
+                    <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#0D1B3E"><LuFolderOpen size={18} /></Box>
                     <Flex flexDir="column">
                         <Text color="#1C2833" fontSize="16px" fontWeight="semibold">
                             {policy ? "Dokumen Polis" : "Dokumen Nasabah"}
@@ -86,7 +86,7 @@ export function DocumentsPanel({ customer, policy, onChanged, refreshKey = 0 }: 
                         </Text>
                     </Flex>
                 </Flex>
-                <Button size="sm" bg="#1A3557" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#162C47" }}
+                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }}
                     onClick={() => setUploadType(policy ? "policy" : "other")}>
                     <LuUpload size={14} /> Unggah Dokumen
                 </Button>

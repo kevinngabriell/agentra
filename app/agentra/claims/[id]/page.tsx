@@ -147,7 +147,7 @@ export default function ClaimDetailPage() {
                                 </Flex>
                                 <Flex gap="8px" flexWrap="wrap">
                                     {canChangeStatus && (
-                                        <Button size="sm" bg="#1A3557" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#162C47" }} onClick={() => setDialog("status")}>
+                                        <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog("status")}>
                                             <LuRefreshCw size={14} /> Ubah Status
                                         </Button>
                                     )}

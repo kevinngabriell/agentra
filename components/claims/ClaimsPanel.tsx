@@ -81,7 +81,7 @@ export function ClaimsPanel({ policy, customer, onChanged }: ClaimsPanelProps) {
                     </Flex>
                 </Flex>
                 {!policy?.cancelled && (
-                    <Button size="sm" bg="#1A3557" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#162C47" }} onClick={() => setRegisterOpen(true)}>
+                    <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setRegisterOpen(true)}>
                         <LuPlus size={14} /> Daftarkan Klaim
                     </Button>
                 )}

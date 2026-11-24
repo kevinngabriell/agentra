@@ -124,7 +124,7 @@ export default function SubAgents() {
                             <Text color="#5D6D7E" fontSize="16px">Jaringan agen referral: nasabah, polis, dan bagi hasil komisi</Text>
                         </Flex>
                         {!lock && (
-                            <Button bg="#1A3557" color="white" gap="6px" fontSize="16px" h="40px" _hover={{ bg: "#162C47" }} onClick={() => setFormOpen(true)}>
+                            <Button bg="#0D1B3E" color="white" gap="6px" fontSize="16px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setFormOpen(true)}>
                                 <LuPlus size={14} /> Tambah Sub-Agen
                             </Button>
                         )}

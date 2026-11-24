@@ -114,7 +114,7 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                                 onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = "" }} />
                             {file ? (
                                 <Flex align="center" gap="10px" px="12px" py="10px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px">
-                                    <Box color="#1A3557" flexShrink={0}>{file.type === "application/pdf" ? <LuFileText size={20} /> : <LuImage size={20} />}</Box>
+                                    <Box color="#0D1B3E" flexShrink={0}>{file.type === "application/pdf" ? <LuFileText size={20} /> : <LuImage size={20} />}</Box>
                                     <Flex flexDir="column" minW="0" flex="1">
                                         <Text color="#1C2833" fontSize="15px" fontWeight="medium" truncate>{file.name}</Text>
                                         <Text color="#64748B" fontSize="14px">{fmtFileSize(file.size)}</Text>
@@ -134,7 +134,7 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                                     onDragLeave={() => setDragging(false)}
                                     onDrop={(e: React.DragEvent) => { e.preventDefault(); setDragging(false); pickFile(e.dataTransfer.files?.[0]) }}
                                 >
-                                    <Box color="#1A3557"><LuUpload size={22} /></Box>
+                                    <Box color="#0D1B3E"><LuUpload size={22} /></Box>
                                     <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Klik atau seret file ke sini</Text>
                                     <Text color="#64748B" fontSize="14px">PDF, JPG, atau PNG · Maks. 10MB</Text>
                                 </Flex>
@@ -188,7 +188,7 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                             _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={onClose}>
                             Batal
                         </Button>
-                        <Button flex="1" bg="#1A3557" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#162C47" }}
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                             loading={saving} loadingText="Mengunggah..." onClick={handleSubmit}>
                             Unggah
                         </Button>

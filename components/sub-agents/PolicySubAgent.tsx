@@ -87,7 +87,7 @@ export function PolicySubAgent({ policyId, subAgentId, onChanged }: {
                             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
                                 <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
                                     _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={() => setOpen(false)}>Batal</Button>
-                                <Button flex="1" bg="#1A3557" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#162C47" }}
+                                <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                                     loading={saving} loadingText="Menyimpan..." disabled={value === current} onClick={save}>Simpan</Button>
                             </Dialog.Footer>
                         </Dialog.Content>

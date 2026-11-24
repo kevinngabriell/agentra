@@ -42,7 +42,7 @@ export function FormDialog({ title, size = "520px", saving, error, submitLabel =
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
                         <Button variant="outline" size="sm" fontSize="15px" disabled={saving} onClick={close}>Batal</Button>
-                        <Button size="sm" bg="#1A3557" color="white" fontSize="15px" _hover={{ bg: "#162C47" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>

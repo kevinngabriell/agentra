@@ -115,7 +115,7 @@ export function DocumentPreviewDialog({ doc, onClose }: { doc: ApiDocument | nul
                     </Dialog.Header>
                     <Dialog.Body p="0" bg="#F1F5F9" borderBottomRadius="12px">
                         <Flex h="min(75vh, 820px)" align="center" justify="center">
-                            {!current && <Spinner color="#1A3557" />}
+                            {!current && <Spinner color="#0D1B3E" />}
                             {current?.error && <Text color="#DC2626" fontSize="15px" px="24px" textAlign="center">{current.error}</Text>}
                             {current?.url && isPdf && (
                                 <iframe src={current.url} title={doc?.file_name}

@@ -50,7 +50,7 @@ function Shell({ title, saving, error, submitLabel, onClose, onSubmit, children 
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
                         <Button variant="outline" size="sm" fontSize="15px" disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button size="sm" bg="#1A3557" color="white" fontSize="15px" _hover={{ bg: "#162C47" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>
@@ -130,7 +130,7 @@ export function PaymentsPanel({ policy, customer, onChanged }: PaymentsPanelProp
                         </Button>
                     )}
                     {unpaid && !hasSchedule && data && (
-                        <Button size="sm" bg="#1A3557" color="white" fontSize="15px" gap="6px" _hover={{ bg: "#162C47" }}
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" gap="6px" _hover={{ bg: "#1A2F5C" }}
                             onClick={() => setDialog({ kind: "pay", installmentId: null, amount: data.expected_amount })}>
                             <LuCreditCard size={14} /> Catat Pembayaran
                         </Button>

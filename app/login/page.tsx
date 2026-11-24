@@ -1,12 +1,12 @@
 "use client"
 
-import { Alert, Button, Card, Checkbox, Field, Flex, Image, Input, Link, Text, chakra } from "@chakra-ui/react"
+import { Alert, Button, Card, Checkbox, Field, Flex, Input, Link, Text, chakra } from "@chakra-ui/react"
 import { PasswordInput } from "../../components/ui/password-input"
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
 import { LoginAgent } from "@/lib/auth/auth"
 import { getAccessToken, getRememberedEmail, restoreAuthCookie, saveBrowserCredential, saveTokens, setRememberedEmail } from "@/lib/auth/session"
-import iconImg from "@/assets/icon.svg"
+import { Logo } from "@/components/Logo"
 
 // Where to go after login: the protected page proxy.ts bounced the user from, if any.
 // Only same-app /agentra paths are accepted so ?from= can't become an open redirect.
@@ -85,7 +85,7 @@ export default function Login() {
 
     return (
         <Flex
-            backgroundColor="#1A3557"
+            backgroundColor="#0D1B3E"
             p={{ base: 4, md: 16 }}
             gap="31.18px"
             flexDir="column"
@@ -96,8 +96,7 @@ export default function Login() {
             <Card.Root backgroundColor="#FFFFFF" p={{ base: "20px", md: "32px" }} w="100%" maxW={{ base: "450px", md: "500px" }}>
                 <Card.Body alignItems="center" w="100%">
                     <Flex pb="32px" flexDir="column" alignItems="center" gap="4px">
-                        <Image src={iconImg.src} alt="" w="64px" h="64px" />
-                        <Text as="h1" color="#001F40" fontSize={32} fontWeight="bold">Agentra</Text>
+                        <Text as="h1" m={0}><Logo height={48} priority /></Text>
                         <Text color="#5D6D7E" fontSize="14px" textAlign="center">
                             Masuk ke Agentra CRM untuk mengelola polis dan nasabah Anda.
                         </Text>

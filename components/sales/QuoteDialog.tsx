@@ -119,7 +119,7 @@ export function QuoteDialog({ prospect, editing, onClose, onSaved }: {
             <FormField label="Penawaran berlaku sampai"><Input {...CLAIM_INPUT} type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} /></FormField>
 
             <Flex justify="space-between" align="center" pt="6px">
-                <Text color="#1A3557" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">PENAWARAN PER ASURANSI</Text>
+                <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">PENAWARAN PER ASURANSI</Text>
                 <Button size="xs" variant="outline" fontSize="14px" disabled={options.length >= MAX_OPTIONS}
                     onClick={() => setOptions(os => [...os, blankOption(Math.max(...os.map(o => o.key)) + 1)])}>
                     <LuPlus size={12} /> Tambah asuransi

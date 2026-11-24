@@ -2,6 +2,10 @@ import type { Metadata } from "next"
 import { Header } from "../components/Header"
 import { HeroSection } from "../components/HeroSection"
 import { FeaturesSection } from "../components/FeaturesSection"
+import { ProblemSection } from "../components/ProblemSection"
+import { HowItWorksSection } from "../components/HowItWorksSection"
+import { ComparisonSection } from "../components/ComparisonSection"
+import { CtaSection } from "../components/CtaSection"
 import { PricingSection } from "../components/PricingSection"
 import { FaqSection } from "../components/FaqSection"
 import { Footer } from "../components/Footer"
@@ -35,9 +39,13 @@ export default function Home() {
       <Header />
       <main id="main">
         <HeroSection />
+        <ProblemSection />
         <FeaturesSection />
+        <HowItWorksSection />
+        <ComparisonSection />
         <PricingSection />
         <FaqSection />
+        <CtaSection />
       </main>
       <Footer />
     </>

@@ -211,7 +211,7 @@ export function SearchSelect({
                 color="#1C2833"
                 gap="8px"
                 _highlighted={{ bg: "#EFF6FF" }}
-                _selected={{ color: "#1A3557", fontWeight: "semibold" }}
+                _selected={{ color: "#0D1B3E", fontWeight: "semibold" }}
                 _disabled={{ opacity: 0.45, cursor: "not-allowed" }}
               >
                 <Combobox.ItemText flex="1" truncate>

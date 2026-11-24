@@ -56,7 +56,7 @@ export function PlanLocked({ title, message, requiredPlan, benefits = [] }: {
       )}
 
       <Flex gap="10px" flexWrap="wrap" justify="center">
-        <Button bg="#1A3557" color="white" gap="6px" h="42px" px="20px" fontSize="16px" _hover={{ bg: "#162C47" }} onClick={() => router.push(SETTINGS_SUBSCRIPTION)}>
+        <Button bg="#0D1B3E" color="white" gap="6px" h="42px" px="20px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => router.push(SETTINGS_SUBSCRIPTION)}>
           <LuCrown size={15} /> Upgrade ke {plan}
         </Button>
         <Button variant="outline" borderColor="#E2E8F0" color="#374151" h="42px" px="20px" fontSize="16px" onClick={() => router.push("/agentra/dashboard")}>

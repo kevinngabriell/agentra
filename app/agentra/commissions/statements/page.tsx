@@ -236,7 +236,7 @@ export default function CommissionStatements() {
                 Catat satu pembayaran dari penanggung, lalu cocokkan ke banyak komisi sekaligus.
               </Text>
             </Flex>
-            <Button bg="#1A3557" color="white" borderRadius="8px" gap="6px" onClick={() => { setCreateError(null); setCreateOpen(true) }}>
+            <Button bg="#0D1B3E" color="white" borderRadius="8px" gap="6px" onClick={() => { setCreateError(null); setCreateOpen(true) }}>
               <LuPlus size={14} /> Catat Statement
             </Button>
           </Flex>
@@ -358,7 +358,7 @@ export default function CommissionStatements() {
               <Flex justify="flex-end" gap="10px">
                 <Button variant="outline" borderColor="#E2E8F0" color="#374151" borderRadius="8px"
                   onClick={() => setCreateOpen(false)} disabled={creating}>Batal</Button>
-                <Button bg="#1A3557" color="white" borderRadius="8px" px="20px" loading={creating} loadingText="Menyimpan..." onClick={submitCreate}>
+                <Button bg="#0D1B3E" color="white" borderRadius="8px" px="20px" loading={creating} loadingText="Menyimpan..." onClick={submitCreate}>
                   Simpan
                 </Button>
               </Flex>
@@ -514,7 +514,7 @@ export default function CommissionStatements() {
                         Dipilih {fmtIDR(pickedTotal)} · sisa {fmtIDR(remainderAfterPick)}
                       </Text>
                     )}
-                    <Button bg="#1A3557" color="white" borderRadius="8px" px="20px" loading={busy}
+                    <Button bg="#0D1B3E" color="white" borderRadius="8px" px="20px" loading={busy}
                       disabled={Object.keys(picked).length === 0 || remainderAfterPick < 0} onClick={submitMatch}>
                       Cocokkan {Object.keys(picked).length > 0 ? `(${Object.keys(picked).length})` : ""}
                     </Button>

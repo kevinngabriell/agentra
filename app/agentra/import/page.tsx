@@ -131,8 +131,8 @@ function ImportData() {
               const active = kind === key
               return (
                 <Button key={key} role="tab" aria-selected={active} size="sm" onClick={() => reset(key)}
-                  bg={active ? "#1A3557" : "white"} color={active ? "white" : "#374151"}
-                  border="1px solid" borderColor={active ? "#1A3557" : "#E2E8F0"} borderRadius="8px" px="16px">
+                  bg={active ? "#0D1B3E" : "white"} color={active ? "white" : "#374151"}
+                  border="1px solid" borderColor={active ? "#0D1B3E" : "#E2E8F0"} borderRadius="8px" px="16px">
                   {label}
                 </Button>
               )
@@ -161,7 +161,7 @@ function ImportData() {
                 <input ref={fileInput} type="file" hidden aria-label="Pilih file import"
                   accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   onChange={(e) => pick(e.target.files?.[0] ?? null)} />
-                <Button size="sm" bg="#1A3557" color="white" gap="6px" loading={busy === "preview"} loadingText="Memeriksa..."
+                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" loading={busy === "preview"} loadingText="Memeriksa..."
                   disabled={busy === "import"} onClick={() => fileInput.current?.click()}>
                   <LuUpload size={13} /> {file ? "Ganti file" : "Pilih file"}
                 </Button>
@@ -194,7 +194,7 @@ function ImportData() {
                   </Badge>
                   <Text fontSize="16px" color="#64748B">dari {preview.total} baris</Text>
                 </Flex>
-                <Button bg="#1A3557" color="white" borderRadius="8px" px="20px" disabled={preview.valid_count === 0}
+                <Button bg="#0D1B3E" color="white" borderRadius="8px" px="20px" disabled={preview.valid_count === 0}
                   loading={busy === "import"} loadingText="Mengimpor..." onClick={confirm}>
                   Impor {preview.valid_count} baris valid
                 </Button>
@@ -292,7 +292,7 @@ function ImportData() {
                 </Box>
               )}
               <Flex gap="10px">
-                <Button size="sm" bg="#1A3557" color="white" onClick={() => router.push(meta.next)}>{meta.nextLabel}</Button>
+                <Button size="sm" bg="#0D1B3E" color="white" onClick={() => router.push(meta.next)}>{meta.nextLabel}</Button>
                 <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" onClick={() => reset()}>Impor lagi</Button>
               </Flex>
             </Box>

@@ -1,40 +1,41 @@
 import { Box, Flex, VStack, HStack, Grid, Text, Heading } from "@chakra-ui/react"
 import Link from "next/link"
+import { LuBell, LuMessageCircle, LuWallet, LuBuilding2, LuUsers, LuClipboardList } from "react-icons/lu"
 
 // Every card describes something the app does today (see docs/APPLICATION_OVERVIEW.md).
 const features = [
   {
-    icon: "🔔",
+    icon: LuBell,
     title: "Pengingat Renewal Polis",
     description:
       "Polis dikelompokkan berdasarkan kedekatan tanggal jatuh tempo, sehingga Anda tahu mana yang perlu ditindaklanjuti hari ini. Batas hari pengingat bisa Anda atur sendiri.",
   },
   {
-    icon: "💬",
+    icon: LuMessageCircle,
     title: "Pesan WhatsApp untuk Renewal",
     description:
       "Kirim pesan renewal ke nasabah lewat WhatsApp langsung dari daftar renewal, dengan template yang bisa diubah. Ringkasan harian dan bulanan juga dapat dikirim ke WhatsApp Anda.",
   },
   {
-    icon: "💰",
+    icon: LuWallet,
     title: "Pelacakan Komisi",
     description:
       "Setiap polis menghasilkan catatan komisi dengan status pending, diterima, atau selisih. Catat jumlah yang benar-benar diterima agar perbedaannya terlihat.",
   },
   {
-    icon: "🏢",
+    icon: LuBuilding2,
     title: "Polis Asuransi Umum dan Koasuransi",
     description:
       "Catat polis kebakaran, kendaraan, cargo, perjalanan, dan kecelakaan beserta item pertanggungannya, termasuk porsi tiap penanggung pada koasuransi.",
   },
   {
-    icon: "👥",
+    icon: LuUsers,
     title: "Manajemen Sub-Agen",
     description:
       "Kelola sub-agen, lihat nasabah dan polis yang mereka bawa, lalu atur pembagian komisinya.",
   },
   {
-    icon: "📋",
+    icon: LuClipboardList,
     title: "Calon Nasabah dan Penawaran",
     description:
       "Catat calon nasabah dan bandingkan penawaran dari beberapa perusahaan asuransi dalam satu tampilan, lalu kirim lewat WhatsApp.",
@@ -78,7 +79,7 @@ export function FeaturesSection() {
           gap={6}
           w="100%"
         >
-          {features.map((feature) => (
+          {features.map(({ icon: Icon, ...feature }) => (
             <Box
               key={feature.title}
               bg="gray.50"
@@ -97,10 +98,10 @@ export function FeaturesSection() {
                   borderRadius="xl"
                   align="center"
                   justify="center"
-                  fontSize="22px"
+                  color="#0D1B3E"
                   aria-hidden="true"
                 >
-                  {feature.icon}
+                  <Icon size={24} />
                 </Flex>
                 <Heading as="h3" fontSize="lg" fontWeight="semibold" color="#0D1B3E">
                   {feature.title}
@@ -112,6 +113,18 @@ export function FeaturesSection() {
             </Box>
           ))}
         </Grid>
+
+        {/* Product lines covered (record-keeping topics, matches the policy types in the app). */}
+        <VStack gap={3}>
+          <Text fontSize="sm" color="gray.500">Jenis polis yang bisa dicatat:</Text>
+          <HStack as="ul" gap={2} flexWrap="wrap" justify="center" listStyleType="none" m={0} p={0}>
+            {["Kebakaran", "Kendaraan", "Cargo", "Perjalanan", "Kecelakaan", "AEP", "Lainnya"].map((t) => (
+              <Box as="li" key={t} px={4} py={1.5} borderRadius="full" bg="#EFF6FF" color="#0D1B3E" fontSize="sm" fontWeight="medium">
+                {t}
+              </Box>
+            ))}
+          </HStack>
+        </VStack>
 
         {/* Internal links to the next steps */}
         <HStack gap={6} flexWrap="wrap" justify="center">

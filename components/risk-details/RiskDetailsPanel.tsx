@@ -52,7 +52,7 @@ function Shell({ title, wide, saving, error, submitLabel, onClose, onSubmit, chi
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
                         <Button variant="outline" size="sm" fontSize="15px" disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button size="sm" bg="#1A3557" color="white" fontSize="15px" _hover={{ bg: "#162C47" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>
@@ -346,7 +346,7 @@ export function RiskDetailsPanel({ policy, onChanged }: RiskDetailsPanelProps) {
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
             <Flex align="center" justify="space-between" gap="8px" mb="16px">
                 <Flex align="center" gap="8px">
-                    <LuCar size={16} color="#1A3557" />
+                    <LuCar size={16} color="#0D1B3E" />
                     <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{RISK_GROUP_LABELS[group]}</Text>
                     {isOpenCover && <Badge px="8px" py="2px" borderRadius="full" bg="#E0F2FE" color="#0369A1" fontSize="14px">Open Cover</Badge>}
                 </Flex>

@@ -65,7 +65,7 @@ function TemplatesTab() {
       {dialog}
             <Flex justify="space-between" align="center" gap="12px" flexWrap="wrap">
                 <Text color="#64748B" fontSize="16px">Template untuk invoice, pengingat premi, ucapan dan broadcast. Template perpanjangan diatur di Pengaturan.</Text>
-                <Button size="sm" bg="#1A3557" color="white" fontSize="16px" gap="6px" onClick={() => setEditing("new")}><LuPlus size={14} /> Template Baru</Button>
+                <Button size="sm" bg="#0D1B3E" color="white" fontSize="16px" gap="6px" onClick={() => setEditing("new")}><LuPlus size={14} /> Template Baru</Button>
             </Flex>
             {error && <Text color="#DC2626" fontSize="16px">{error}</Text>}
             {!templates && !error && <Skeleton h="160px" borderRadius="12px" />}

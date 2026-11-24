@@ -78,7 +78,7 @@ export function ConvertDialog({ prospect, onClose, onConverted }: {
     const tab = (m: Mode, label: string) => (
         <button type="button" key={m} onClick={() => { setMode(m); setError(null); createdId.current = null }}
             style={{ flex: 1, padding: "8px 10px", fontSize: 12, fontWeight: 600, borderRadius: 8, border: "1px solid #E2E8F0",
-                background: mode === m ? "#1A3557" : "white", color: mode === m ? "white" : "#475569", cursor: "pointer" }}>
+                background: mode === m ? "#0D1B3E" : "white", color: mode === m ? "white" : "#475569", cursor: "pointer" }}>
             {label}
         </button>
     )

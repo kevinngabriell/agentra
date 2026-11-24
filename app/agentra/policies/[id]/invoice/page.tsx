@@ -48,7 +48,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
     return (
         <Box bg="#F1F5F9" minH="100vh" py="24px" px="16px" css={{ "@media print": { background: "white", padding: 0 } }}>
             <Flex maxW="720px" mx="auto" mb="12px" justify="flex-end" css={{ "@media print": { display: "none" } }}>
-                <Button size="sm" bg="#1A3557" color="white" gap="6px" onClick={() => window.print()}><LuPrinter size={14} /> Cetak / Simpan PDF</Button>
+                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" onClick={() => window.print()}><LuPrinter size={14} /> Cetak / Simpan PDF</Button>
             </Flex>
             <Box maxW="720px" mx="auto" bg="white" p={{ base: "20px", md: "40px" }} borderRadius="8px" border="1px solid" borderColor="#E2E8F0" color="#1C2833">
                 <Flex justify="space-between" align="flex-start" mb="24px" gap="12px" flexWrap="wrap">

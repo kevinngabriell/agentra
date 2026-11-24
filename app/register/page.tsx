@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Alert, Box, Button, Card, Field, Flex, Grid, Heading, Input, InputGroup, SimpleGrid, Steps, Text } from "@chakra-ui/react"
 import { Header } from "../../components/Header"
+import { Logo } from "../../components/Logo"
 import { ErrorAlert } from "@/components/ui/error-alert"
 import { SearchSelect } from "@/components/ui/search-select"
 import { FaShieldAlt } from "react-icons/fa"
@@ -521,9 +522,7 @@ function PageFooter() {
         py="48px"
       >
         <Box>
-          <Text fontWeight="bold" fontSize="16px" color="#0D1B3E" mb="12px">
-            Agentra
-          </Text>
+          <Box mb="12px"><Logo height={30} /></Box>
           <Text fontSize="13px" color="#5D6D7E" lineHeight="1.75" maxW="240px">
             CRM untuk agen asuransi umum di Indonesia, dibuat oleh Movira.
           </Text>

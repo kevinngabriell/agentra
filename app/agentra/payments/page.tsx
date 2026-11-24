@@ -88,7 +88,7 @@ export default function PaymentsPage() {
                     <Flex gap="8px" flexWrap="wrap">
                         {SCOPES.map((s) => (
                             <Button key={s.value} size="sm" fontSize="15px" variant={scope === s.value ? "solid" : "outline"}
-                                bg={scope === s.value ? "#1A3557" : undefined} color={scope === s.value ? "white" : "#374151"} onClick={() => setScope(s.value)}>
+                                bg={scope === s.value ? "#0D1B3E" : undefined} color={scope === s.value ? "white" : "#374151"} onClick={() => setScope(s.value)}>
                                 {s.label}
                             </Button>
                         ))}

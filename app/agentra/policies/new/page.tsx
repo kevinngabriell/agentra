@@ -68,8 +68,8 @@ function fmt(n: number) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
-      <Box borderLeft="3px solid #1A3557" pl="10px" mb="20px">
-        <Text color="#1A3557" fontSize="16px" fontWeight="semibold">{title}</Text>
+      <Box borderLeft="3px solid #0D1B3E" pl="10px" mb="20px">
+        <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">{title}</Text>
       </Box>
       {children}
     </Box>
@@ -1355,12 +1355,12 @@ export default function NewPolicy() {
                         px="20px" py="14px" justify="space-between" align="center"
                         borderBottom="1px solid" borderColor="#E2E8F0"
                       >
-                        <Box borderLeft="3px solid #1A3557" pl="10px">
-                          <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Item Coverage</Text>
+                        <Box borderLeft="3px solid #0D1B3E" pl="10px">
+                          <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Item Coverage</Text>
                         </Box>
                         <Button
-                          size="sm" bg="#1A3557" color="white" fontSize="14px" gap="4px"
-                          borderRadius="6px" _hover={{ bg: "#162C47" }} onClick={openAddCov}
+                          size="sm" bg="#0D1B3E" color="white" fontSize="14px" gap="4px"
+                          borderRadius="6px" _hover={{ bg: "#1A2F5C" }} onClick={openAddCov}
                         >
                           <LuPlus size={12} /> Tambah Item
                         </Button>
@@ -1427,7 +1427,7 @@ export default function NewPolicy() {
                                   </Text>
                                 )}
                                 <Text color="#64748B" fontSize="14px">
-                                  Premi: <Text as="span" color="#1A3557" fontWeight="semibold">
+                                  Premi: <Text as="span" color="#0D1B3E" fontWeight="semibold">
                                     Rp {cov.premium_amount.toLocaleString("id-ID")}
                                   </Text>
                                 </Text>
@@ -1440,7 +1440,7 @@ export default function NewPolicy() {
                             <Text color="#64748B" fontSize="14px" fontWeight="semibold">
                               Total UP: Rp {covTotalSI.toLocaleString("id-ID")}
                             </Text>
-                            <Text color="#1A3557" fontSize="15px" fontWeight="bold">
+                            <Text color="#0D1B3E" fontSize="15px" fontWeight="bold">
                               Total Premi: Rp {covTotalPremium.toLocaleString("id-ID")}
                             </Text>
                           </Flex>
@@ -1466,8 +1466,8 @@ export default function NewPolicy() {
                       borderColor="#E2E8F0"
                     >
                       <Flex flexDir="column" gap="2px">
-                        <Box borderLeft="3px solid #1A3557" pl="10px">
-                          <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Ko-Asuransi</Text>
+                        <Box borderLeft="3px solid #0D1B3E" pl="10px">
+                          <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Ko-Asuransi</Text>
                         </Box>
                         <Text fontSize="14px" color="#64748B" pl="13px">Aktifkan jika ada ko-penanggung pada polis ini</Text>
                       </Flex>
@@ -1497,8 +1497,8 @@ export default function NewPolicy() {
                             )}
                           </Flex>
                           <Button
-                            size="sm" bg="#1A3557" color="white" fontSize="14px" gap="4px"
-                            borderRadius="6px" _hover={{ bg: "#162C47" }} onClick={openAddCa}
+                            size="sm" bg="#0D1B3E" color="white" fontSize="14px" gap="4px"
+                            borderRadius="6px" _hover={{ bg: "#1A2F5C" }} onClick={openAddCa}
                           >
                             <LuPlus size={12} /> Tambah Ko-Asuransi
                           </Button>
@@ -1598,8 +1598,8 @@ export default function NewPolicy() {
                   Batal
                 </Button>
                 <Button
-                  type="submit" bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold"
-                  loading={submitting} _hover={{ bg: "#162C47" }}
+                  type="submit" bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold"
+                  loading={submitting} _hover={{ bg: "#1A2F5C" }}
                 >
                   Simpan Polis
                 </Button>
@@ -1688,8 +1688,8 @@ export default function NewPolicy() {
                 >
                   <Box
                     w="16px" h="16px" borderRadius="4px" flexShrink={0}
-                    border="2px solid" borderColor={covForm.count_in_tsi ? "#1A3557" : "#CBD5E1"}
-                    bg={covForm.count_in_tsi ? "#1A3557" : "white"}
+                    border="2px solid" borderColor={covForm.count_in_tsi ? "#0D1B3E" : "#CBD5E1"}
+                    bg={covForm.count_in_tsi ? "#0D1B3E" : "white"}
                     display="flex" alignItems="center" justifyContent="center"
                   >
                     {covForm.count_in_tsi && <Box w="8px" h="8px" borderRadius="2px" bg="white" />}
@@ -1712,7 +1712,7 @@ export default function NewPolicy() {
               <Dialog.ActionTrigger asChild>
                 <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#1A3557" color="white" fontSize="16px" onClick={saveCov}>
+              <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" onClick={saveCov}>
                 Simpan
               </Button>
             </Dialog.Footer>
@@ -1851,7 +1851,7 @@ export default function NewPolicy() {
               <Dialog.ActionTrigger asChild>
                 <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#1A3557" color="white" fontSize="16px" onClick={saveCa}>
+              <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" onClick={saveCa}>
                 Simpan
               </Button>
             </Dialog.Footer>
