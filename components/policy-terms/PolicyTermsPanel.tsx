@@ -200,7 +200,7 @@ function Section({ title, count, onAdd, children }: { title: string; count: numb
     return (
         <Flex flexDir="column" gap="8px">
             <Flex justify="space-between" align="center" gap="8px">
-                <Text color="#1A3557" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()} ({count})</Text>
+                <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()} ({count})</Text>
                 <Button size="xs" variant="outline" fontSize="14px" onClick={onAdd}><LuPlus size={12} /> Tambah</Button>
             </Flex>
             {children}
@@ -261,7 +261,7 @@ export function PolicyTermsPanel({ policyId, coverages, onChanged }: PolicyTerms
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
             <Flex align="center" justify="space-between" gap="8px" mb="16px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
-                    <LuShieldCheck size={16} color="#1A3557" />
+                    <LuShieldCheck size={16} color="#0D1B3E" />
                     <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan</Text>
                 </Flex>
                 {terms && terms.length > 0 && (
@@ -355,8 +355,8 @@ export function DraftTermsEditor({ terms, onChange, coverages }: DraftTermsEdito
     return (
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
             <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0" align="center" gap="8px">
-                <Box borderLeft="3px solid #1A3557" pl="10px">
-                    <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan Jaminan</Text>
+                <Box borderLeft="3px solid #0D1B3E" pl="10px">
+                    <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan Jaminan</Text>
                     <Text color="#64748B" fontSize="14px">Opsional. Bisa juga diisi nanti dari halaman detail polis.</Text>
                 </Box>
             </Flex>

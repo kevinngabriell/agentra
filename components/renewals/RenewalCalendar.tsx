@@ -104,7 +104,7 @@ export function RenewalCalendar({ month, filters }: { month: string; filters: Re
                   aria-label={`${day} ${monthLabel(month)}: ${list.length} polis`} aria-pressed={isSelected}
                   onClick={() => list.length && setSelected(isSelected ? null : date)}>
                   <Text fontSize="16px" fontWeight={date === today ? "bold" : "medium"} mb="2px"
-                    color={date === today ? "white" : "#64748B"} bg={date === today ? "#1A3557" : "transparent"}
+                    color={date === today ? "white" : "#64748B"} bg={date === today ? "#0D1B3E" : "transparent"}
                     w="max-content" minW="18px" textAlign="center" borderRadius="full" px="4px">{day}</Text>
                   <Flex flexDir="column" gap="2px">
                     {list.slice(0, MAX_VISIBLE).map((r) => {

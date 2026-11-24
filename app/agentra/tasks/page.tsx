@@ -78,7 +78,7 @@ export default function Tasks() {
               <Text color="#1C2833" fontSize="24px" fontWeight="bold">Tugas & Pengingat</Text>
               <Text color="#5D6D7E" fontSize="16px">Catat hal yang harus dikerjakan dan kaitkan dengan customer, polis, atau klaim.</Text>
             </Flex>
-            <Button bg="#1A3557" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#162C47" }} onClick={() => setDialog({})}>
+            <Button bg="#0D1B3E" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog({})}>
               <LuPlus size={14} /> Tugas Baru
             </Button>
           </Flex>
@@ -87,8 +87,8 @@ export default function Tasks() {
             {TABS.map((t) => (
               <Box key={t.key} as="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
                 px="14px" py="7px" borderRadius="full" fontSize="16px" fontWeight="medium" border="1px solid"
-                bg={tab === t.key ? "#1A3557" : "white"} color={tab === t.key ? "white" : "#475569"}
-                borderColor={tab === t.key ? "#1A3557" : "#E2E8F0"}>
+                bg={tab === t.key ? "#0D1B3E" : "white"} color={tab === t.key ? "white" : "#475569"}
+                borderColor={tab === t.key ? "#0D1B3E" : "#E2E8F0"}>
                 {t.label}
                 {t.key === "today" && data && (data.overdue_count + data.today_count) > 0 && (
                   <Badge ml="6px" px="6px" borderRadius="full" bg="#DC2626" color="white" fontSize="16px">{data.overdue_count + data.today_count}</Badge>

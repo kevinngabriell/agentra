@@ -164,7 +164,7 @@ export default function ClaimsPage() {
                             <Text color="#1C2833" fontSize="24px" fontWeight="bold">Klaim</Text>
                             <Text color="#5D6D7E" fontSize="16px">Pantau klaim nasabah dari pelaporan sampai pembayaran</Text>
                         </Flex>
-                        <Button bg="#1A3557" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#162C47" }} onClick={() => setRegisterOpen(true)}>
+                        <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setRegisterOpen(true)}>
                             <LuPlus size={14} /> Daftarkan Klaim
                         </Button>
                     </Flex>

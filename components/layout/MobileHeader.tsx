@@ -1,8 +1,9 @@
 "use client"
 
-import { Box, Flex, IconButton, Text } from "@chakra-ui/react"
+import { Box, Flex, IconButton } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
-import { FiBell, FiLogOut, FiShield } from "react-icons/fi"
+import { FiBell, FiLogOut } from "react-icons/fi"
+import { Logo } from "@/components/Logo"
 import { logout } from "@/lib/auth/logout"
 
 export function MobileHeader() {
@@ -30,11 +31,8 @@ export function MobileHeader() {
       right={0}
       zIndex={15}
     >
-      <Flex align="center" gap="8px">
-        <Flex w="28px" h="28px" borderRadius="6px" bg="#1D4ED8" align="center" justify="center" aria-hidden="true">
-          <FiShield size={14} color="white" />
-        </Flex>
-        <Text color="#0C4A6E" fontSize="18px" fontWeight="bold">Agentra CRM</Text>
+      <Flex align="center">
+        <Logo height={28} />
       </Flex>
       <Flex gap="10px" align="center">
         <Box color="#64748B" aria-hidden="true"><FiBell size={22} /></Box>

@@ -198,7 +198,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
             <Card.Body p="0">
                 <Flex justify="space-between" align="center" px="32px" pt="24px" pb={loading || policies.length > 0 ? "16px" : "24px"}>
                     <Flex gap="10px" align="center">
-                        <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuFileText size={18} /></Box>
+                        <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#0D1B3E"><LuFileText size={18} /></Box>
                         <Flex flexDir="column">
                             <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Polis Dimiliki</Text>
                             <Text color="#5D6D7E" fontSize="14px">{total} polis terdaftar atas nama nasabah ini</Text>
@@ -548,7 +548,7 @@ function CustomerDetailForm() {
                         <Button size="xs" variant="ghost" color="#64748B" disabled={saving} onClick={() => setPendingDoc(null)}>Hapus</Button>
                     </Flex>
                 ) : (
-                    <Button w="100%" variant="outline" borderColor="#1A3557" color="#1A3557" gap="8px" fontSize="15px" disabled={saving}
+                    <Button w="100%" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="8px" fontSize="15px" disabled={saving}
                         onClick={() => { pendingTypeRef.current = type; pendingInputRef.current?.click() }}>
                         <FaRegFileImage size={15} aria-hidden="true" /> {label}
                     </Button>
@@ -635,8 +635,8 @@ function CustomerDetailForm() {
                 </Flex>
             )}
             <Button
-                bg={dark ? "white" : "#1A3557"}
-                color={dark ? "#1A3557" : "white"}
+                bg={dark ? "white" : "#0D1B3E"}
+                color={dark ? "#0D1B3E" : "white"}
                 fontSize="16px" fontWeight="bold" py="16px" borderRadius="10px" gap="8px"
                 onClick={handleSave} loading={saving} disabled={saving || saveSuccess}
             >
@@ -706,8 +706,8 @@ function CustomerDetailForm() {
                             <Flex w={{ base: "100%", md: "70%" }}>
                                 <Card.Root w="100%" border="1px solid" borderColor="#F1F5F9" borderRadius="12px">
                                     <Card.Body gap="24px" p={{ base: "16px", md: "32px" }}>
-                                        <Flex borderLeft="4px solid" borderColor="#1A3557" pl="12px">
-                                            <Text color="#1A3557" fontSize="18px" fontWeight="semibold">Data Identitas</Text>
+                                        <Flex borderLeft="4px solid" borderColor="#0D1B3E" pl="12px">
+                                            <Text color="#0D1B3E" fontSize="18px" fontWeight="semibold">Data Identitas</Text>
                                         </Flex>
 
                                         <SimpleGrid columns={{ md: 2 }} gap="24px">
@@ -799,7 +799,7 @@ function CustomerDetailForm() {
 
                             {/* Right sidebar */}
                             <Flex w={{ base: "100%", md: "30%" }} gap="24px" flexDir="column">
-                                <Card.Root bgColor="#1A3557" color="white" borderRadius="12px">
+                                <Card.Root bgColor="#0D1B3E" color="white" borderRadius="12px">
                                     <Card.Body gap="16px">
                                         <Flex gap="8px" align="center" fontWeight="semibold" fontSize="16px">
                                             <FaInfoCircle color="#7DD3FC" /> Petunjuk Pengisian
@@ -819,7 +819,7 @@ function CustomerDetailForm() {
                                         <Flex flexDir="column" align="center" gap="12px"
                                             border="2px dashed" borderColor="#CBD5E1" borderRadius="10px" p="16px">
                                             <Image src={verifiedImg.src} alt="" w="72px" />
-                                            <Text color="#1A3557" fontSize="16px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
+                                            <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
                                             <Text color="#64748B" fontSize="14px" textAlign="center">
                                                 {isEdit
                                                     ? "Unggah KTP untuk melengkapi dokumen KYC (APU-PPT)"
@@ -827,7 +827,7 @@ function CustomerDetailForm() {
                                             </Text>
                                             {!isEdit && renderPendingUpload("ktp", "Pilih Foto KTP")}
                                             {isEdit && (
-                                                <Button w="100%" variant="outline" borderColor="#1A3557" color="#1A3557" gap="8px" fontSize="15px"
+                                                <Button w="100%" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="8px" fontSize="15px"
                                                     onClick={() => setKycUpload("ktp")}>
                                                     <FaRegFileImage size={15} aria-hidden="true" /> Unggah Foto KTP
                                                 </Button>
@@ -947,7 +947,7 @@ function CustomerDetailForm() {
                                     <Card.Root w="100%" borderRadius="12px" border="1px solid" borderColor="#F1F5F9">
                                         <Card.Body gap="24px" p={{ base: "16px", md: "32px" }}>
                                             <Flex gap="12px" align="center">
-                                                <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1A3557"><LuUser size={20} /></Box>
+                                                <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#0D1B3E"><LuUser size={20} /></Box>
                                                 <Flex flexDir="column">
                                                     <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi PIC</Text>
                                                     <Text color="#5D6D7E" fontSize="14px">Detail orang yang bertanggung jawab (Person In Charge).</Text>
@@ -999,7 +999,7 @@ function CustomerDetailForm() {
 
                                 {/* Right sidebar */}
                                 <Flex w={{ base: "100%", md: "30%" }} gap="24px" flexDir="column">
-                                    <Card.Root bgColor="#1A3557" color="white" borderRadius="12px">
+                                    <Card.Root bgColor="#0D1B3E" color="white" borderRadius="12px">
                                         <Card.Body gap="12px">
                                             <Text fontSize="16px" fontWeight="semibold">Verifikasi Data</Text>
                                             <Text fontSize="14px" color="#BFDBFE">
@@ -1030,7 +1030,7 @@ function CustomerDetailForm() {
                                         <Box fontWeight="bold" fontSize="16px" color="#1C2833">Dokumen Legal</Box>
                                         <Box color="#64748B" fontSize="14px">Akta Pendirian, NIB, NPWP, KTP Direktur — PDF, JPG, PNG (Maks. 10MB)</Box>
                                         {isEdit ? (
-                                            <Button size="sm" variant="outline" borderColor="#1A3557" color="#1A3557" gap="6px" fontSize="15px"
+                                            <Button size="sm" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="6px" fontSize="15px"
                                                 onClick={() => setKycUpload("akta_pendirian")}>
                                                 <LuUpload size={13} /> Unggah Dokumen Legal
                                             </Button>

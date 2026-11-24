@@ -1,10 +1,11 @@
 "use client"
 
 import { Box, Button, Flex, Text } from "@chakra-ui/react"
-import { FiHome, FiUsers, FiRefreshCw, FiDollarSign, FiUserCheck, FiFolder, FiBarChart2, FiLogOut, FiShield, FiAlertCircle, FiCreditCard, FiTarget, FiMessageSquare, FiCheckSquare, FiUpload } from "react-icons/fi"
+import { FiHome, FiUsers, FiRefreshCw, FiDollarSign, FiUserCheck, FiFolder, FiBarChart2, FiLogOut, FiAlertCircle, FiCreditCard, FiTarget, FiMessageSquare, FiCheckSquare, FiUpload } from "react-icons/fi"
 import { MdOutlinePolicy } from "react-icons/md"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { Logo } from "@/components/Logo"
 import { logout } from "@/lib/auth/logout"
 import { SUB_AGENT_HOME, useAgentMode } from "./AgentMode"
 
@@ -73,15 +74,8 @@ export function Sidebar() {
 
   return (
     <Flex as="nav" aria-label="Menu utama" display={{ base: "none", md: "flex" }} flexDir="column" w="250px" minH="100vh" bg="#F8FAFC" borderRight="1px solid" borderColor="#E2E8F0" py="24px" px="12px" position="fixed" top={0} left={0} zIndex={10}>
-      <Flex align="center" gap="8px" mb="32px" px="4px">
-        <Flex
-          w="32px" h="32px" borderRadius="8px"
-          bg="#1D4ED8" align="center" justify="center"
-          flexShrink={0}
-        >
-          <FiShield size={16} color="white" />
-        </Flex>
-        <Text color="#0C4A6E" fontSize="18px" fontWeight="bold" lineHeight="1.2">Agentra CRM</Text>
+      <Flex align="center" mb="32px" px="4px">
+        <Link href="/agentra/dashboard" aria-label="Agentra CRM – Beranda"><Logo height={32} /></Link>
       </Flex>
 
       <Flex flexDir="column" gap="2px" flex={1}>

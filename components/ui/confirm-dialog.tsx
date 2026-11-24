@@ -35,8 +35,8 @@ function ConfirmDialog({ options, onDecide, onGone }: { options: ConfirmOptions;
                         )}
                         <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
                             <Button variant="outline" size="sm" fontSize="15px" onClick={() => decide(false)}>{cancelLabel}</Button>
-                            <Button size="sm" fontSize="15px" color="white" bg={danger ? "#DC2626" : "#1A3557"}
-                                _hover={{ bg: danger ? "#B91C1C" : "#162C47" }} onClick={() => decide(true)}>{confirmLabel}</Button>
+                            <Button size="sm" fontSize="15px" color="white" bg={danger ? "#DC2626" : "#0D1B3E"}
+                                _hover={{ bg: danger ? "#B91C1C" : "#1A2F5C" }} onClick={() => decide(true)}>{confirmLabel}</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

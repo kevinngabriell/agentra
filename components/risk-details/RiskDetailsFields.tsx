@@ -44,7 +44,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 function Group({ title, children }: { title: string; children: ReactNode }) {
     return (
         <Flex flexDir="column" gap="12px">
-            <Text color="#1A3557" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()}</Text>
+            <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()}</Text>
             {children}
         </Flex>
     )

@@ -113,7 +113,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                     {quote.status === "accepted" && !quote.policy_id && (
                         <Button size="sm" bg="#16A34A" color="white" fontSize="15px" _hover={{ bg: "#15803D" }} onClick={startPolicy}><LuFileCheck size={13} /> Buat Polis</Button>
                     )}
-                    <Button size="sm" bg="#1A3557" color="white" fontSize="15px" gap="6px" onClick={() => window.print()}><LuPrinter size={14} /> Cetak / Simpan PDF</Button>
+                    <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" gap="6px" onClick={() => window.print()}><LuPrinter size={14} /> Cetak / Simpan PDF</Button>
                     {quote.status !== "accepted" && <Button size="sm" variant="ghost" color="#DC2626" aria-label="Hapus penawaran" onClick={remove}><LuTrash2 size={14} /></Button>}
                 </Flex>
             </Flex>
@@ -155,7 +155,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                                 {quote.options.map(o => {
                                     const accepted = o.option_id === quote.accepted_option_id
                                     return (
-                                        <Box as="th" key={o.option_id} p="10px 8px" textAlign="left" verticalAlign="top" bg={accepted ? "#DCFCE7" : "#F8FAFC"} borderBottom="2px solid" borderColor={accepted ? "#16A34A" : "#1A3557"}>
+                                        <Box as="th" key={o.option_id} p="10px 8px" textAlign="left" verticalAlign="top" bg={accepted ? "#DCFCE7" : "#F8FAFC"} borderBottom="2px solid" borderColor={accepted ? "#16A34A" : "#0D1B3E"}>
                                             <Text fontSize="16px" fontWeight="bold">{o.insurer_short_name || o.insurer_name}</Text>
                                             {accepted && <Text fontSize="14px" color="#16A34A" fontWeight="semibold">Dipilih nasabah</Text>}
                                             {o.total_amount === lowest && cols > 1 && !accepted && <Text fontSize="14px" color="#0369A1" fontWeight="semibold">Termurah</Text>}

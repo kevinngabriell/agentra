@@ -139,7 +139,7 @@ export function MobileBottomNav() {
                         aria-current={active ? "page" : undefined}>
                         <Flex align="center" gap="14px" minH="64px" px="16px" py="10px" borderRadius="12px" border="1px solid"
                           borderColor={active ? "#1D4ED8" : "#E2E8F0"} bg={active ? "#EFF6FF" : "white"}>
-                          <Box color={active ? "#1D4ED8" : "#1A3557"} flexShrink={0}>{item.icon}</Box>
+                          <Box color={active ? "#1D4ED8" : "#0D1B3E"} flexShrink={0}>{item.icon}</Box>
                           <Flex flexDir="column" gap="2px" minW="0">
                             <Text fontSize="18px" fontWeight="semibold" color="#1C2833">{item.label}</Text>
                             {item.hint && <Text fontSize="15px" color="#64748B">{item.hint}</Text>}

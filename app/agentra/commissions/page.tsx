@@ -335,7 +335,7 @@ export default function Commissions() {
               onClick={handleExport} loading={exporting}>
               <LuDownload size={13} /> Excel
             </Button>
-            <Button size="sm" w={{ base: "100%", md: "auto" }} bg="#1A3557" color="white" fontSize="16px" gap="6px"
+            <Button size="sm" w={{ base: "100%", md: "auto" }} bg="#0D1B3E" color="white" fontSize="16px" gap="6px"
               onClick={() => router.push("/agentra/commissions/statements")}>
               <LuReceipt size={13} /> Rekonsiliasi Statement
             </Button>
@@ -349,9 +349,9 @@ export default function Commissions() {
               const active = statusFilter === key
               return (
                 <Button key={key} size="sm" onClick={() => setStatus(key)} aria-pressed={active}
-                  bg={active ? "#1A3557" : "white"}
+                  bg={active ? "#0D1B3E" : "white"}
                   color={active ? "white" : "#374151"}
-                  border="1px solid" borderColor={active ? "#1A3557" : "#E2E8F0"}
+                  border="1px solid" borderColor={active ? "#0D1B3E" : "#E2E8F0"}
                   borderRadius="8px" fontSize="14px" fontWeight={active ? "semibold" : "normal"}
                   px="14px">
                   {label}
@@ -469,7 +469,7 @@ export default function Commissions() {
                         <Table.Cell px="16px" py="12px">
                           <Flex gap="6px">
                             {(c.status === "pending" || c.status === "discrepancy") && (
-                              <Button size="sm" bg="#1A3557" color="white" fontSize="14px"
+                              <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px"
                                 fontWeight="semibold" borderRadius="8px" px="12px"
                                 onClick={() => openMark(c)}>
                                 Tandai Diterima
@@ -615,7 +615,7 @@ export default function Commissions() {
                   onClick={() => setMarkDialog(false)} disabled={submitting}>
                   Batal
                 </Button>
-                <Button bg="#1A3557" color="white" borderRadius="8px" px="20px"
+                <Button bg="#0D1B3E" color="white" borderRadius="8px" px="20px"
                   loading={submitting} loadingText="Menyimpan..." onClick={submitMark}>
                   Simpan
                 </Button>

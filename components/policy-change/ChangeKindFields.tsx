@@ -21,9 +21,9 @@ export function ChangeKindFields({ value, onChange }: { value: ChangeInfo; onCha
                     const active = value.change_kind === k.kind
                     return (
                         <Box key={k.kind} as="button" flex="1" textAlign="left" p="10px" borderRadius="8px"
-                            border="1px solid" borderColor={active ? "#1A3557" : "#E2E8F0"} bg={active ? "#EFF6FF" : "white"}
+                            border="1px solid" borderColor={active ? "#0D1B3E" : "#E2E8F0"} bg={active ? "#EFF6FF" : "white"}
                             aria-pressed={active} onClick={() => set({ change_kind: k.kind })}>
-                            <Text fontSize="14px" fontWeight="semibold" color={active ? "#1A3557" : "#1C2833"}>{k.title}</Text>
+                            <Text fontSize="14px" fontWeight="semibold" color={active ? "#0D1B3E" : "#1C2833"}>{k.title}</Text>
                             <Text fontSize="14px" color="#64748B">{k.hint}</Text>
                         </Box>
                     )

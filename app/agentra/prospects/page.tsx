@@ -141,7 +141,7 @@ export default function ProspectsPage() {
                             <Text color="#1C2833" fontSize="24px" fontWeight="bold">Prospek & Penawaran</Text>
                             <Text color="#5D6D7E" fontSize="16px">Catat calon nasabah dan polis di tempat lain, buat penawaran, lalu jadikan nasabah</Text>
                         </Flex>
-                        <Button bg="#1A3557" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#162C47" }} onClick={() => setDialogOpen(true)}>
+                        <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialogOpen(true)}>
                             <LuPlus size={14} /> {isCompetitor ? "Tambah Polis Pesaing" : "Tambah Prospek"}
                         </Button>
                     </Flex>
@@ -165,8 +165,8 @@ export default function ProspectsPage() {
                         <Flex px="20px" pt="12px" gap="6px" borderBottom="1px solid" borderColor="#E2E8F0" role="tablist">
                             {([["lead", "Prospek"], ["competitor_policy", "Polis di Tempat Lain"]] as const).map(([value, label]) => (
                                 <Button key={value} role="tab" aria-selected={tab === value} size="sm" variant="ghost" fontSize="15px" borderRadius="8px 8px 0 0"
-                                    color={tab === value ? "#1A3557" : "#64748B"} fontWeight={tab === value ? "bold" : "medium"}
-                                    borderBottom="2px solid" borderColor={tab === value ? "#1A3557" : "transparent"}
+                                    color={tab === value ? "#0D1B3E" : "#64748B"} fontWeight={tab === value ? "bold" : "medium"}
+                                    borderBottom="2px solid" borderColor={tab === value ? "#0D1B3E" : "transparent"}
                                     onClick={() => { setTab(value); setExpiry(""); setPage(1) }}>
                                     {label}
                                 </Button>

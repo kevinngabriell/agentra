@@ -293,7 +293,7 @@ export default function Policies() {
                 <LuUpload size={14} /> Impor Polis
               </Button>
               <Button
-                bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold" borderRadius="8px"
+                bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold" borderRadius="8px"
                 gap="6px" px="16px"
                 onClick={() => router.push("/agentra/policies/new")}
               >
@@ -439,7 +439,7 @@ export default function Policies() {
                               onClick={() => router.push(`/agentra/policies/${encodeURIComponent(p.policy_id)}`)}>
                               <LuEye size={14} />
                             </IconButton>
-                            <IconButton size="sm" variant="ghost" aria-label="Ubah polis" color="#64748B" _hover={{ bg: "#F1F5F9", color: "#1A3557" }}
+                            <IconButton size="sm" variant="ghost" aria-label="Ubah polis" color="#64748B" _hover={{ bg: "#F1F5F9", color: "#0D1B3E" }}
                               onClick={() => router.push(`/agentra/policies/${encodeURIComponent(p.policy_id)}`)}>
                               <LuPencil size={14} />
                             </IconButton>
@@ -466,10 +466,10 @@ export default function Policies() {
                     <Pagination.Items render={(item) => (
                       <Pagination.Item key={item.value} type="page" value={item.value} asChild>
                         <Button w="32px" h="32px" minW="32px" p="0" borderRadius="6px" border="1px solid"
-                          borderColor={item.value === page ? "#1A3557" : "#E2E8F0"}
-                          bg={item.value === page ? "#1A3557" : "white"}
+                          borderColor={item.value === page ? "#0D1B3E" : "#E2E8F0"}
+                          bg={item.value === page ? "#0D1B3E" : "white"}
                           color={item.value === page ? "white" : "#374151"}
-                          fontSize="15px" _hover={{ bg: item.value === page ? "#162C47" : "#F1F5F9" }}>
+                          fontSize="15px" _hover={{ bg: item.value === page ? "#1A2F5C" : "#F1F5F9" }}>
                           {item.value}
                         </Button>
                       </Pagination.Item>
@@ -533,7 +533,7 @@ export default function Policies() {
                     <Checkbox.HiddenInput />
                     <Checkbox.Control
                       w="16px" h="16px" borderRadius="4px" borderColor="#CBD5E1"
-                      bg={exportApplyFilters ? "#1A3557" : "white"}
+                      bg={exportApplyFilters ? "#0D1B3E" : "white"}
                     >
                       <Checkbox.Indicator color="white" />
                     </Checkbox.Control>
@@ -557,7 +557,7 @@ export default function Policies() {
                 Batal
               </Button>
               <Button
-                bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold"
+                bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold"
                 borderRadius="8px" gap="6px" loading={exporting}
                 onClick={handleExport}
               >

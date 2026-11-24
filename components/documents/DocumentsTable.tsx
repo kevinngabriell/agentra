@@ -213,7 +213,7 @@ export function DocumentsTable({ documents, onChanged, showCustomer = true, show
                                 disabled={busy} onClick={() => setPending(null)}>
                                 Batal
                             </Button>
-                            <Button flex="1" bg={pending?.kind === "delete" ? "#DC2626" : "#1A3557"} color="white" fontSize="16px" borderRadius="8px"
+                            <Button flex="1" bg={pending?.kind === "delete" ? "#DC2626" : "#0D1B3E"} color="white" fontSize="16px" borderRadius="8px"
                                 loading={busy} onClick={confirm}>
                                 {pending?.kind === "archive" ? "Arsipkan" : "Hapus"}
                             </Button>

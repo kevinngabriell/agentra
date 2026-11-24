@@ -211,7 +211,7 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                             _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={onClose}>
                             Batal
                         </Button>
-                        <Button flex="1" bg="#1A3557" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#162C47" }}
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                             loading={saving} loadingText="Menyimpan..." onClick={handleSubmit}>
                             Daftarkan
                         </Button>

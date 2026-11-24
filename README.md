@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <img src="public/brand/agentra-logo-horizontal.svg" alt="Agentra" width="280">
+</p>
 
-## Getting Started
+<p align="center"><strong>CRM for independent general-insurance agents in Indonesia.</strong><br>
+Policies, renewals, WhatsApp reminders and commissions in one place, so no policy gets missed.</p>
 
-First, run the development server:
+Agentra replaces paper files and spreadsheets for agents who manage many policies with different renewal dates, place risks with more than one insurer, and reconcile commissions by hand. It is built for **general insurance** (fire, motor, cargo, travel, accident, AEP). Life insurance is out of scope. The UI is in Indonesian.
+
+This repository is the **frontend only**: a Next.js app that talks to a separate REST API.
+
+## What it does
+
+- **Customers and policies**: individuals (NIK) and companies (NPWP, with a PIC contact), policies with coverage items, deductibles, clauses and extensions.
+- **Co-insurance**: several insurers per policy, each with a share, one marked as leader.
+- **Renewals**: policies grouped by how close they are to expiry, with renewal messages sent over WhatsApp from the list.
+- **Commissions**: one record per policy with status `pending`, `received` or `discrepancy`, so differences from the expected amount are visible.
+- **Sub-agents**: network totals, per-sub-agent performance and commission splits.
+- **Prospects and quotes**: track leads, compare offers from several insurers, print or send a quote.
+- **Reports**: monthly production totals, weekly and per-agent breakdowns.
+- **Marketing site**: SEO-optimised landing page, pricing loaded from the plans API, help centre, legal pages.
+
+See [docs/APPLICATION_OVERVIEW.md](docs/APPLICATION_OVERVIEW.md) for every screen and business rule.
+
+## Quick start
+
+**You need:** Node.js 20 or later, and the URL of a running Agentra API.
+
+```bash
+git clone <repository-url> agentra
+cd agentra
+npm ci
+```
+
+Create `.env.local` in the project root (it is git-ignored):
+
+```bash
+NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_APP_ID=<application id>
+NEXT_PUBLIC_APP_ROLE_ID=<role id>
+```
+
+Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>. The landing page loads even if the API is down (the pricing section renders empty). Everything behind login needs the API.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All variables are read at **build time** (`NEXT_PUBLIC_*` values are inlined into the bundle), so rebuild after changing them.
 
-## Learn More
+| Variable | Required | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend base URL, without `/api/v1`. Also the only origin the Content Security Policy allows for `connect-src`. |
+| `NEXT_PUBLIC_APP_ID` | Yes | Application ID sent when registering and listing plans. |
+| `NEXT_PUBLIC_APP_ROLE_ID` | Yes | Role ID sent when registering. |
+| `NEXT_PUBLIC_STORAGE_URL` | For documents | Object-storage origin(s), comma-separated, allowed for document previews. |
+| `NEXT_PUBLIC_SITE_URL` | No | Public site URL for canonical links, sitemap and OG image. Defaults to `https://agentra.getmovira.com`. |
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Development server (webpack) on port 3000. |
+| `npm run build` | Production build (webpack). |
+| `npm start` | Serve the production build. |
+| `npm run lint` | ESLint. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+There are no automated tests yet. Before opening a PR, run `npm run lint`, `npx tsc --noEmit` and `npm run build`.
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/                  Routes (App Router)
+  page.tsx            Landing page
+  login/ register/ forgot-password/ help/ contact/ privacy/ terms/
+  agentra/            Authenticated app (noindex)
+  seo.ts              Shared SEO constants: domain, title, description, contacts
+  opengraph-image.tsx robots.ts sitemap.ts manifest.ts
+components/           Landing-page sections (Hero, Problem, Features, HowItWorks,
+                      Comparison, Pricing, Faq, Cta), Header, Footer, Logo,
+                      StructuredData (JSON-LD), plus app feature folders
+lib/                  API client (one module per resource), auth, hooks, plans
+public/brand/         Official logo SVGs
+public/icons/         PWA icons
+docs/                 Overview, API reference, SEO strategy
+proxy.ts              Route guard for /agentra/*
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Brand and landing page
+
+- The logo kit lives in `public/brand/`; use the `<Logo>` component ([components/Logo.tsx](components/Logo.tsx)) instead of referencing files directly. Colours: navy `#0D1B3E`, blue `#3B82F6`, light blue `#60A5FA` (on dark backgrounds).
+- Landing copy follows the rules in [docs/seo/SEO_STRATEGY.md](docs/seo/SEO_STRATEGY.md): the head term "CRM asuransi" is always paired with "agen asuransi umum", prices are never hard-coded (they come from the plans API), and no customer counts, ratings or other unverifiable claims are made.
+- The FAQ in `components/FaqSection.tsx` is the single source for both the visible accordion and the `FAQPage` JSON-LD.
+
+## Deployment
+
+Pushes to `main` trigger a GitHub Actions deploy: a self-hosted runner runs `npm ci` and `npm run build`, copies the result to the server and restarts the `agentra` process with PM2. Because `NEXT_PUBLIC_*` values are inlined at build time, all of them must be present in the runner's environment during the build.
+
+## Notes for contributors
+
+- **This is not the Next.js you know.** The project uses Next.js 16 with breaking changes. Read the relevant guide in `node_modules/next/dist/docs/` before changing framework-level code (see [AGENTS.md](AGENTS.md)).
+- Styling is Chakra UI v3 style props; Tailwind 4 is installed but used sparingly.
+- Pages under `app/agentra/` are client components that fetch from the API in `useEffect`.
+- Known gaps are listed in [docs/APPLICATION_OVERVIEW.md](docs/APPLICATION_OVERVIEW.md#known-gaps).
+
+## Credits
+
+Agentra is built by [Movira](https://getmovira.com), a software house in Tangerang. Questions: kevin@getmovira.com.

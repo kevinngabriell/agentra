@@ -375,7 +375,7 @@ export default function Customer() {
                             Reset
                           </Button>
                           <Popover.CloseTrigger asChild>
-                            <Button flex="1" size="sm" bg="#1A3557" color="white" fontSize="14px" onClick={applyFilter}>
+                            <Button flex="1" size="sm" bg="#0D1B3E" color="white" fontSize="14px" onClick={applyFilter}>
                               Terapkan
                             </Button>
                           </Popover.CloseTrigger>

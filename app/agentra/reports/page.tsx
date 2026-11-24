@@ -75,8 +75,8 @@ export default function Reports() {
             {[{ key: PRODUCTION_TAB, label: "Produksi" }, ...REPORT_DEFS].map((t) => (
               <Box key={t.key} as="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
                 px="14px" py="7px" borderRadius="full" fontSize="16px" fontWeight="medium" border="1px solid"
-                bg={tab === t.key ? "#1A3557" : "white"} color={tab === t.key ? "white" : "#475569"}
-                borderColor={tab === t.key ? "#1A3557" : "#E2E8F0"}>
+                bg={tab === t.key ? "#0D1B3E" : "white"} color={tab === t.key ? "white" : "#475569"}
+                borderColor={tab === t.key ? "#0D1B3E" : "#E2E8F0"}>
                 {t.label}
               </Box>
             ))}

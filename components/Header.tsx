@@ -1,5 +1,6 @@
 import { Box, Flex, HStack, Button, Text } from "@chakra-ui/react"
 import Link from "next/link"
+import { Logo } from "./Logo"
 
 export function Header() {
   return (
@@ -15,10 +16,8 @@ export function Header() {
     >
       <Flex maxW="1200px" mx="auto" align="center" justify="space-between">
         {/* Logo */}
-        <Link href="/" aria-label="Agentra – Beranda" style={{ textDecoration: "none" }}>
-          <Text fontWeight="bold" fontSize="xl" color="#0D1B3E" letterSpacing="tight">
-            Agentra
-          </Text>
+        <Link href="/" aria-label="Agentra – Beranda" style={{ display: "block" }}>
+          <Logo height={34} priority />
         </Link>
 
         {/* Nav Links: absolute "/#..." so they also work where the header is reused (e.g. /register). */}
@@ -31,6 +30,16 @@ export function Header() {
               _hover={{ color: "gray.900" }}
             >
               Fitur
+            </Text>
+          </Link>
+          <Link href="/#how">
+            <Text
+              fontSize="sm"
+              fontWeight="medium"
+              color="gray.600"
+              _hover={{ color: "gray.900" }}
+            >
+              Cara Kerja
             </Text>
           </Link>
           <Link href="/#pricing">

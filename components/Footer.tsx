@@ -3,10 +3,12 @@
 import { Box, Flex, HStack, VStack, Text, Button } from "@chakra-ui/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Logo } from "./Logo"
 
 // Absolute "/#..." anchors so the links also resolve when the footer is rendered off the landing page.
 const footerLinks = [
   { label: "Fitur", href: "/#features" },
+  { label: "Cara Kerja", href: "/#how" },
   { label: "Harga", href: "/#pricing" },
   { label: "Tanya Jawab", href: "/#faq" },
   { label: "Bantuan", href: "/help" },
@@ -91,9 +93,7 @@ export function Footer() {
         >
           {/* Brand + copyright */}
           <VStack align={{ base: "center", md: "flex-start" }} gap={1}>
-            <Text fontWeight="bold" fontSize="lg" color="#0D1B3E">
-              Agentra
-            </Text>
+            <Logo height={30} />
             <Text fontSize="sm" color="gray.400">
               © {new Date().getFullYear()} Agentra. CRM untuk agen asuransi umum, dibuat oleh Movira.
             </Text>

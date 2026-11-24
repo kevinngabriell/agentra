@@ -1,4 +1,5 @@
-import { Box, VStack, Grid, Text, Heading } from "@chakra-ui/react"
+import { Box, VStack, Text, Heading } from "@chakra-ui/react"
+import { LuChevronDown } from "react-icons/lu"
 import Link from "next/link"
 
 // Single source for the visible FAQ and the FAQPage JSON-LD (StructuredData.tsx imports it),
@@ -29,6 +30,16 @@ export const FAQ_ITEMS: ReadonlyArray<{ question: string; answer: string }> = [
     question: "Bagaimana cara mendaftar, dan apakah ada paket gratis?",
     answer:
       "Pendaftaran dilakukan lewat halaman Daftar dalam tiga langkah: akun, profil, dan pilihan paket. Paket yang tersedia beserta harganya ditampilkan di bagian Harga pada halaman ini; paket tanpa biaya akan tertera sebagai Gratis jika tersedia.",
+  },
+  {
+    question: "Apakah Agentra cocok untuk agen asuransi jiwa?",
+    answer:
+      "Tidak. Agentra dirancang untuk agen asuransi umum (kebakaran, kendaraan, cargo, perjalanan, kecelakaan, AEP), dengan polis tahunan yang perlu diperpanjang dan koasuransi. Alur dan istilah asuransi jiwa tidak didukung.",
+  },
+  {
+    question: "Apakah Agentra bisa dipakai dari HP?",
+    answer:
+      "Agentra berbasis web, jadi bisa dibuka lewat browser di laptop maupun HP tanpa instalasi. Tampilannya menyesuaikan ukuran layar.",
   },
   {
     question: "Siapa yang membuat Agentra?",
@@ -62,27 +73,43 @@ export function FaqSection() {
           </Heading>
         </VStack>
 
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6} w="100%">
+        <VStack w="100%" gap={3} align="stretch">
           {FAQ_ITEMS.map((item) => (
             <Box
+              as="details"
               key={item.question}
               bg="gray.50"
-              borderRadius="2xl"
-              p={6}
+              borderRadius="xl"
               border="1px solid"
               borderColor="gray.100"
+              css={{ "&[open] summary svg": { transform: "rotate(180deg)" } }}
             >
-              <VStack align="flex-start" gap={3}>
+              <Box
+                as="summary"
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                gap={4}
+                px={6}
+                py={4}
+                minH="56px"
+                cursor="pointer"
+                listStyleType="none"
+                css={{ "&::-webkit-details-marker": { display: "none" } }}
+              >
                 <Heading as="h3" fontSize="md" fontWeight="semibold" color="#0D1B3E">
                   {item.question}
                 </Heading>
-                <Text fontSize="sm" color="gray.600" lineHeight="1.75">
-                  {item.answer}
-                </Text>
-              </VStack>
+                <Box color="gray.500" flexShrink={0} aria-hidden="true">
+                  <LuChevronDown size={20} style={{ transition: "transform 0.2s" }} />
+                </Box>
+              </Box>
+              <Text px={6} pb={5} fontSize="sm" color="gray.600" lineHeight="1.75">
+                {item.answer}
+              </Text>
             </Box>
           ))}
-        </Grid>
+        </VStack>
 
         <Text fontSize="sm" color="gray.500" textAlign="center">
           Butuh jawaban lain? Lihat{" "}

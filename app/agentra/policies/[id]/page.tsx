@@ -929,8 +929,8 @@ export default function PolicyDetail() {
                 >
                   <Box
                     w="16px" h="16px" borderRadius="4px" flexShrink={0}
-                    border="2px solid" borderColor={covForm.count_in_tsi ? "#1A3557" : "#CBD5E1"}
-                    bg={covForm.count_in_tsi ? "#1A3557" : "white"}
+                    border="2px solid" borderColor={covForm.count_in_tsi ? "#0D1B3E" : "#CBD5E1"}
+                    bg={covForm.count_in_tsi ? "#0D1B3E" : "white"}
                     display="flex" alignItems="center" justifyContent="center"
                   >
                     {covForm.count_in_tsi && <Box w="8px" h="8px" borderRadius="2px" bg="white" />}
@@ -962,9 +962,9 @@ export default function PolicyDetail() {
                 Batal
               </Button>
               <Button
-                flex="1" bg="#1A3557" color="white" fontSize="16px" borderRadius="8px"
+                flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px"
                 loading={covSaving} loadingText="Menyimpan..."
-                _hover={{ bg: "#162C47" }}
+                _hover={{ bg: "#1A2F5C" }}
                 onClick={handleSaveCoverage}
               >
                 Simpan
@@ -996,8 +996,8 @@ export default function PolicyDetail() {
                   <Flex justify="space-between" align="center" mb="10px">
                     <Text fontSize="15px" fontWeight="semibold" color="#1C2833">Item Pertanggungan</Text>
                     <Button
-                      size="xs" bg="#1A3557" color="white" fontSize="14px" gap="4px" borderRadius="6px"
-                      _hover={{ bg: "#162C47" }}
+                      size="xs" bg="#0D1B3E" color="white" fontSize="14px" gap="4px" borderRadius="6px"
+                      _hover={{ bg: "#1A2F5C" }}
                       onClick={() => {
                         setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '', count_in_tsi: true })
                         setCovError(null)
@@ -1444,8 +1444,8 @@ export default function PolicyDetail() {
                   <Flex justify="space-between" align="center" mb="10px">
                     <Text fontSize="15px" fontWeight="semibold" color="#1C2833">Item Pertanggungan</Text>
                     <Button
-                      size="xs" bg="#1A3557" color="white" fontSize="14px" gap="4px" borderRadius="6px"
-                      _hover={{ bg: "#162C47" }}
+                      size="xs" bg="#0D1B3E" color="white" fontSize="14px" gap="4px" borderRadius="6px"
+                      _hover={{ bg: "#1A2F5C" }}
                       onClick={() => {
                         setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '', count_in_tsi: true })
                         setCovError(null)
@@ -1904,7 +1904,7 @@ export default function PolicyDetail() {
                 Batal
               </Button>
               <Button
-                flex="1" bg="#1A3557" color="white" fontSize="16px" borderRadius="8px"
+                flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px"
                 loading={actionLoading === "followup"} loadingText="Menyimpan..."
                 onClick={logFollowUp}
               >
@@ -2321,8 +2321,8 @@ export default function PolicyDetail() {
               <Flex px="16px" py="10px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
                 <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Uang Pertanggungan & Rate</Text>
                 {/* <Button
-                  size="xs" bg="#1A3557" color="white" fontSize="14px" gap="4px" borderRadius="6px"
-                  _hover={{ bg: "#162C47" }}
+                  size="xs" bg="#0D1B3E" color="white" fontSize="14px" gap="4px" borderRadius="6px"
+                  _hover={{ bg: "#1A2F5C" }}
                   onClick={() => { setCovForm({ coverage_type: 'bangunan', coverage_label: '', sum_insured: '', rate_permille: '' }); setCovError(null); setCovChange(newChange('correction')); setCovDialog({ open: true, editing: null }) }}
                 >
                   <LuPlus size={10} /> Tambah Item
@@ -2584,10 +2584,10 @@ export default function PolicyDetail() {
             <Text color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.08em" mb="12px">
               {days >= 0 ? "HARI MENUJU EXPIRY" : "SUDAH BERAKHIR"}
             </Text>
-            <Text color={days < 0 ? "#DC2626" : "#1A3557"} fontSize="52px" fontWeight="bold" lineHeight="1">
+            <Text color={days < 0 ? "#DC2626" : "#0D1B3E"} fontSize="52px" fontWeight="bold" lineHeight="1">
               {Math.abs(days)}
             </Text>
-            <Text color={days < 0 ? "#DC2626" : "#1A3557"} fontSize="18px" fontWeight="semibold" mb="12px">Hari</Text>
+            <Text color={days < 0 ? "#DC2626" : "#0D1B3E"} fontSize="18px" fontWeight="semibold" mb="12px">Hari</Text>
             <Flex align="center" justify="center" gap="6px" color="#64748B" fontSize="14px" mb="20px">
               <LuCalendar size={13} /> Berakhir: {formatDate(policy.coverage_end)}
             </Flex>

@@ -155,7 +155,7 @@ function DocumentsTab({ summary, insurers, reloadKey, onChanged }: {
                     <SearchSelect value={status} onChange={set((v: string) => setStatus((v || "active") as ApiDocumentStatus | "all"))}
                         options={STATUS_OPTIONS} ariaLabel="Filter status" />
                 </Box>
-                <Button bg="#1A3557" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#162C47" }}
+                <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }}
                     w={{ base: "100%", sm: "auto" }} onClick={() => setUploadOpen(true)}>
                     <LuUpload size={14} /> Unggah Dokumen
                 </Button>
@@ -296,7 +296,7 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
                                         </Table.Cell>
                                         <Table.Cell px="12px" py="10px" textAlign="end" whiteSpace="nowrap">
                                             {!r.complete && (
-                                                <Button size="xs" variant="ghost" color="#1A3557" gap="4px" fontSize="14px"
+                                                <Button size="xs" variant="ghost" color="#0D1B3E" gap="4px" fontSize="14px"
                                                     onClick={() => setUpload({ customer: r, type: r.missing[0] })}>
                                                     <LuUpload size={12} /> Unggah
                                                 </Button>

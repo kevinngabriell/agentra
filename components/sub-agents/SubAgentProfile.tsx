@@ -85,7 +85,7 @@ function MonthlyChart({ perf }: { perf: SubAgentPerformance }) {
             <Flex align="flex-end" gap="6px" h="120px" role="img" aria-label="Grafik premi per bulan">
                 {perf.monthly.map((m) => (
                     <Flex key={m.month} flex="1" flexDir="column" justify="flex-end" align="center" h="100%" title={`${monthLabel(m.month)}: ${fmtIDR(m.premium)} · ${m.policies_count} polis`}>
-                        <Box w="100%" maxW="28px" borderTopRadius="4px" bg={m.premium > 0 ? "#1A3557" : "#E2E8F0"} h={`${Math.max(m.premium > 0 ? 4 : 2, (m.premium / max) * 100)}%`} />
+                        <Box w="100%" maxW="28px" borderTopRadius="4px" bg={m.premium > 0 ? "#0D1B3E" : "#E2E8F0"} h={`${Math.max(m.premium > 0 ? 4 : 2, (m.premium / max) * 100)}%`} />
                     </Flex>
                 ))}
             </Flex>
@@ -489,7 +489,7 @@ function AccountDialog({ agent, onClose, onSaved }: { agent: ApiSubAgentDetail; 
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
                         <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px" disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button flex="1" bg="#1A3557" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#162C47" }} loading={saving} loadingText="Menyimpan..." onClick={submit}>Simpan</Button>
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }} loading={saving} loadingText="Menyimpan..." onClick={submit}>Simpan</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>

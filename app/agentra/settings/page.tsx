@@ -78,8 +78,8 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
   return (
     <Flex flexDir="column" gap="24px">
       <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
-        <Flex borderLeft="4px solid" borderColor="#1A3557" pl="12px" mb="24px">
-          <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Informasi Akun</Text>
+        <Flex borderLeft="4px solid" borderColor="#0D1B3E" pl="12px" mb="24px">
+          <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Informasi Akun</Text>
         </Flex>
 
         <Flex flexDir="column" gap="16px" maxW="480px">
@@ -128,7 +128,7 @@ function ProfileTab({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserP
           {feedback && <Toast type={feedback.type} message={feedback.msg} />}
 
           <Button
-            bg="#1A3557" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
+            bg="#0D1B3E" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
             px="24px" w="max-content"
             loading={saving}
             onClick={handleSave}
@@ -187,8 +187,8 @@ function SecurityTab() {
 
   return (
     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
-      <Flex borderLeft="4px solid" borderColor="#1A3557" pl="12px" mb="24px">
-        <Text color="#1A3557" fontSize="16px" fontWeight="semibold">Ubah Password</Text>
+      <Flex borderLeft="4px solid" borderColor="#0D1B3E" pl="12px" mb="24px">
+        <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Ubah Password</Text>
       </Flex>
 
       <Flex flexDir="column" gap="16px" maxW="480px">
@@ -216,7 +216,7 @@ function SecurityTab() {
         {feedback && <Toast type={feedback.type} message={feedback.msg} />}
 
         <Button
-          bg="#1A3557" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
+          bg="#0D1B3E" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
           px="24px" w="max-content"
           loading={saving}
           onClick={handleChange}
@@ -484,7 +484,7 @@ function NotificationsTab() {
       {feedback && <Toast type={feedback.type} message={feedback.msg} />}
 
       <Button
-        bg="#1A3557" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
+        bg="#0D1B3E" color="white" fontSize="16px" fontWeight="semibold" borderRadius="8px"
         px="24px" w="max-content"
         loading={saving}
         disabled={loadState !== "ready"}
@@ -619,7 +619,7 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
         }
         <Flex gap="8px">
           <Button size="sm" variant="ghost" color="#64748B" fontSize="14px" onClick={onClose}>Tutup</Button>
-          <Button size="sm" bg="#1A3557" color="white" fontSize="14px" loading={saving} disabled={loading || loadFailed} onClick={save}>
+          <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" loading={saving} disabled={loading || loadFailed} onClick={save}>
             Simpan Konfigurasi
           </Button>
         </Flex>
@@ -755,7 +755,7 @@ function InsurersTab() {
           <Text color="#64748B" fontSize="15px">Kelola perusahaan asuransi dan konfigurasi produk & komisi</Text>
         </Flex>
         <Button
-          bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold" gap="6px"
+          bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold" gap="6px"
           onClick={() => { setShowAdd(true); setFeedback(null) }}
         >
           <LuPlus size={14} /> Tambah Insurer
@@ -836,7 +836,7 @@ function InsurersTab() {
                         <Button size="sm" variant="ghost" color="#64748B" onClick={() => setEditingId(null)} px="2">
                           <LuX size={14} />
                         </Button>
-                        <Button size="sm" bg="#1A3557" color="white" fontSize="14px" loading={savingId === ins.insurer_id} onClick={() => saveEdit(ins.insurer_id)}>
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" loading={savingId === ins.insurer_id} onClick={() => saveEdit(ins.insurer_id)}>
                           Simpan
                         </Button>
                       </>
@@ -919,7 +919,7 @@ function InsurersTab() {
             </Dialog.Body>
             <Dialog.Footer borderTop="1px solid" borderColor="#E2E8F0" pt="16px" gap="8px">
               <Button variant="outline" onClick={() => setShowAdd(false)} disabled={adding}>Batal</Button>
-              <Button bg="#1A3557" color="white" loading={adding} onClick={handleAdd}>Simpan</Button>
+              <Button bg="#0D1B3E" color="white" loading={adding} onClick={handleAdd}>Simpan</Button>
             </Dialog.Footer>
           </Dialog.Content>
         </Dialog.Positioner>
@@ -1204,7 +1204,7 @@ function MasterProductsTab() {
           <Text color="#64748B" fontSize="15px">Kelola katalog produk asuransi dan tarif komisi default</Text>
         </Flex>
         <Button
-          bg="#1A3557" color="white" fontSize="15px" fontWeight="semibold" gap="6px"
+          bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold" gap="6px"
           onClick={() => { setAddForm(EMPTY_PRODUCT_FORM); setAddErrors({}); setAddError(null); setAddOpen(true); setFeedback(null) }}
         >
           <LuPlus size={14} /> Tambah Produk
@@ -1227,7 +1227,7 @@ function MasterProductsTab() {
             return (
               <Box key={p.product_id} bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0">
                 <Flex p="16px" align="center" gap="12px" flexWrap="wrap">
-                  <Box px="8px" py="2px" borderRadius="6px" bg="#1A3557" color="white" fontSize="14px" fontWeight="bold" flexShrink={0}>
+                  <Box px="8px" py="2px" borderRadius="6px" bg="#0D1B3E" color="white" fontSize="14px" fontWeight="bold" flexShrink={0}>
                     {p.product_code}
                   </Box>
                   <Text color="#1C2833" fontSize="16px" fontWeight="semibold" flex="1" minW={0}>{p.product_name}</Text>
@@ -1314,7 +1314,7 @@ function MasterProductsTab() {
               <Dialog.ActionTrigger asChild>
                 <Button variant="ghost" color="#64748B" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button bg="#1A3557" color="white" fontSize="16px" loading={adding} onClick={handleAdd}>
+              <Button bg="#0D1B3E" color="white" fontSize="16px" loading={adding} onClick={handleAdd}>
                 Simpan
               </Button>
             </Dialog.Footer>
@@ -1340,7 +1340,7 @@ function MasterProductsTab() {
               <Dialog.ActionTrigger asChild>
                 <Button variant="ghost" color="#64748B" fontSize="16px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button bg="#1A3557" color="white" fontSize="16px" loading={saving} onClick={handleSaveEdit}>
+              <Button bg="#0D1B3E" color="white" fontSize="16px" loading={saving} onClick={handleSaveEdit}>
                 Simpan Perubahan
               </Button>
             </Dialog.Footer>

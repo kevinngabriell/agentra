@@ -67,7 +67,7 @@ export function TasksPanel({ link }: { link: TaskLink }) {
                         <Text color="#5D6D7E" fontSize="16px">{loading ? "Memuat..." : `${open.length} tugas terbuka`}</Text>
                     </Flex>
                 </Flex>
-                <Button size="sm" bg="#1A3557" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#162C47" }} onClick={() => setDialog({})}>
+                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog({})}>
                     <LuPlus size={14} /> Tambah Tugas
                 </Button>
             </Flex>

@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { SITE_URL } from "./seo";
 
 // Root OG image: inherited by every route that doesn't define its own. Twitter/X reuses it
@@ -10,12 +12,15 @@ export const size = {
 };
 export const contentType = "image/png";
 
-const NAVY = "#1A3557";
-const ACCENT = "#2E86C1";
-const MUTED = "#D6E4F0";
+const NAVY = "#0D1B3E";
+const ACCENT = "#3B82F6";
+const MUTED = "#C7D6F2";
 
-export default function Image() {
+export default async function Image() {
   const host = new URL(SITE_URL).host;
+  // Official white logo, inlined as a data URI so the OG renderer needs no network or font access.
+  const svg = await readFile(path.join(process.cwd(), "public/brand/agentra-logo-horizontal-white.svg"), "utf8");
+  const logo = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -31,25 +36,8 @@ export default function Image() {
           padding: "72px 80px",
         }}
       >
-        {/* Wordmark */}
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 18,
-              background: ACCENT,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 44,
-              fontWeight: 700,
-            }}
-          >
-            A
-          </div>
-          <div style={{ display: "flex", fontSize: 44, fontWeight: 700, letterSpacing: -1 }}>Agentra</div>
-        </div>
+        {/* Logo */}
+        <img src={logo} width={246} height={72} alt="" />
 
         {/* Headline */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

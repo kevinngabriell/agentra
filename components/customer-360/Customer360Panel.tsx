@@ -89,7 +89,7 @@ export function Customer360Panel({ customerId }: { customerId: string }) {
                     <Flex bg="#F1F5F9" borderRadius="8px" p="2px">
                         {(["customer", "group"] as const).map((s) => (
                             <Button key={s} size="xs" fontSize="16px" borderRadius="6px" variant="ghost"
-                                bg={scope === s ? "#1A3557" : "transparent"} color={scope === s ? "white" : "#475569"} _hover={{ bg: scope === s ? "#1A3557" : "#E2E8F0" }}
+                                bg={scope === s ? "#0D1B3E" : "transparent"} color={scope === s ? "white" : "#475569"} _hover={{ bg: scope === s ? "#0D1B3E" : "#E2E8F0" }}
                                 onClick={() => setScope(s)}>
                                 {s === "customer" ? "Nasabah ini" : "Seluruh grup"}
                             </Button>
@@ -119,11 +119,11 @@ export function Customer360Panel({ customerId }: { customerId: string }) {
                                 <SearchSelect value={pickedGroup} onChange={(v) => { setPickedGroup(v); setNewGroup("") }} placeholder="Pilih grup yang ada"
                                     options={groups.map((g) => ({ value: g.group_id, label: `${g.name} (${g.member_count})` }))} />
                             </Box>
-                            <Button size="xs" bg="#1A3557" color="white" disabled={!pickedGroup || saving} loading={saving} onClick={() => void saveGroup({ group_id: pickedGroup })}>Pindahkan</Button>
+                            <Button size="xs" bg="#0D1B3E" color="white" disabled={!pickedGroup || saving} loading={saving} onClick={() => void saveGroup({ group_id: pickedGroup })}>Pindahkan</Button>
                             <Text fontSize="16px" color="#64748B">atau</Text>
                             <Input size="sm" w="190px" fontSize="16px" placeholder="Nama grup baru" maxLength={150} value={newGroup}
                                 onChange={(e) => { setNewGroup(e.target.value); setPickedGroup("") }} />
-                            <Button size="xs" bg="#1A3557" color="white" disabled={!newGroup.trim() || saving} loading={saving} onClick={() => void saveGroup({ group_name: newGroup.trim() })}>Buat &amp; masukkan</Button>
+                            <Button size="xs" bg="#0D1B3E" color="white" disabled={!newGroup.trim() || saving} loading={saving} onClick={() => void saveGroup({ group_name: newGroup.trim() })}>Buat &amp; masukkan</Button>
                             <Button size="xs" variant="ghost" onClick={() => setEditingGroup(false)}>Batal</Button>
                         </Flex>
                     )}

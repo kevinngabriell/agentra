@@ -182,7 +182,7 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                             return (
                                                 <Flex key={s} align="center" gap="6px">
                                                     <Flex align="center" gap="5px" px="10px" py="4px" borderRadius="full" fontSize="16px" fontWeight="semibold"
-                                                        bg={current ? "#1A3557" : reached ? "#DCFCE7" : "#F1F5F9"} color={current ? "white" : reached ? "#15803D" : "#94A3B8"}>
+                                                        bg={current ? "#0D1B3E" : reached ? "#DCFCE7" : "#F1F5F9"} color={current ? "white" : reached ? "#15803D" : "#94A3B8"}>
                                                         {reached && !current && <LuCheck size={11} />}{RENEWAL_STAGE_LABELS[s]}
                                                     </Flex>
                                                     {i < RENEWAL_STAGE_FLOW.length - 1 && <Text color="#CBD5E1" fontSize="16px">›</Text>}
@@ -291,14 +291,14 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                         <Flex gap="8px" flexWrap="wrap" align="center">
                                             {editable && <Button size="sm" variant="outline" fontSize="16px" disabled={!dirty || busy} loading={busy && dirty} onClick={() => void save()}>Simpan ketentuan</Button>}
                                             {nextSteps.map((s) => (
-                                                <Button key={s} size="sm" bg="#1A3557" color="white" fontSize="16px" disabled={busy} onClick={() => void moveTo(s)}>
+                                                <Button key={s} size="sm" bg="#0D1B3E" color="white" fontSize="16px" disabled={busy} onClick={() => void moveTo(s)}>
                                                     {NEXT_LABELS[s] ?? RENEWAL_STAGE_LABELS[s]}
                                                 </Button>
                                             ))}
                                             {stage === "accepted" && (
                                                 <Button size="sm" bg="#16A34A" color="white" fontSize="16px" disabled={busy} onClick={() => setIssuing(true)}>Terbitkan polis baru</Button>
                                             )}
-                                            {reopenable && <Button size="sm" bg="#1A3557" color="white" fontSize="16px" disabled={busy} onClick={() => void moveTo("terms_requested")}>Buka kembali</Button>}
+                                            {reopenable && <Button size="sm" bg="#0D1B3E" color="white" fontSize="16px" disabled={busy} onClick={() => void moveTo("terms_requested")}>Buka kembali</Button>}
                                             {canDecline && <Button size="sm" variant="outline" borderColor="#FCA5A5" color="#DC2626" fontSize="16px" disabled={busy} onClick={() => setDeclining(true)}>Perpanjangan hilang</Button>}
                                         </Flex>
                                     )}
@@ -351,7 +351,7 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                             <Flex mt="16px" gap="8px" flexWrap="wrap" justify="flex-end">
                                 <Button size="sm" variant="outline" fontSize="16px" onClick={onClose}>Nanti</Button>
                                 <Button size="sm" variant="outline" fontSize="16px" onClick={() => router.push(`/agentra/policies/${encodeURIComponent(issued.policy_id)}`)}>Buka polis</Button>
-                                <Button size="sm" bg="#1A3557" color="white" fontSize="16px" gap="6px" onClick={() => setUploading(true)}><LuFileUp size={13} /> Unggah dokumen</Button>
+                                <Button size="sm" bg="#0D1B3E" color="white" fontSize="16px" gap="6px" onClick={() => setUploading(true)}><LuFileUp size={13} /> Unggah dokumen</Button>
                             </Flex>
                         </Dialog.Content>
                     </Dialog.Positioner>

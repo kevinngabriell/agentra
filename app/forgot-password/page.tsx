@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Alert, Box, Button, Card, Field, Flex, Image, Input, Text } from "@chakra-ui/react"
+import { Alert, Box, Button, Card, Field, Flex, Input, Text } from "@chakra-ui/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { FiLock, FiMessageCircle } from "react-icons/fi"
 import { PasswordInput, PasswordStrengthMeter } from "@/components/ui/password-input"
 import { ForgotPassword, ResetPassword } from "@/lib/auth/auth"
-import iconImg from "@/assets/icon.svg"
+import { Logo } from "@/components/Logo"
 
 type Step = 1 | 2 | 3
 
@@ -217,7 +217,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <Flex
-            backgroundColor="#1A3557"
+            backgroundColor="#0D1B3E"
             flexDir="column"
             minH="100vh"
             alignItems="center"
@@ -233,8 +233,7 @@ export default function ForgotPasswordPage() {
                     {step === 1 && (
                         <>
                             <Flex flexDir="column" alignItems="center" mb="28px" gap="6px">
-                                <Image src={iconImg.src} alt="" w="44px" h="44px" mb="2px" />
-                                <Text color="#001F40" fontSize="22px" fontWeight="bold" lineHeight="1">Agentra</Text>
+                                <Logo height={40} />
                                 <Text color="#001F40" fontSize="19px" fontWeight="bold" mt="8px">Lupa Password?</Text>
                                 <Text color="#5D6D7E" fontSize="13px" textAlign="center" lineHeight="1.6">
                                     Masukkan email akun Anda. Kami akan mengirim kode OTP ke nomor WhatsApp Anda yang terdaftar.

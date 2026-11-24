@@ -153,10 +153,10 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
                                 <Flex justify="space-between" align="center" gap="8px" mb="16px" flexWrap="wrap">
                                     <Flex align="center" gap="8px">
-                                        <LuFileText size={16} color="#1A3557" />
+                                        <LuFileText size={16} color="#0D1B3E" />
                                         <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Penawaran ({quotes.length})</Text>
                                     </Flex>
-                                    {!closed && <Button size="sm" bg="#1A3557" color="white" fontSize="15px" _hover={{ bg: "#162C47" }} onClick={() => setDialog("quote")}><LuPlus size={13} /> Buat Penawaran</Button>}
+                                    {!closed && <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog("quote")}><LuPlus size={13} /> Buat Penawaran</Button>}
                                 </Flex>
                                 {quotes.length === 0 ? (
                                     <Text color="#64748B" fontSize="15px">Belum ada penawaran. Buat penawaran dan bandingkan beberapa asuransi sekaligus.</Text>

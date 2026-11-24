@@ -280,7 +280,7 @@ export default function Renewals() {
             <Flex bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" overflow="hidden" w={{ base: "100%", md: "auto" }}>
               {([["list", "List", LuList], ["calendar", "Kalender", LuCalendarDays]] as const).map(([key, label, Icon]) => (
                 <Button key={key} size="sm" flex={{ base: 1, md: "initial" }} borderRadius="0" fontSize="16px" gap="6px" px="14px" aria-pressed={view === key}
-                  bg={view === key ? "#1A3557" : "white"} color={view === key ? "white" : "#475569"} onClick={() => setView(key)}>
+                  bg={view === key ? "#0D1B3E" : "white"} color={view === key ? "white" : "#475569"} onClick={() => setView(key)}>
                   <Icon size={13} /> {label}
                 </Button>
               ))}
@@ -432,12 +432,12 @@ export default function Renewals() {
                               <Table.Cell px="20px" py="12px">
                                 <Flex gap="6px" flexWrap="wrap">
                                   {key !== "done" && (
-                                    <Button size="sm" bg="#1A3557" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px" px="14px"
+                                    <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px" px="14px"
                                       onClick={() => router.push(`/agentra/policies/${encodeURIComponent(r.policy_id)}`)}>
                                       Follow Up
                                     </Button>
                                   )}
-                                  <Button size="sm" variant="outline" borderColor="#1A3557" color="#1A3557" fontSize="16px" borderRadius="8px" px="14px"
+                                  <Button size="sm" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" fontSize="16px" borderRadius="8px" px="14px"
                                     onClick={() => setWorkflowId(r.policy_id)}>
                                     Alur Renewal
                                   </Button>
