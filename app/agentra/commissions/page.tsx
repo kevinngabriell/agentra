@@ -1,5 +1,6 @@
 "use client"
 
+import { EndorsementCommissions } from "@/components/endorsements/EndorsementCommissions"
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
   Badge, Box, Button, Dialog, Field, Flex, Grid, Input, Skeleton, Table, Text, Textarea,
@@ -21,6 +22,7 @@ import { MonthPickerButton } from "@/components/ui/month-picker"
 import { SearchSelect } from "@/components/ui/search-select"
 import { getInsurers, type ApiInsurer } from "@/lib/api/insurers"
 import { getMasterProducts, type ApiMasterProduct } from "@/lib/api/master-products"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,18 +42,6 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
 }
 
-const PRODUCT_LABELS: Record<string, string> = {
-  fire:        "Kebakaran",
-  motorcycle:  "Motor",
-  car:         "Kendaraan",
-  travel:      "Perjalanan",
-  cargo:       "Kargo",
-  other:       "Lainnya",
-  kecelakaan:  "Kecelakaan",
-  aep:         "AEP",
-  kebakaran:   "Kebakaran",
-  kendaraan:   "Kendaraan",
-}
 
 const STATUS_META: Record<CommissionStatus, { label: string; bg: string; color: string; Icon: React.ElementType }> = {
   pending:     { label: "Menunggu",  bg: "#FEF3C7", color: "#D97706", Icon: LuClock },
@@ -97,6 +87,7 @@ const emptyMarkForm = (): MarkFormState => ({
 type StatusFilter = CommissionStatus | "all"
 
 export default function Commissions() {
+  const productCatalog = useProductOptions()
   const router = useRouter()
   const [month, setMonth]         = useState(() => localMonth())
   const [query, setQuery]         = useState("")
@@ -424,7 +415,7 @@ export default function Commissions() {
                         {/* Produk */}
                         <Table.Cell px="16px" py="12px">
                           <Text color="#64748B" fontSize="14px">
-                            {c.product_type ? (PRODUCT_LABELS[c.product_type] ?? c.product_type) : "—"}
+                            {c.product_type ? productCatalog.label(c.product_type) : "—"}
                           </Text>
                         </Table.Cell>
 
@@ -490,6 +481,8 @@ export default function Commissions() {
               </Box>
             )}
           </Box>
+
+          <EndorsementCommissions insurerId={insurerId} />
 
         </Flex>
       </Box>

@@ -8,12 +8,17 @@ export interface ApiInsurer {
     is_primary: boolean
     is_active: boolean
     notes?: string | null
+    /** 24-hour emergency assistance number (travel / motor). */
+    assistance_phone?: string | null
 }
 
-export type ApiInsurerProductType = 'fire' | 'motorcycle' | 'car' | 'travel' | 'cargo' | 'other'
+/** A product line (GET /master-products/types). The insurer's default commission is set per line. */
+export type ApiInsurerProductType = string
 
 export interface ApiInsurerProduct {
-    insurer_product_id: string
+    /** Null until a rate was saved for this line. */
+    insurer_product_id: string | null
+    label?: string
     insurer_id: string
     product_type: ApiInsurerProductType
     commission_rate: number
@@ -27,6 +32,7 @@ export interface CreateInsurerPayload {
     notes?: string
     is_primary?: boolean
     is_active?: boolean
+    assistance_phone?: string | null
 }
 
 export async function getInsurers(token: string, isActive?: boolean): Promise<ApiInsurer[]> {

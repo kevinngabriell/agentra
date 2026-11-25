@@ -20,20 +20,11 @@ import {
   getPolicies, exportPolicies,
   type ApiPolicy, type ApiProductType, type ApiRenewalStatus,
 } from "@/lib/api/policies"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 const PAGE_SIZE = 10
 const SKELETON_ROWS = 6
 
-const PRODUCT_LABELS: Record<ApiProductType, string> = {
-  fire:        "Asuransi Kebakaran",
-  motorcycle:  "Asuransi Motor",
-  car:         "Asuransi Kendaraan",
-  travel:      "Asuransi Perjalanan",
-  cargo:       "Asuransi Kargo",
-  other:       "Asuransi Lainnya",
-  kecelakaan:  "Asuransi Kecelakaan",
-  aep:         "AEP",
-}
 
 const PRODUCT_ICONS: Record<ApiProductType, React.ElementType> = {
   fire:        LuFlame,
@@ -129,6 +120,7 @@ function TableSkeleton() {
 }
 
 export default function Policies() {
+  const productCatalog = useProductOptions()
   const router = useRouter()
 
   const [page, setPage]         = useState(1)
@@ -255,7 +247,7 @@ export default function Policies() {
                 onChange={(v) => { setProductFilter(v as ApiProductType | ""); setPage(1) }}
                 options={[
                   { value: "", label: "Semua Produk" },
-                  ...(Object.keys(PRODUCT_LABELS) as ApiProductType[]).map((k) => ({ value: k, label: PRODUCT_LABELS[k] })),
+                  ...productCatalog.options,
                 ]}
               />
             </Flex>
@@ -403,7 +395,7 @@ export default function Policies() {
                         <Table.Cell px="20px" py="14px">
                           <Flex align="center" gap="6px" mb="4px">
                             <Box color="#64748B"><ProductIcon size={14} /></Box>
-                            <Text color="#1C2833" fontSize="15px">{PRODUCT_LABELS[p.product_type]}</Text>
+                            <Text color="#1C2833" fontSize="15px">{productCatalog.label(p.product_type)}</Text>
                           </Flex>
                           <Badge px="6px" py="1px" borderRadius="4px" fontSize="14px" fontWeight="bold"
                             bg={insurerColor + "20"} color={insurerColor}>

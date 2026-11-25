@@ -13,7 +13,8 @@ import {
 } from "@/lib/api/prospects"
 import { fmtIDR, fmtIDRCompact } from "@/lib/format"
 import { SearchSelect } from "@/components/ui/search-select"
-import { ProspectDialog, StageBadge, PRODUCT_OPTIONS, fmtDate, productLabel } from "@/components/sales"
+import { ProspectDialog, StageBadge, fmtDate } from "@/components/sales"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 const PAGE_SIZE = 20
 
@@ -62,6 +63,7 @@ function daysUntil(iso: string): number {
 }
 
 export default function ProspectsPage() {
+    const productCatalog = useProductOptions()
     const router = useRouter()
     const [checked, setChecked] = useState(false)
     const [summary, setSummary] = useState<ProspectSummary | null>(null)
@@ -181,7 +183,7 @@ export default function ProspectsPage() {
                                 {query && <IconButton size="xs" variant="ghost" aria-label="Hapus pencarian" color="#64748B" onClick={() => set(setQuery)("")}><LuX size={14} /></IconButton>}
                             </Flex>
                             <Box w={{ base: "100%", sm: "170px" }}><SearchSelect value={stage} onChange={set(setStage)} options={STAGE_OPTIONS} ariaLabel="Filter tahap" /></Box>
-                            <Box w={{ base: "100%", sm: "170px" }}><SearchSelect value={product} onChange={set(setProduct)} options={[{ value: "", label: "Semua Produk" }, ...PRODUCT_OPTIONS]} ariaLabel="Filter produk" /></Box>
+                            <Box w={{ base: "100%", sm: "170px" }}><SearchSelect value={product} onChange={set(setProduct)} options={[{ value: "", label: "Semua Produk" }, ...productCatalog.options]} ariaLabel="Filter produk" /></Box>
                             {isCompetitor && <Box w={{ base: "100%", sm: "200px" }}><SearchSelect value={expiry} onChange={set(setExpiry)} options={EXPIRY_OPTIONS} ariaLabel="Filter tanggal berakhir" /></Box>}
                         </Flex>
 
@@ -237,12 +239,12 @@ export default function ProspectsPage() {
                                                                         </Text>
                                                                     )}
                                                                 </Table.Cell>
-                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{productLabel(p.product_interest)}</Table.Cell>
+                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{productCatalog.label(p.product_interest)}</Table.Cell>
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{p.whatsapp ?? p.phone ?? p.email ?? "—"}</Table.Cell>
-                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{productLabel(p.product_interest)}</Table.Cell>
+                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{productCatalog.label(p.product_interest)}</Table.Cell>
                                                                 <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{p.expected_premium ? fmtIDR(p.expected_premium) : "—"}</Table.Cell>
                                                                 <Table.Cell px="16px" py="10px" fontSize="15px" whiteSpace="nowrap"
                                                                     color={p.follow_up_date && daysUntil(p.follow_up_date) < 0 && p.stage !== "won" && p.stage !== "lost" ? "#DC2626" : "#1C2833"}>

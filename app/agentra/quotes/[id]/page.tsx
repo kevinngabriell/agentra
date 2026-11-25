@@ -7,29 +7,41 @@ import { LuArrowLeft, LuCheck, LuFileCheck, LuPencil, LuPrinter, LuSend, LuTrash
 import { getAccessToken } from "@/lib/auth/session"
 import { errorMessage } from "@/lib/api/client"
 import {
-    QUOTE_TRANSITIONS, acceptQuote, changeQuoteStatus, deleteQuote, getQuote,
-    type ApiQuoteDetail, type QuoteOption,
+    PLACEMENT_STATUS_COLORS, PLACEMENT_STATUS_LABELS, QUOTE_TRANSITIONS, acceptQuote, changeQuoteStatus, deleteQuote, getQuote, updateOptionPlacement,
+    type ApiQuoteDetail, type PlacementStatus, type QuoteOption,
 } from "@/lib/api/quotes"
+import { COVERAGE_TYPE_LABELS, type ApiCoverageType } from "@/lib/api/policies"
+import { SearchSelect } from "@/components/ui/search-select"
+import { deductibleText } from "@/components/policy-terms/catalog"
 import { getProspect, type ApiProspect } from "@/lib/api/prospects"
 import { fmtIDR, whatsappUrl } from "@/lib/format"
-import { ConvertDialog, QuoteDialog, QuoteStatusBadge, fmtDate, productLabel } from "@/components/sales"
+import { ConvertDialog, QuoteDialog, QuoteStatusBadge, fmtDate } from "@/components/sales"
 import { quoteMessageText } from "@/components/sales/quoteMessage"
 import { useConfirm } from "@/components/ui/confirm-dialog"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 type Row = { label: string; cell: (o: QuoteOption) => string; bold?: boolean }
 
+/** Structured deductibles / extensions offered, one per line. */
+function termsText(o: QuoteOption): string {
+    return o.terms.map((t) => t.term_type === "deductible"
+        ? `Risiko sendiri: ${deductibleText({ deductible_type: t.deductible_type ?? null, deductible_amount: t.deductible_amount ?? null, deductible_percent: t.deductible_percent ?? null })}`
+        : (t.title ?? "")).filter(Boolean).join("\n")
+}
+
 const ROWS: Row[] = [
-    { label: "Rate", cell: o => (o.rate_permille !== null ? `${o.rate_permille}‰` : "—") },
+    { label: "Rate", cell: o => (o.rate_permille !== null ? `${o.rate_permille}‰` : o.item_rates.length ? "per item" : "—") },
     { label: "Premi", cell: o => fmtIDR(o.premium_amount) },
     { label: "Biaya polis", cell: o => (o.biaya_polis ? fmtIDR(o.biaya_polis) : "—") },
     { label: "Materai", cell: o => (o.materai_amount ? fmtIDR(o.materai_amount) : "—") },
     { label: "Total dibayar", cell: o => fmtIDR(o.total_amount), bold: true },
     { label: "Risiko sendiri", cell: o => o.deductible_note ?? "—" },
-    { label: "Klausula & perluasan", cell: o => o.terms_note ?? "—" },
+    { label: "Klausula & perluasan", cell: o => [termsText(o), o.terms_note].filter(Boolean).join("\n") || "—" },
 ]
 
 /** A quote: insurer offers side by side, ready to print as PDF or send by WhatsApp, and the path to a policy. */
 export default function QuotePage({ params }: { params: Promise<{ id: string }> }) {
+    const productCatalog = useProductOptions()
     const { confirm, dialog: confirmDialog } = useConfirm()
     const { id } = use(params)
     const router = useRouter()
@@ -71,7 +83,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
         const base = quote.prospect_whatsapp ? whatsappUrl(quote.prospect_whatsapp) : null
         if (!base) { setError("Prospek belum punya nomor WhatsApp"); return }
         // Opened synchronously so the browser does not block it as a popup.
-        window.open(`${base}?text=${encodeURIComponent(quoteMessageText(quote))}`, "_blank", "noopener,noreferrer")
+        window.open(`${base}?text=${encodeURIComponent(quoteMessageText(quote, productCatalog.label(quote.product_type)))}`, "_blank", "noopener,noreferrer")
         if (quote.status === "draft") run(t => changeQuoteStatus(t, id, "sent"))
     }
 
@@ -93,7 +105,15 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
     if (!quote) return <Box p="24px"><Skeleton h="400px" maxW="960px" mx="auto" /></Box>
 
     const editable = quote.status === "draft" || quote.status === "sent"
-    const lowest = Math.min(...quote.options.map(o => o.total_amount))
+    const priced = quote.options.filter(o => o.placement_status === "quoted" && o.total_amount > 0)
+    const lowest = priced.length ? Math.min(...priced.map(o => o.total_amount)) : 0
+    // Co-insurance panel: priced options with a share; the leader (or the first) is the accepted option.
+    const panel = quote.options.filter(o => o.share_percent && o.placement_status === "quoted")
+    const panelTotal = panel.reduce((t, o) => t + (o.share_percent ?? 0), 0)
+    const panelLeader = panel.find(o => o.is_leader) ?? panel[0]
+    const inPanel = (o: QuoteOption) => !!quote.accepted_panel?.includes(o.option_id)
+    const fx = quote.currency !== "IDR" && quote.exchange_rate > 0 ? quote.exchange_rate : null
+    const setPlacement = (o: QuoteOption, status: PlacementStatus) => run(t => updateOptionPlacement(t, id, o.option_id, { placement_status: status }))
     const moves = QUOTE_TRANSITIONS[quote.status]
     const cols = quote.options.length
 
@@ -142,8 +162,8 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
 
                 <Box mb="20px" fontSize="15px">
                     <Text><b>Kepada:</b> {quote.prospect_name}</Text>
-                    <Text><b>Produk:</b> {productLabel(quote.product_type)}{quote.object_description ? ` · ${quote.object_description}` : ""}</Text>
-                    <Text><b>Nilai pertanggungan:</b> {fmtIDR(quote.sum_insured)}</Text>
+                    <Text><b>Produk:</b> {productCatalog.label(quote.product_type)}{quote.object_description ? ` · ${quote.object_description}` : ""}</Text>
+                    <Text><b>Nilai pertanggungan:</b> {fmtIDR(quote.sum_insured)}{fx ? ` (${quote.currency} ${(quote.sum_insured / fx).toLocaleString("id-ID", { maximumFractionDigits: 2 })}, kurs ${fx.toLocaleString("id-ID")})` : ""}</Text>
                     {quote.coverage_start && quote.coverage_end && <Text><b>Periode:</b> {fmtDate(quote.coverage_start)} – {fmtDate(quote.coverage_end)}</Text>}
                 </Box>
 
@@ -157,14 +177,38 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                                     return (
                                         <Box as="th" key={o.option_id} p="10px 8px" textAlign="left" verticalAlign="top" bg={accepted ? "#DCFCE7" : "#F8FAFC"} borderBottom="2px solid" borderColor={accepted ? "#16A34A" : "#0D1B3E"}>
                                             <Text fontSize="16px" fontWeight="bold">{o.insurer_short_name || o.insurer_name}</Text>
-                                            {accepted && <Text fontSize="14px" color="#16A34A" fontWeight="semibold">Dipilih nasabah</Text>}
-                                            {o.total_amount === lowest && cols > 1 && !accepted && <Text fontSize="14px" color="#0369A1" fontWeight="semibold">Termurah</Text>}
+                                            {accepted && <Text fontSize="14px" color="#16A34A" fontWeight="semibold">{quote.accepted_panel ? "Leader panel" : "Dipilih nasabah"}</Text>}
+                                            {!accepted && inPanel(o) && <Text fontSize="14px" color="#16A34A" fontWeight="semibold">Anggota panel</Text>}
+                                            {o.total_amount === lowest && lowest > 0 && cols > 1 && !accepted && !inPanel(o) && <Text fontSize="14px" color="#0369A1" fontWeight="semibold">Termurah</Text>}
+                                            {o.share_percent !== null && <Text fontSize="14px" color="#6D28D9">Share {o.share_percent}%{o.is_leader ? " · leader" : ""}</Text>}
+                                            <Box mt="4px" css={{ "@media print": { display: "none" } }}>
+                                                {editable ? (
+                                                    <SearchSelect value={o.placement_status} onChange={(v) => setPlacement(o, v as PlacementStatus)} fontSize="14px"
+                                                        options={(Object.entries(PLACEMENT_STATUS_LABELS) as [PlacementStatus, string][]).map(([value, label]) => ({ value, label }))} />
+                                                ) : (
+                                                    <Box as="span" px="6px" py="1px" borderRadius="6px" fontSize="14px" bg={PLACEMENT_STATUS_COLORS[o.placement_status].bg} color={PLACEMENT_STATUS_COLORS[o.placement_status].color}>
+                                                        {PLACEMENT_STATUS_LABELS[o.placement_status]}</Box>
+                                                )}
+                                                {o.decline_reason && <Text fontSize="14px" color="#B91C1C" mt="2px">{o.decline_reason}</Text>}
+                                            </Box>
                                         </Box>
                                     )
                                 })}
                             </Box>
                         </Box>
                         <Box as="tbody">
+                            {quote.items.map(it => (
+                                <Box as="tr" key={it.item_id} borderBottom="1px solid" borderColor="#E2E8F0">
+                                    <Box as="td" p="8px" color="#64748B" verticalAlign="top">
+                                        <Text fontWeight="semibold">{it.label || COVERAGE_TYPE_LABELS[it.coverage_type as ApiCoverageType] || it.coverage_type}</Text>
+                                        <Text fontSize="14px">{fmtIDR(it.sum_insured)}{it.count_in_tsi ? "" : " (perluasan)"}</Text>
+                                    </Box>
+                                    {quote.options.map(o => {
+                                        const r = o.item_rates.find(x => x.item_id === it.item_id)
+                                        return <Box as="td" key={o.option_id} p="8px" verticalAlign="top" fontSize="14px">{r ? `${r.rate_permille}‰ · ${fmtIDR(r.premium_amount)}` : "—"}</Box>
+                                    })}
+                                </Box>
+                            ))}
                             {ROWS.map(row => (
                                 <Box as="tr" key={row.label} borderBottom="1px solid" borderColor="#E2E8F0">
                                     <Box as="td" p="8px" color="#64748B" fontWeight="semibold" verticalAlign="top">{row.label}</Box>
@@ -176,6 +220,12 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                                     ))}
                                 </Box>
                             ))}
+                            {fx && (
+                                <Box as="tr" borderBottom="1px solid" borderColor="#E2E8F0">
+                                    <Box as="td" p="8px" color="#64748B" fontWeight="semibold">Total ({quote.currency})</Box>
+                                    {quote.options.map(o => <Box as="td" key={o.option_id} p="8px">{quote.currency} {(o.total_amount / fx).toLocaleString("id-ID", { maximumFractionDigits: 2 })}</Box>)}
+                                </Box>
+                            )}
                             {editable && (
                                 <Box as="tr" css={{ "@media print": { display: "none" } }}>
                                     <Box as="td" />
@@ -193,6 +243,19 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                     </Box>
                 </Box>
 
+                {editable && panel.length > 1 && panelLeader && (
+                    <Flex mt="16px" p="12px" bg="#F5F3FF" borderRadius="8px" gap="10px" align="center" justify="space-between" flexWrap="wrap" css={{ "@media print": { display: "none" } }}>
+                        <Text fontSize="15px" color="#4C1D95">
+                            Panel koasuransi: {panel.map(o => `${o.insurer_short_name || o.insurer_name} ${o.share_percent}%`).join(" + ")} = {panelTotal}%
+                            {Math.abs(panelTotal - 100) > 0.01 && " — harus 100%"}
+                        </Text>
+                        <Button size="sm" bg="#6D28D9" color="white" fontSize="14px" _hover={{ bg: "#5B21B6" }} disabled={busy || Math.abs(panelTotal - 100) > 0.01}
+                            onClick={async () => { if (await confirm({ title: "Nasabah menerima panel koasuransi?", message: `${panelLeader.insurer_short_name || panelLeader.insurer_name} sebagai leader.`, confirmLabel: "Ya, terima" }))
+                                run(t => acceptQuote(t, id, panelLeader.option_id, panel.filter(o => o.option_id !== panelLeader.option_id).map(o => o.option_id))) }}>
+                            <LuCheck size={13} /> Terima sebagai panel
+                        </Button>
+                    </Flex>
+                )}
                 {quote.notes && <Text mt="20px" fontSize="15px" whiteSpace="pre-wrap">{quote.notes}</Text>}
                 {quote.policy_number && <Text mt="16px" fontSize="15px" color="#16A34A" fontWeight="semibold">Sudah diterbitkan sebagai polis {quote.policy_number}</Text>}
                 <Text mt="24px" fontSize="14px" color="#64748B">

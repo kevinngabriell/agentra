@@ -17,12 +17,13 @@ import {
 } from "@/lib/api/policies"
 import { getCustomers, getCustomerDetail, type ApiCustomer } from "@/lib/api/customers"
 import { errorMessage } from "@/lib/api/client"
-import { addToISODate } from "@/lib/format"
+import { addToISODate, localISODate } from "@/lib/format"
 import { getInsurers, type ApiInsurer } from "@/lib/api/insurers"
 import { getMasterProducts, getProductTypes, type ApiMasterProduct, type ApiProductTypeInfo } from "@/lib/api/master-products"
 import { useWilayahCascade } from "@/lib/hooks/useWilayahCascade"
 import { RISK_GROUP_LABELS } from "@/lib/api/risk-details"
 import { getQuote, linkQuotePolicy } from "@/lib/api/quotes"
+import { CURRENCIES } from "@/lib/api/schedules"
 import { DraftTermsEditor, type DraftTerm } from "@/components/policy-terms"
 import {
   EMPTY_RISK_FORM, RiskDetailsFields, membersToPayload, riskFormToPayload, validateRisk,
@@ -163,6 +164,9 @@ const EMPTY = {
   risk_postal_code: "", risk_latitude: "", risk_longitude: "",
   policy_year: "1", object_insured: "", insured_name: "", coverage_notes: "", notes: "",
   issuing_agent_id: "",   // sub-agent; "" = main agent directly
+  // v2.1.0: foreign currency, covernote, per-policy renewal lead time
+  currency: "IDR", exchange_rate: "", sum_insured_fc: "", premium_fc: "",
+  covernote_number: "", covernote_date: "", covernote_expiry: "", renewal_lead_days: "",
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -264,6 +268,36 @@ export default function NewPolicy() {
             }))
             if (quote.coverage_end) setEndDateAuto(false)
             if (product) setCommissionSource({ kind: "product", name: product.product_name })
+            // [v2.1.0] Itemised quote → coverage items at the accepted insurer's rates; structured terms; panel; currency.
+            const localIds = quote.items.map(() => uid())
+            if (quote.items.length && option.item_rates.length) {
+              setLocalCoverages(quote.items.map((it, i) => {
+                const r = option.item_rates.find(x => x.item_id === it.item_id)
+                return {
+                  _id: localIds[i], coverage_type: (it.coverage_type as ApiCoverageType), coverage_label: it.label ?? "",
+                  sum_insured: it.sum_insured, rate_permille: r?.rate_permille ?? 0, premium_amount: r?.premium_amount ?? 0, count_in_tsi: it.count_in_tsi,
+                }
+              }))
+            }
+            if (option.terms.length) {
+              const now = new Date().toISOString()
+              setDraftTerms(option.terms.map((t) => ({
+                term_id: uid(), coverage_id: t.coverage_index != null && localIds[t.coverage_index] ? localIds[t.coverage_index] : null,
+                coverage_type: null, coverage_label: null, term_type: t.term_type ?? "clause", clause_code: t.clause_code ?? null,
+                title: t.title ?? "Risiko Sendiri", description: t.description ?? null, deductible_type: t.deductible_type ?? null,
+                deductible_amount: t.deductible_amount ?? null, deductible_percent: t.deductible_percent ?? null, created_at: now, updated_at: now,
+              })))
+            }
+            if (quote.accepted_panel && quote.accepted_panel.length > 1) {
+              setIsCoassurance(true)
+              setCoassurances(quote.accepted_panel.map((oid) => quote.options.find(o => o.option_id === oid)).filter((o): o is NonNullable<typeof o> => !!o).map((o) => ({
+                _id: uid(), co_insurer_name: o.insurer_name ?? o.insurer_short_name ?? "", is_leader: o.option_id === quote.accepted_option_id,
+                share_percent: String(o.share_percent ?? ""), sum_insured_share: "", premium_share: "", commission_rate: "",
+              })))
+            }
+            if (quote.currency && quote.currency !== "IDR") {
+              setForm(f => ({ ...f, currency: quote.currency, exchange_rate: String(quote.exchange_rate) }))
+            }
           }
         } catch (err) { console.error("quote prefill failed", err) }
       }
@@ -663,6 +697,14 @@ export default function NewPolicy() {
         insured_name:        form.insured_name    || undefined,
         coverage_notes:      form.coverage_notes  || undefined,
         notes:               form.notes           || undefined,
+        ...(form.currency !== "IDR" && Number(form.exchange_rate) > 0 ? {
+          currency: form.currency, exchange_rate: Number(form.exchange_rate.replace(",", ".")),
+          sum_insured_fc: form.sum_insured_fc ? Number(form.sum_insured_fc) : null, premium_fc: form.premium_fc ? Number(form.premium_fc) : null,
+        } : {}),
+        ...(form.covernote_number || form.covernote_expiry ? {
+          covernote_number: form.covernote_number || null, covernote_date: form.covernote_date || null, covernote_expiry: form.covernote_expiry || null,
+        } : {}),
+        ...(form.renewal_lead_days ? { renewal_lead_days: Number(form.renewal_lead_days) } : {}),
         ...(!isEndorsement && draftTerms.length > 0
           ? {
               terms: draftTerms.map(t => {
@@ -1555,6 +1597,56 @@ export default function NewPolicy() {
                       </Box>
                     )}
                   </Box>
+
+                  {/* v2.1.0: currency, covernote, renewal lead time */}
+                  <Section title="Mata Uang, Covernote & Pengingat (Opsional)">
+                    <Flex flexDir="column" gap="12px">
+                      {riskGroup === "travel" && form.coverage_start && form.coverage_start <= localISODate() && (
+                        <Box px="12px" py="8px" bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="8px">
+                          <Text fontSize="14px" color="#92400E">Polis perjalanan mulai hari ini atau sebelumnya. Pastikan sertifikat terbit sebelum keberangkatan; penanggung bisa menolak polis yang dibuat setelah perjalanan dimulai.</Text>
+                        </Box>
+                      )}
+                      <Flex gap="12px" flexDir={{ base: "column", md: "row" }}>
+                        <FField label="Mata uang polis">
+                          <SearchSelect value={form.currency} onChange={(v) => set("currency", v || "IDR")} options={CURRENCIES.map(c => ({ value: c, label: c }))} />
+                        </FField>
+                        {form.currency !== "IDR" && (
+                          <>
+                            <FField label={`Kurs 1 ${form.currency} (Rp)`} hint="Nilai rupiah di atas memakai kurs ini">
+                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="decimal"
+                                value={form.exchange_rate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("exchange_rate", e.target.value.replace(/[^\d.,]/g, ""))} />
+                            </FField>
+                            <FField label={`TSI (${form.currency})`}>
+                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="decimal"
+                                value={form.sum_insured_fc} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("sum_insured_fc", e.target.value.replace(/[^\d.]/g, ""))} />
+                            </FField>
+                            <FField label={`Premi (${form.currency})`}>
+                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="decimal"
+                                value={form.premium_fc} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("premium_fc", e.target.value.replace(/[^\d.]/g, ""))} />
+                            </FField>
+                          </>
+                        )}
+                      </Flex>
+                      <Flex gap="12px" flexDir={{ base: "column", md: "row" }}>
+                        <FField label="No. covernote">
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" maxLength={60}
+                            value={form.covernote_number} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("covernote_number", e.target.value)} />
+                        </FField>
+                        <FField label="Tanggal covernote">
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" type="date"
+                            value={form.covernote_date} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("covernote_date", e.target.value)} />
+                        </FField>
+                        <FField label="Covernote berlaku s/d" hint="Diingatkan bila polis asli belum diterima">
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" type="date"
+                            value={form.covernote_expiry} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("covernote_expiry", e.target.value)} />
+                        </FField>
+                        <FField label="Ingatkan perpanjangan (hari)" hint="Kosong = pengaturan umum">
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="numeric" maxLength={3} placeholder="90"
+                            value={form.renewal_lead_days} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("renewal_lead_days", e.target.value.replace(/\D/g, ""))} />
+                        </FField>
+                      </Flex>
+                    </Flex>
+                  </Section>
 
                   {/* Notes */}
                   <Section title="Catatan (Opsional)">

@@ -6,14 +6,15 @@ import { SearchSelect } from "@/components/ui/search-select"
 import { CustomerPicker } from "@/components/documents/UploadDocumentDialog"
 import { getAccessToken } from "@/lib/auth/session"
 import { errorMessage } from "@/lib/api/client"
-import { createClaim, type ApiClaim } from "@/lib/api/claims"
+import { CAUSE_SUGGESTIONS_BY_GROUP, claimProductGroup, createClaim, getDeductiblePreview, type ApiClaim, type DeductiblePreview } from "@/lib/api/claims"
 import { getCustomerPolicies, type ApiCustomerPolicy } from "@/lib/api/customers"
-import { localISODate } from "@/lib/format"
+import { COVERAGE_TYPE_LABELS, getCoverages, getPolicyDetail, type ApiCoverageItem, type ApiCoverageType } from "@/lib/api/policies"
+import { useProductCatalog } from "@/lib/hooks/useProductCatalog"
+import { fmtIDR, localISODate } from "@/lib/format"
 import { CLAIM_INPUT, CLAIM_LABEL, MoneyInput, Required } from "./fields"
 import { useOpenOnMount } from "@/components/ui/use-open-on-mount"
 
 const OTHER_CAUSE = "__other__"
-const CAUSE_SUGGESTIONS = ["Tabrakan", "Kehilangan / pencurian", "Kebakaran", "Banjir", "Gempa bumi", "Kerusakan", "Kecelakaan diri", "Rawat inap"]
 
 export interface RegisterClaimDialogProps {
     open: boolean
@@ -46,6 +47,13 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
     const [estimated, setEstimated] = useState("")
     const [deductible, setDeductible] = useState("")
     const [insurerRef, setInsurerRef] = useState("")
+    // [v2.1.0] Affected item, total loss, value at risk; deductible left blank comes from the policy terms.
+    const [coverageId, setCoverageId] = useState("")
+    const [claimType, setClaimType] = useState<"partial" | "total_loss">("partial")
+    const [valueAtRisk, setValueAtRisk] = useState("")
+    const [polInfo, setPolInfo] = useState<{ id: string; product_type: string; items: ApiCoverageItem[] } | null>(null)
+    const [dedPreview, setDedPreview] = useState<DeductiblePreview | null>(null)
+    const { typeInfoOf } = useProductCatalog()
     const [saving, setSaving]       = useState(false)
     const [error, setError]         = useState<string | null>(null)
 
@@ -66,6 +74,30 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
         ? { policy_id: policy.id, coverage_start: policy.coverage_start, coverage_end: policy.coverage_end }
         : policies?.customerId === customerId ? policies?.list.find((p) => p.policy_id === policyId) : undefined
     const maxLoss = chosen && chosen.coverage_end < today ? chosen.coverage_end : today
+    const chosenId = chosen?.policy_id ?? ""
+
+    useEffect(() => {
+        const token = getAccessToken()
+        if (!token || !chosenId) return
+        let cancelled = false
+        Promise.all([getPolicyDetail(token, chosenId), getCoverages(token, chosenId).catch(() => ({ items: [] as ApiCoverageItem[] }))])
+            .then(([p, c]) => { if (!cancelled) { setPolInfo({ id: chosenId, product_type: p.product_type, items: c.items ?? [] }); setCoverageId("") } })
+            .catch(() => {})
+        return () => { cancelled = true }
+    }, [chosenId])
+
+    useEffect(() => {
+        const token = getAccessToken()
+        if (!token || !chosenId) return
+        const t = setTimeout(() => {
+            getDeductiblePreview(token, chosenId, coverageId || null, Number(estimated || 0)).then(setDedPreview).catch(() => setDedPreview(null))
+        }, 300)
+        return () => clearTimeout(t)
+    }, [chosenId, coverageId, estimated])
+
+    const info = polInfo?.id === chosenId ? polInfo : null
+    const group = info ? ((typeInfoOf(info.product_type)?.risk_group ?? claimProductGroup(info.product_type)) as keyof typeof CAUSE_SUGGESTIONS_BY_GROUP) : "default"
+    const causeSuggestions = CAUSE_SUGGESTIONS_BY_GROUP[group] ?? CAUSE_SUGGESTIONS_BY_GROUP.default
 
     const policyOptions = (policies?.customerId === customerId ? policies?.list ?? [] : []).map((p) => ({
         value: p.policy_id,
@@ -95,8 +127,12 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                 loss_location: location.trim() || undefined,
                 description: description.trim() || undefined,
                 estimated_loss: estimated ? Number(estimated) : 0,
-                deductible: deductible ? Number(deductible) : 0,
+                // Blank = take it from the policy's deductible terms (worked out by the API for this loss).
+                ...(deductible ? { deductible: Number(deductible) } : {}),
                 insurer_claim_number: insurerRef.trim() || undefined,
+                ...(coverageId ? { coverage_id: coverageId } : {}),
+                claim_type: claimType,
+                ...(valueAtRisk ? { value_at_risk: Number(valueAtRisk) } : {}),
             })
             onRegistered(claim)
             onClose()
@@ -163,19 +199,35 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                             <Flex flexDir="column" gap="4px">
                                 <Text {...CLAIM_LABEL}>Penyebab Kerugian <Required /></Text>
                                 <SearchSelect
-                                    value={otherCause ? OTHER_CAUSE : CAUSE_SUGGESTIONS.includes(cause) ? cause : ""}
+                                    value={otherCause ? OTHER_CAUSE : causeSuggestions.includes(cause) ? cause : ""}
                                     onChange={(v) => {
                                         if (v === OTHER_CAUSE) { setOtherCause(true); setCause("") }
                                         else { setOtherCause(false); setCause(v) }
                                     }}
                                     placeholder="Pilih penyebab"
-                                    options={[...CAUSE_SUGGESTIONS.map((c) => ({ value: c, label: c })), { value: OTHER_CAUSE, label: "Lainnya (tulis sendiri)" }]}
+                                    options={[...causeSuggestions.map((c) => ({ value: c, label: c })), { value: OTHER_CAUSE, label: "Lainnya (tulis sendiri)" }]}
                                 />
                                 {otherCause && (
                                     <Input {...CLAIM_INPUT} placeholder="Tulis penyebab kerugian" maxLength={200} aria-label="Penyebab kerugian"
                                         value={cause} onChange={(e) => setCause(e.target.value)} />
                                 )}
                             </Flex>
+
+                            {info && info.items.length > 1 && (
+                                <Flex flexDir="column" gap="4px">
+                                    <Text {...CLAIM_LABEL}>Item / kendaraan / lokasi yang terdampak</Text>
+                                    <SearchSelect value={coverageId} onChange={setCoverageId} clearable placeholder="Seluruh polis"
+                                        options={info.items.map((c) => ({ value: c.coverage_id, label: `${COVERAGE_TYPE_LABELS[c.coverage_type as ApiCoverageType] ?? c.coverage_type}${c.coverage_label ? ` · ${c.coverage_label}` : ""} · ${fmtIDR(c.sum_insured)}` }))} />
+                                </Flex>
+                            )}
+
+                            {group === "motor" && (
+                                <Flex flexDir="column" gap="4px">
+                                    <Text {...CLAIM_LABEL}>Jenis kerugian</Text>
+                                    <SearchSelect value={claimType} onChange={(v) => setClaimType(v as "partial" | "total_loss")}
+                                        options={[{ value: "partial", label: "Kerusakan sebagian (perbaikan bengkel)" }, { value: "total_loss", label: "Total loss / hilang" }]} />
+                                </Flex>
+                            )}
 
                             <Flex flexDir="column" gap="4px">
                                 <Text {...CLAIM_LABEL}>Lokasi Kejadian</Text>
@@ -194,9 +246,24 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                                 </Flex>
                                 <Flex flexDir="column" gap="4px" flex="1" minW="160px">
                                     <Text {...CLAIM_LABEL}>Risiko Sendiri / Deductible (Rp)</Text>
-                                    <MoneyInput value={deductible} onChange={setDeductible} aria-label="Risiko sendiri" />
+                                    <MoneyInput value={deductible} onChange={setDeductible} aria-label="Risiko sendiri" placeholder="Otomatis dari polis" />
+                                    {!deductible && dedPreview && (
+                                        <Text color="#64748B" fontSize="14px">
+                                            {dedPreview.deductible > 0 ? `Dari ketentuan polis: ${fmtIDR(dedPreview.deductible)}` : "Polis tidak mencatat risiko sendiri"}
+                                        </Text>
+                                    )}
                                 </Flex>
                             </Flex>
+
+                            {group === "fire" && (
+                                <Flex flexDir="column" gap="4px">
+                                    <Text {...CLAIM_LABEL}>Nilai sebenarnya objek saat kejadian (Rp)</Text>
+                                    <MoneyInput value={valueAtRisk} onChange={setValueAtRisk} aria-label="Nilai sebenarnya" />
+                                    <Text color="#64748B" fontSize="14px">
+                                        Bila lebih besar dari nilai pertanggungan{dedPreview ? ` (${fmtIDR(dedPreview.sum_insured)})` : ""}, ganti rugi dipotong proporsional (klausula average).
+                                    </Text>
+                                </Flex>
+                            )}
 
                             <Flex flexDir="column" gap="4px">
                                 <Text {...CLAIM_LABEL}>No. Klaim dari Asuransi (jika sudah ada)</Text>

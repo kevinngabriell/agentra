@@ -2,14 +2,17 @@
 
 import type { ReactNode } from "react"
 import { Box, Button, Flex, Grid, IconButton, Input, Switch, Text, Textarea } from "@chakra-ui/react"
-import { LuPlus, LuTrash2 } from "react-icons/lu"
+import { LuPlus, LuTrash2, LuTriangleAlert, LuUpload } from "react-icons/lu"
 import { SearchSelect } from "@/components/ui/search-select"
 import { CLAIM_INPUT, CLAIM_LABEL, MoneyInput } from "@/components/claims/fields"
 import type { MemberRole, RiskGroup } from "@/lib/api/risk-details"
 import {
-    EXTENSION_LABELS, ICC_OPTIONS, MOTOR_COVERAGE_OPTIONS, SURVEY_OPTIONS, TARIFF_REGION_OPTIONS, USAGE_OPTIONS,
-    emptyMember, type MemberForm, type RiskForm,
+    EXTENSION_LABELS, FAMILY_TYPE_OPTIONS, ICC_OPTIONS, INSPECTION_OPTIONS, MOTOR_COVERAGE_OPTIONS, SURVEY_OPTIONS, TARIFF_REGION_OPTIONS,
+    TRAVEL_AREA_OPTIONS, TRAVEL_PLAN_OPTIONS, USAGE_OPTIONS,
+    emptyMember, travelWarnings, type MemberForm, type RiskForm,
 } from "./model"
+import { OccupationInput } from "@/components/tariffs/OccupationInput"
+import { csvDate, csvRecords, readFileText } from "@/lib/csv"
 
 export interface RiskDetailsFieldsProps {
     group: RiskGroup
@@ -112,6 +115,15 @@ function MotorFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "
                     </Field>
                 </Grid>
             </Group>
+
+            <Group title="Inspeksi Sebelum Penutupan">
+                <Grid {...GRID}>
+                    <Field label="Status Inspeksi" hint="Kendaraan bekas umumnya wajib diinspeksi (foto) sebelum jaminan berlaku">
+                        <SearchSelect value={form.inspection_status} onChange={(v) => onChange({ inspection_status: v as RiskForm["inspection_status"] })} options={INSPECTION_OPTIONS} placeholder="Pilih status" fontSize="15px" clearable />
+                    </Field>
+                    <Field label="Tanggal Inspeksi"><Input {...CLAIM_INPUT} type="date" value={form.inspection_date} onChange={(e) => onChange({ inspection_date: e.target.value })} /></Field>
+                </Grid>
+            </Group>
         </Flex>
     )
 }
@@ -142,15 +154,46 @@ function CargoFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "
 }
 
 function TravelFields({ form, onChange, coverage }: Pick<RiskDetailsFieldsProps, "form" | "onChange" | "coverage">) {
+    const cur = form.benefit_currency || "USD"
+    const limit = (key: "medical_limit" | "evacuation_limit" | "baggage_limit" | "delay_limit" | "cancellation_limit", label: string) => (
+        <Field label={`${label} (${cur})`}>
+            <Input {...CLAIM_INPUT} inputMode="decimal" maxLength={14} value={form[key]} onChange={(e) => onChange({ [key]: e.target.value.replace(/[^\d.]/g, "") })} />
+        </Field>
+    )
     return (
-        <Grid {...GRID}>
-            <Field label="Negara Tujuan" span={2} hint={coverage?.start && coverage.end ? `Tanggal perjalanan mengikuti periode polis: ${coverage.start} s/d ${coverage.end}` : "Tanggal perjalanan mengikuti periode polis"}>
-                <Input {...CLAIM_INPUT} placeholder="Pisahkan dengan koma, mis: Jepang, Korea Selatan" maxLength={500} value={form.destinations} onChange={(e) => onChange({ destinations: e.target.value })} />
-            </Field>
-            <Field label="No. Sertifikat Schengen" hint="Diisi jika sertifikat Schengen sudah diterbitkan">
-                <Input {...CLAIM_INPUT} maxLength={60} value={form.schengen_certificate_no} onChange={(e) => onChange({ schengen_certificate_no: e.target.value.toUpperCase() })} />
-            </Field>
-        </Grid>
+        <Flex flexDir="column" gap="20px">
+            <Grid {...GRID}>
+                <Field label="Negara Tujuan" span={2} hint={coverage?.start && coverage.end ? `Periode polis: ${coverage.start} s/d ${coverage.end}. Untuk annual / grup, isi tanggal perjalanan per peserta.` : "Tanggal perjalanan mengikuti periode polis"}>
+                    <Input {...CLAIM_INPUT} placeholder="Pisahkan dengan koma, mis: Jepang, Korea Selatan" maxLength={500} value={form.destinations} onChange={(e) => onChange({ destinations: e.target.value })} />
+                </Field>
+                <Field label="No. Sertifikat Schengen" hint="Diisi jika sertifikat Schengen sudah diterbitkan">
+                    <Input {...CLAIM_INPUT} maxLength={60} value={form.schengen_certificate_no} onChange={(e) => onChange({ schengen_certificate_no: e.target.value.toUpperCase() })} />
+                </Field>
+            </Grid>
+            <Group title="Plan">
+                <Grid {...GRID}>
+                    <Field label="Jenis Plan"><SearchSelect value={form.travel_plan_type} onChange={(v) => onChange({ travel_plan_type: v as RiskForm["travel_plan_type"] })} options={TRAVEL_PLAN_OPTIONS} placeholder="Single / annual" fontSize="15px" clearable /></Field>
+                    <Field label="Maks. hari per perjalanan" hint="Annual multi-trip umumnya 90 hari"><Input {...CLAIM_INPUT} inputMode="numeric" maxLength={3} value={form.max_trip_days} onChange={(e) => onChange({ max_trip_days: e.target.value.replace(/\D/g, "") })} /></Field>
+                    <Field label="Area"><SearchSelect value={form.travel_area} onChange={(v) => onChange({ travel_area: v as RiskForm["travel_area"] })} options={TRAVEL_AREA_OPTIONS} placeholder="Pilih area" fontSize="15px" clearable /></Field>
+                    <Field label="Tingkatan Plan"><Input {...CLAIM_INPUT} placeholder="Mis: Gold" maxLength={60} value={form.plan_tier} onChange={(e) => onChange({ plan_tier: e.target.value })} /></Field>
+                    <Field label="Tipe Peserta"><SearchSelect value={form.family_type} onChange={(v) => onChange({ family_type: v as RiskForm["family_type"] })} options={FAMILY_TYPE_OPTIONS} placeholder="Individu / keluarga / grup" fontSize="15px" clearable /></Field>
+                    <Field label="Batas Usia (tahun)"><Input {...CLAIM_INPUT} inputMode="numeric" maxLength={3} value={form.max_age} onChange={(e) => onChange({ max_age: e.target.value.replace(/\D/g, "") })} /></Field>
+                </Grid>
+            </Group>
+            <Group title="Limit Manfaat">
+                <Grid {...GRID}>
+                    <Field label="Mata Uang Manfaat">
+                        <SearchSelect value={form.benefit_currency} onChange={(v) => onChange({ benefit_currency: v })} fontSize="15px" clearable placeholder="USD / EUR"
+                            options={["USD", "EUR", "SGD", "IDR"].map(c => ({ value: c, label: c }))} />
+                    </Field>
+                    {limit("medical_limit", "Biaya medis")}
+                    {limit("evacuation_limit", "Evakuasi medis")}
+                    {limit("baggage_limit", "Bagasi")}
+                    {limit("delay_limit", "Keterlambatan")}
+                    {limit("cancellation_limit", "Pembatalan perjalanan")}
+                </Grid>
+            </Group>
+        </Flex>
     )
 }
 
@@ -159,7 +202,10 @@ function FireFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "o
         <Flex flexDir="column" gap="20px">
             <Group title="Okupasi">
                 <Grid {...GRID}>
-                    <Field label="Kode Okupasi"><Input {...CLAIM_INPUT} maxLength={40} value={form.occupation_code} onChange={(e) => onChange({ occupation_code: e.target.value })} /></Field>
+                    <Field label="Kode Okupasi" hint="Pilih dari tabel okupasi (Pengaturan → Tarif & Okupasi) agar tarif bisa dicek">
+                        <OccupationInput code={form.occupation_code}
+                            onPick={(code, description) => onChange(description !== null ? { occupation_code: code, occupation_description: description } : { occupation_code: code })} />
+                    </Field>
                     <Field label="Deskripsi Okupasi"><Input {...CLAIM_INPUT} placeholder="Mis: Toko bangunan" maxLength={200} value={form.occupation_description} onChange={(e) => onChange({ occupation_description: e.target.value })} /></Field>
                 </Grid>
             </Group>
@@ -173,6 +219,24 @@ function FireFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "o
                     </Field>
                     <Field label="Tanggal Survei"><Input {...CLAIM_INPUT} type="date" value={form.survey_date} onChange={(e) => onChange({ survey_date: e.target.value })} /></Field>
                 </Grid>
+            </Group>
+            <Group title="Gangguan Usaha (Business Interruption)">
+                <Grid {...GRID}>
+                    <Field label="Laba Kotor Dipertanggungkan (Rp)" hint="Kosongkan jika BI tidak diambil"><MoneyInput value={form.bi_gross_profit} onChange={(v) => onChange({ bi_gross_profit: v })} /></Field>
+                    <Field label="Periode Ganti Rugi (bulan)"><Input {...CLAIM_INPUT} inputMode="numeric" maxLength={2} value={form.bi_indemnity_months} onChange={(e) => onChange({ bi_indemnity_months: e.target.value.replace(/\D/g, "") })} /></Field>
+                    <Field label="Risiko Sendiri Waktu (hari)"><Input {...CLAIM_INPUT} inputMode="numeric" maxLength={3} value={form.bi_time_deductible_days} onChange={(e) => onChange({ bi_time_deductible_days: e.target.value.replace(/\D/g, "") })} /></Field>
+                </Grid>
+            </Group>
+            <Group title="Stok Deklarasi (Adjustable)">
+                <Toggle label="Polis stok deklarasi: premi deposit, deklarasi bulanan, penyesuaian di akhir periode" checked={form.is_stock_declaration} onChange={(v) => onChange({ is_stock_declaration: v })} />
+                {form.is_stock_declaration && (
+                    <Grid {...GRID}>
+                        <Field label="Nilai Stok Maksimum (Rp)"><MoneyInput value={form.stock_max_sum_insured} onChange={(v) => onChange({ stock_max_sum_insured: v })} /></Field>
+                        <Field label="Rate Stok (‰)"><Input {...CLAIM_INPUT} inputMode="decimal" maxLength={9} value={form.stock_rate_permille} onChange={(e) => onChange({ stock_rate_permille: e.target.value.replace(/[^\d.]/g, "") })} /></Field>
+                        <Field label="Premi Deposit (Rp)"><MoneyInput value={form.stock_deposit_premium} onChange={(v) => onChange({ stock_deposit_premium: v })} /></Field>
+                        <Field label="Batas Pengembalian (% deposit)" hint="Umumnya 50% sesuai wording"><Input {...CLAIM_INPUT} inputMode="decimal" maxLength={6} placeholder="50" value={form.stock_refund_cap_percent} onChange={(e) => onChange({ stock_refund_cap_percent: e.target.value.replace(/[^\d.]/g, "") })} /></Field>
+                    </Grid>
+                )}
             </Group>
         </Flex>
     )
@@ -203,6 +267,13 @@ function MembersEditor({ roles, members, onChange }: { roles: MemberRole[]; memb
                                     <Field label={role === "traveller" ? "No. Paspor" : "No. KTP / Identitas"}><Input {...CLAIM_INPUT} bg="white" maxLength={40} value={m.id_number} onChange={(e) => patch(m._id, { id_number: e.target.value.toUpperCase() })} /></Field>
                                     <Field label="Tanggal Lahir"><Input {...CLAIM_INPUT} bg="white" type="date" value={m.birth_date} onChange={(e) => patch(m._id, { birth_date: e.target.value })} /></Field>
                                     <Field label="Hubungan dengan Pemegang Polis"><Input {...CLAIM_INPUT} bg="white" placeholder="Mis: Suami / Istri / Anak" maxLength={60} value={m.relationship} onChange={(e) => patch(m._id, { relationship: e.target.value })} /></Field>
+                                    {role === "traveller" && (
+                                        <>
+                                            <Field label="No. Sertifikat"><Input {...CLAIM_INPUT} bg="white" maxLength={60} value={m.certificate_number} onChange={(e) => patch(m._id, { certificate_number: e.target.value.toUpperCase() })} /></Field>
+                                            <Field label="Berangkat"><Input {...CLAIM_INPUT} bg="white" type="date" value={m.trip_start} onChange={(e) => patch(m._id, { trip_start: e.target.value })} /></Field>
+                                            <Field label="Kembali"><Input {...CLAIM_INPUT} bg="white" type="date" value={m.trip_end} onChange={(e) => patch(m._id, { trip_end: e.target.value })} /></Field>
+                                        </>
+                                    )}
                                     {role === "beneficiary" ? (
                                         <Field label="Bagian (%)" hint="Total semua penerima manfaat maksimal 100%">
                                             <Input {...CLAIM_INPUT} bg="white" inputMode="decimal" maxLength={6} value={m.share_percent} onChange={(e) => patch(m._id, { share_percent: e.target.value.replace(/[^\d.]/g, "") })} />
@@ -217,14 +288,52 @@ function MembersEditor({ roles, members, onChange }: { roles: MemberRole[]; memb
                                 </Grid>
                             </Box>
                         ))}
-                        <Box>
+                        <Flex gap="8px" flexWrap="wrap">
                             <Button size="xs" variant="outline" fontSize="14px" onClick={() => onChange([...members, emptyMember(role)])}>
                                 <LuPlus size={12} /> {ROLE_ADD[role]}
                             </Button>
-                        </Box>
+                            {role === "traveller" && <RosterImport onRows={(rows) => onChange([...members, ...rows])} />}
+                        </Flex>
                     </Group>
                 )
             })}
+        </Flex>
+    )
+}
+
+/**
+ * Corporate / group travel: add travellers from a CSV (Nama, Paspor, Tanggal Lahir, Sertifikat, Berangkat, Kembali).
+ * Rows are appended to the form; nothing is saved until the form is saved.
+ */
+function RosterImport({ onRows }: { onRows: (rows: MemberForm[]) => void }) {
+    async function pick(file: File | undefined) {
+        if (!file) return
+        const text = await readFileText(file)
+        const recs = csvRecords(text, {
+            name: ["nama", "name", "nama lengkap", "full_name"], passport: ["paspor", "passport", "no paspor", "id_number"],
+            birth: ["tanggal lahir", "birth_date", "dob", "tgl lahir"], cert: ["sertifikat", "certificate", "certificate_number", "no sertifikat"],
+            start: ["berangkat", "trip_start", "departure"], end: ["kembali", "trip_end", "return"],
+        })
+        onRows(recs.filter(r => r.name).map(r => ({
+            ...emptyMember("traveller"), full_name: r.name, id_number: r.passport.toUpperCase(), birth_date: csvDate(r.birth),
+            certificate_number: r.cert.toUpperCase(), trip_start: csvDate(r.start), trip_end: csvDate(r.end),
+        })))
+    }
+    return (
+        <Button as="label" size="xs" variant="outline" fontSize="14px" cursor="pointer">
+            <LuUpload size={12} /> Impor CSV peserta
+            <input type="file" accept=".csv,text/csv" hidden onChange={(e) => { pick(e.target.files?.[0]); e.target.value = "" }} />
+        </Button>
+    )
+}
+
+function Warnings({ items }: { items: string[] }) {
+    if (!items.length) return null
+    return (
+        <Flex flexDir="column" gap="4px" p="10px 12px" bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="8px">
+            {items.map((w) => (
+                <Flex key={w} gap="6px" align="flex-start"><Box mt="3px" color="#B45309"><LuTriangleAlert size={13} /></Box><Text fontSize="14px" color="#92400E">{w}</Text></Flex>
+            ))}
         </Flex>
     )
 }
@@ -239,6 +348,7 @@ export function RiskDetailsFields({ group, form, onChange, members, onMembersCha
             return (
                 <Flex flexDir="column" gap="20px">
                     <TravelFields form={form} onChange={onChange} coverage={coverage} />
+                    <Warnings items={travelWarnings(form, members, coverage?.start)} />
                     <MembersEditor roles={["traveller"]} members={members} onChange={onMembersChange} />
                 </Flex>
             )

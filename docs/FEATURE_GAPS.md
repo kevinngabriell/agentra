@@ -169,3 +169,21 @@ Shipped: `migration_commission_statements.sql` (run once on the API), `commissio
 - [x] Match it against many commission records at once
 - [x] Show the unmatched remainder and any discrepancies per statement
 - [x] Commission filters by insurer and product on `app/agentra/commissions/page.tsx` (the Excel export honours them too)
+
+---
+
+## P0/P1 — Large accounts (v2.1.0)
+
+### 17. [x] Large-account features from [INSURANCE_GAP_AUDIT.md](./INSURANCE_GAP_AUDIT.md)
+Shipped in v2.1.0: `migrations/v2.1.0/20261124_v2.1.0_large_accounts.sql` (run once on the API), new API modules (`policies/endorsements.php`, `locations.php`, `vehicles.php`, `parties.php`, `claims/large_loss.php`, `customers/compliance.php`, `tariffs/`) and panels (`components/endorsements/`, `components/schedules/`, `components/claims/LargeLoss.tsx`, `components/customer-360/CompliancePanel.tsx`, `components/tariffs/`). The section 0 table in the audit maps each gap to its screen.
+
+- [x] Location schedule, fleet schedule (CSV import), traveller roster
+- [x] Endorsement debit / credit notes with pro-rata / short-period maths and commission per note; cancellation with refund and clawback; printable notes
+- [x] Itemised quotes, placement tracker, co-insurance panel, covernote
+- [x] Multi-currency on policies, quotes and claims
+- [x] Large-loss claims: reserves, interim payments, settlement calculation, adjuster, co-insurance split, recoveries, deadlines
+- [x] Product lines from master products; insurer commission per line
+- [x] APU-PPT compliance (beneficial owners, PEP, screening, EDD); occupation codes and tariff bands with rate warnings
+- [x] Property: risk engineering, survey recommendations / warranties, stock declarations, BI, accumulation; banks / leasing (QQ); multi-year schedules
+- [x] Motor inspection, NCD hint; travel plans, benefits and warnings; emergency-info WhatsApp
+- [x] Co-insurance must total 100% to renew; per-policy renewal lead time; DN / CN numbering; statement of account

@@ -9,6 +9,20 @@ export interface ChangeInfo {
     reason: string
     endorsement_number: string
     effective_date: string
+    /** How an endorsement's premium difference is billed (helpers/endorsements.php). Default pro_rata. */
+    calc_method?: EndorsementCalcMethod
+    /** Stamp duty / policy fee charged on the endorsement note, plain digits. */
+    endorsement_materai?: string
+    endorsement_biaya_polis?: string
+}
+
+export type EndorsementCalcMethod = 'pro_rata' | 'short_period' | 'flat' | 'manual'
+
+export const CALC_METHOD_LABELS: Record<EndorsementCalcMethod, string> = {
+    pro_rata:     'Pro-rata (sisa hari)',
+    short_period: 'Skala jangka pendek',
+    flat:         'Penuh setahun',
+    manual:       'Nominal dari penanggung',
 }
 
 export const CHANGE_REASON_MIN = 5
@@ -33,5 +47,8 @@ export function changeFields(c: ChangeInfo): Partial<ChangeInfo> {
         ...(c.endorsement_number.trim() ? { endorsement_number: c.endorsement_number.trim() } : {}),
         ...(c.effective_date ? { effective_date: c.effective_date } : {}),
         ...(c.reason.trim() ? { reason: c.reason.trim() } : {}),
+        ...(c.calc_method && c.calc_method !== 'manual' ? { calc_method: c.calc_method } : {}),
+        ...(c.endorsement_materai ? { endorsement_materai: c.endorsement_materai } : {}),
+        ...(c.endorsement_biaya_polis ? { endorsement_biaya_polis: c.endorsement_biaya_polis } : {}),
     }
 }

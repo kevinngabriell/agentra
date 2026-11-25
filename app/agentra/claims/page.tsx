@@ -15,20 +15,10 @@ import {
 import { fmtIDR, fmtIDRCompact } from "@/lib/format"
 import { SearchSelect } from "@/components/ui/search-select"
 import { ClaimStatusBadge, RegisterClaimDialog } from "@/components/claims"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 const PAGE_SIZE = 20
 
-const PRODUCT_OPTIONS = [
-    { value: "", label: "Semua Produk" },
-    { value: "car", label: "Kendaraan" },
-    { value: "motorcycle", label: "Motor" },
-    { value: "fire", label: "Kebakaran" },
-    { value: "cargo", label: "Kargo" },
-    { value: "travel", label: "Perjalanan" },
-    { value: "kecelakaan", label: "Kecelakaan" },
-    { value: "aep", label: "AEP" },
-    { value: "other", label: "Lainnya" },
-]
 
 const STATUS_OPTIONS = [
     { value: "", label: "Semua Status" },
@@ -77,6 +67,7 @@ function DocsProgress({ claim }: { claim: ApiClaim }) {
 }
 
 export default function ClaimsPage() {
+    const productCatalog = useProductOptions()
     const router = useRouter()
     const [checked, setChecked]     = useState(false)
     const [insurers, setInsurers]   = useState<ApiInsurer[]>([])
@@ -204,7 +195,7 @@ export default function ClaimsPage() {
                                 <SearchSelect value={insurerId} onChange={set(setInsurer)} options={insurerOptions} ariaLabel="Filter asuransi" />
                             </Box>
                             <Box w={{ base: "100%", sm: "170px" }}>
-                                <SearchSelect value={product} onChange={set(setProduct)} options={PRODUCT_OPTIONS} ariaLabel="Filter produk" />
+                                <SearchSelect value={product} onChange={set(setProduct)} options={[{ value: "", label: "Semua Produk" }, ...productCatalog.options]} ariaLabel="Filter produk" />
                             </Box>
                         </Flex>
 

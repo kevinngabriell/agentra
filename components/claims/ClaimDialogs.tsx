@@ -83,7 +83,9 @@ function useSubmit(onClose: () => void) {
 export function ClaimStatusDialog({ claim, missingDocs, onClose, onChanged }: {
     claim: ApiClaim; missingDocs: number; onClose: () => void; onChanged: () => void
 }) {
-    const targets = CLAIM_TRANSITIONS[claim.status]
+    // Claims paid in instalments are closed by recording the final payment, not by this dialog.
+    const hasPayments = ((claim as { payments?: unknown[] }).payments?.length ?? 0) > 0
+    const targets = CLAIM_TRANSITIONS[claim.status].filter((t) => !(t === "paid" && hasPayments))
     const today = localISODate()
     const [target, setTarget] = useState<ApiClaimStatus>(targets[0])
     const [note, setNote]     = useState("")
@@ -108,6 +110,8 @@ export function ClaimStatusDialog({ claim, missingDocs, onClose, onChanged }: {
         } else if (target === "rejected") {
             if (!reason.trim()) { setError("Alasan penolakan wajib diisi."); return }
             payload.rejection_reason = reason.trim()
+        } else if (target === "withdrawn" || target === "appeal") {
+            if (!note.trim()) { setError(target === "withdrawn" ? "Alasan pencabutan wajib diisi." : "Dasar banding wajib diisi."); return }
         } else if (target === "paid") {
             if (!settlement) { setError("Jumlah dibayar wajib diisi."); return }
             if (claim.approved_amount !== null && Number(settlement) > claim.approved_amount) {
@@ -176,7 +180,16 @@ export function ClaimStatusDialog({ claim, missingDocs, onClose, onChanged }: {
                 </>
             )}
 
-            <Field label="Catatan">
+            {claim.status === "paid" && (
+                <Text fontSize="14px" color="#92400E" bg="#FFFBEB" border="1px solid #FDE68A" borderRadius="8px" px="12px" py="8px">
+                    Membuka kembali klaim yang sudah dibayar, mis. ada kerugian tambahan yang baru ditemukan.
+                </Text>
+            )}
+            {target === "approved" && claim.status === "appeal" && (
+                <Text fontSize="14px" color="#475569">Banding diterima: isi jumlah yang disetujui setelah banding.</Text>
+            )}
+
+            <Field label={target === "withdrawn" ? "Alasan pencabutan" : target === "appeal" ? "Dasar banding" : "Catatan"} required={target === "withdrawn" || target === "appeal"}>
                 <Textarea {...CLAIM_INPUT} rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
             </Field>
         </Shell>

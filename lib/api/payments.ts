@@ -40,6 +40,8 @@ export interface PolicyPayments {
     days_until_due: number | null
     urgency: PaymentUrgency | null
     installments: ApiInstallment[]
+    /** Number of the original debit note (v2.1.0). */
+    debit_note_number?: string | null
 }
 
 export interface OverduePremium {
@@ -59,6 +61,10 @@ export interface OverduePremium {
     is_installment: boolean
     days_until_due: number
     urgency: PaymentUrgency
+    /** policy = original debit note, endorsement = endorsement debit note, year = multi-year premium (v2.1.0). */
+    kind?: 'policy' | 'endorsement' | 'year'
+    note_number?: string | null
+    reference_id?: string | null
 }
 
 export interface OverduePremiumSummary {

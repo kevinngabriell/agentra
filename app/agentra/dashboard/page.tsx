@@ -17,19 +17,10 @@ import {
   type DashboardStats, type ActivityItem, type TodayAction, type RenewalBreakdown,
 } from "@/lib/api/dashboard"
 import { getMyProfile, type UserProfile } from "@/lib/api/user"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const PRODUCT_LABELS: Record<string, string> = {
-  fire: "Asuransi Kebakaran",
-  motorcycle: "Asuransi Motor",
-  car: "Asuransi Kendaraan",
-  travel: "Asuransi Perjalanan",
-  cargo: "Asuransi Kargo",
-  other: "Asuransi Lainnya",
-  kecelakaan: "Asuransi Kecelakaan",
-  aep: "AEP",
-}
 
 function formatCommission(amount: number): string {
   if (amount >= 1_000_000) {
@@ -126,6 +117,7 @@ function KlaimBerjalan({ open, pendingDocs }: { open: number; pendingDocs: numbe
 }
 
 function AksiHariIni({ actions }: { actions: TodayAction[] }) {
+  const productCatalog = useProductOptions()
   const router = useRouter()
   return (
     <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" overflow="hidden">
@@ -148,7 +140,7 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
         <Flex flexDir="column">
           {actions.map((a, i) => {
             const status = getActionStatus(a.days_until_expiry)
-            const productLabel = PRODUCT_LABELS[a.product_type] ?? "Asuransi"
+            const productLabel = productCatalog.label(a.product_type)
             return (
               <Grid
                 key={a.policy_id}

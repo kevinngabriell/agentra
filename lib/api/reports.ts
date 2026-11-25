@@ -3,6 +3,8 @@ import { apiDownload, apiFetch, withQuery } from "./client"
 export type ReportKey =
     | 'payment-consolidation' | 'lapsed' | 'portfolio' | 'retention'
     | 'commissions' | 'sub-agent-production' | 'claims' | 'commission-list'
+    // v2.1.0
+    | 'accumulation' | 'endorsements' | 'statement'
 
 export type ReportColumnType = 'text' | 'int' | 'money' | 'pct' | 'date'
 
@@ -27,6 +29,9 @@ export interface ReportParams {
     product_type?: string
     group_by?: string
     status?: string
+    /** statement: one customer or a whole customer group. */
+    customer_id?: string
+    group_id?: string
 }
 
 function toQuery(params: ReportParams, extra?: Record<string, string>): URLSearchParams {

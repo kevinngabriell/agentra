@@ -15,9 +15,10 @@ import { getQuotes, type ApiQuote } from "@/lib/api/quotes"
 import { fmtIDR, whatsappUrl } from "@/lib/format"
 import { SearchSelect } from "@/components/ui/search-select"
 import {
-    ConvertDialog, LostDialog, ProspectDialog, QuoteDialog, QuoteStatusBadge, StageBadge, fmtDate, productLabel,
+    ConvertDialog, LostDialog, ProspectDialog, QuoteDialog, QuoteStatusBadge, StageBadge, fmtDate,
 } from "@/components/sales"
 import { useConfirm } from "@/components/ui/confirm-dialog"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 function Info({ label, value }: { label: string; value: string | null | undefined }) {
     if (!value) return null
@@ -33,6 +34,7 @@ type MovableStage = Exclude<ProspectStage, "won" | "lost">
 const MOVABLE_STAGES: MovableStage[] = ["new", "contacted", "quoted", "negotiating"]
 
 export default function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const productCatalog = useProductOptions()
     const { confirm, dialog: confirmDialog } = useConfirm()
     const { id } = use(params)
     const router = useRouter()
@@ -138,7 +140,7 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                                     <Info label="Email" value={prospect.email} />
                                     <Info label="Sumber" value={PROSPECT_SOURCE_LABELS[prospect.source]} />
                                     <Info label="Dirujuk oleh" value={prospect.referred_by_agent_name} />
-                                    <Info label="Minat produk" value={prospect.product_interest ? productLabel(prospect.product_interest) : null} />
+                                    <Info label="Minat produk" value={prospect.product_interest ? productCatalog.label(prospect.product_interest) : null} />
                                     <Info label="Perkiraan premi" value={prospect.expected_premium ? fmtIDR(prospect.expected_premium) : null} />
                                     <Info label="Tindak lanjut" value={prospect.follow_up_date ? fmtDate(prospect.follow_up_date) : null} />
                                     <Info label="Asuransi saat ini" value={prospect.competitor_insurer} />
@@ -171,7 +173,7 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                                                         <QuoteStatusBadge status={q.status} expired={q.is_expired} />
                                                     </Flex>
                                                     <Text color="#64748B" fontSize="14px">
-                                                        {productLabel(q.product_type)} · Nilai {fmtIDR(q.sum_insured)} · {q.option_count} asuransi
+                                                        {productCatalog.label(q.product_type)} · Nilai {fmtIDR(q.sum_insured)} · {q.option_count} asuransi
                                                         {q.lowest_premium !== null ? ` · mulai ${fmtIDR(q.lowest_premium)}` : ""}
                                                     </Text>
                                                 </Flex>

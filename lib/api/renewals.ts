@@ -1,10 +1,12 @@
 import { apiFetch, apiFetchOr, apiPath, withQuery } from "./client"
 
-export type RenewalStage = 'not_started' | 'terms_requested' | 'terms_received' | 'offered' | 'accepted' | 'declined' | 'issued'
+// awaiting_ri: the insurer needs facultative reinsurance support before quoting a large risk.
+export type RenewalStage = 'not_started' | 'terms_requested' | 'awaiting_ri' | 'terms_received' | 'offered' | 'accepted' | 'declined' | 'issued'
 export type RenewalLostReason = 'price' | 'competitor' | 'service' | 'no_longer_needed' | 'asset_sold' | 'no_response' | 'other'
 
 export const RENEWAL_STAGE_LABELS: Record<RenewalStage, string> = {
     not_started:     'Belum dimulai',
+    awaiting_ri:     'Menunggu reasuransi',
     terms_requested: 'Minta ketentuan',
     terms_received:  'Ketentuan diterima',
     offered:         'Ditawarkan',
@@ -15,6 +17,7 @@ export const RENEWAL_STAGE_LABELS: Record<RenewalStage, string> = {
 
 export const RENEWAL_STAGE_COLORS: Record<RenewalStage, { bg: string; color: string }> = {
     not_started:     { bg: '#F1F5F9', color: '#64748B' },
+    awaiting_ri:     { bg: '#EDE9FE', color: '#6D28D9' },
     terms_requested: { bg: '#EFF6FF', color: '#1D4ED8' },
     terms_received:  { bg: '#E0F2FE', color: '#0369A1' },
     offered:         { bg: '#FEF3C7', color: '#B45309' },

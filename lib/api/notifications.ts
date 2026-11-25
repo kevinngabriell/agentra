@@ -3,6 +3,8 @@ import { apiFetch, apiPath, withQuery } from "./client"
 export type NotificationType =
     | 'expiring_today' | 'expiring_week' | 'policy_lapsed'
     | 'premium_overdue' | 'commission_received' | 'claim_status'
+    // v2.1.0 large accounts
+    | 'covernote_due' | 'claim_deadline' | 'endorsement_due' | 'warranty_due' | 'party_proof_due' | 'year_premium_due'
 
 export interface AppNotification {
     notification_id: string

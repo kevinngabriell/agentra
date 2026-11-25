@@ -21,6 +21,8 @@ import { DocumentsPanel, UploadDocumentDialog } from "@/components/documents";
 import { ClaimsPanel } from "@/components/claims";
 import { TasksPanel } from "@/components/tasks";
 import { Customer360Panel } from "@/components/customer-360";
+import { CompliancePanel } from "@/components/customer-360/CompliancePanel";
+import { useProductOptions } from "@/lib/hooks/useProductOptions";
 import { CustomerMessagesPanel } from "@/components/communications";
 import { DOCUMENT_ACCEPT, DOCUMENT_MAX_BYTES, uploadDocument, type ApiDocumentType } from "@/lib/api/documents";
 
@@ -140,16 +142,6 @@ function ErrText({ msg }: { msg?: string }) {
 
 // ─── Customer policies section (list 5.10) ───────────────────────────────────
 
-const POLICY_PRODUCT_LABELS: Record<string, string> = {
-    fire:       "Kebakaran",
-    motorcycle: "Motor",
-    car:        "Kendaraan",
-    travel:     "Perjalanan",
-    cargo:      "Kargo",
-    other:      "Lainnya",
-    kecelakaan: "Kecelakaan",
-    aep:        "AEP",
-}
 
 const RENEWAL_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
     pending:   { label: "Pending",     bg: "#FEF3C7", color: "#D97706" },
@@ -165,6 +157,7 @@ function fmtDate(iso: string) {
 const POL_PAGE_SIZE = 5
 
 function CustomerPoliciesSection({ customerId }: { customerId: string }) {
+    const productCatalog = useProductOptions()
     const router = useRouter()
     const [page, setPage]         = useState(1)
     // Tagged with the page it answers so `loading` can be derived and stale responses ignored.
@@ -241,7 +234,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                                     <Table.Row key={p.policy_id} borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
                                         <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="14px" fontFamily="mono">{p.policy_number}</Table.Cell>
                                         <Table.Cell px="20px" py="12px" color="#64748B" fontSize="15px">
-                                            {POLICY_PRODUCT_LABELS[p.product_type] ?? p.product_type}
+                                            {productCatalog.label(p.product_type)}
                                             {p.insurer_short_name ? ` · ${p.insurer_short_name}` : ""}
                                         </Table.Cell>
                                         <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px">
@@ -1046,6 +1039,10 @@ function CustomerDetailForm() {
 
                 {isEdit && customerId && !fetchLoading && (
                     <Customer360Panel customerId={customerId} />
+                )}
+
+                {isEdit && customerId && !fetchLoading && (
+                    <CompliancePanel customerId={customerId} isCompany={activeTab !== "individual"} />
                 )}
 
                 {isEdit && customerId && (

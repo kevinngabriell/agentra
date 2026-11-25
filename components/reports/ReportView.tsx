@@ -9,6 +9,8 @@ import { getInsurers, type ApiInsurer } from "@/lib/api/insurers"
 import { errorMessage, errorStatus, saveBlob } from "@/lib/api/client"
 import { fmtIDR } from "@/lib/format"
 import { MonthPickerButton } from "@/components/ui/month-picker"
+import { CustomerPicker } from "@/components/documents/UploadDocumentDialog"
+import { getCustomerDetail } from "@/lib/api/customers"
 
 export interface ReportDef {
   key: ReportKey
@@ -19,6 +21,8 @@ export interface ReportDef {
   month?: boolean
   insurer?: boolean
   groupBy?: { value: string; label: string }[]
+  /** Needs a customer (statement of account); offers the customer's whole group when it has one. */
+  customer?: boolean
 }
 
 export const REPORT_DEFS: ReportDef[] = [
@@ -35,6 +39,12 @@ export const REPORT_DEFS: ReportDef[] = [
     key: "claims", label: "Klaim & Loss Ratio", description: "Jumlah klaim, klaim disetujui dan loss ratio terhadap premi.", year: true, insurer: true,
     groupBy: [{ value: "insurer", label: "Insurer" }, { value: "product", label: "Produk" }],
   },
+  {
+    key: "accumulation", label: "Akumulasi Risiko", description: "Nilai pertanggungan aktif per kawasan, kota, kecamatan atau zona gempa — konsentrasi risiko banjir / gempa / kebakaran merambat.",
+    groupBy: [{ value: "area", label: "Kawasan" }, { value: "city", label: "Kota" }, { value: "district", label: "Kecamatan" }, { value: "eq_zone", label: "Zona gempa" }],
+  },
+  { key: "endorsements", label: "Endorsemen & Nota", description: "Nota debit / kredit endorsemen dan pembatalan, dengan komisinya.", year: true, month: true, insurer: true },
+  { key: "statement", label: "Rekening Koran", description: "Semua nota yang ditagih ke satu nasabah atau grup perusahaan, dengan sisa tagihannya.", customer: true },
 ]
 
 function formatCell(col: ReportColumn, v: string | number | null | undefined): string {
@@ -59,13 +69,19 @@ export function ReportView({ def }: { def: ReportDef }) {
   const [insurers, setInsurers] = useState<ApiInsurer[]>([])
   const [exporting, setExporting] = useState(false)
   const [result, setResult]   = useState<{ id: string; report: Report | null; error: string | null } | null>(null)
+  const [customer, setCustomer] = useState<{ id: string; name: string } | null>(null)
+  const [group, setGroup] = useState<{ customerId: string; id: string | null; name: string | null } | null>(null)
+  const [wholeGroup, setWholeGroup] = useState(false)
 
+  const groupId = group && customer && group.customerId === customer.id ? group.id : null
   const params = {
     year: def.year ? year : undefined,
     month: def.month && month ? month : undefined,
     insurer_id: insurerId || undefined,
     group_by: groupBy || undefined,
+    ...(def.customer && customer ? (wholeGroup && groupId ? { group_id: groupId } : { customer_id: customer.id }) : {}),
   }
+  const needsCustomer = !!def.customer && !customer
   const requestId = JSON.stringify([def.key, params])
 
   useEffect(() => {
@@ -73,9 +89,20 @@ export function ReportView({ def }: { def: ReportDef }) {
     if (token && def.insurer) getInsurers(token, true).then(setInsurers).catch(() => {})
   }, [def.insurer])
 
+  // The picked customer's group, to offer the whole group's statement.
   useEffect(() => {
     const token = getAccessToken()
-    if (!token) return
+    if (!token || !customer || !def.customer) return
+    let cancelled = false
+    getCustomerDetail(token, customer.id)
+      .then((d) => { if (!cancelled) setGroup({ customerId: customer.id, id: d.group_id ?? null, name: d.group_name ?? null }) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [customer, def.customer])
+
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!token || needsCustomer) return
     const ctrl = new AbortController()
     getReport(token, def.key, JSON.parse(requestId)[1], ctrl.signal)
       .then((report) => setResult({ id: requestId, report, error: null }))
@@ -84,7 +111,7 @@ export function ReportView({ def }: { def: ReportDef }) {
         setResult({ id: requestId, report: null, error: errorMessage(err, "Data laporan belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.") })
       })
     return () => ctrl.abort()
-  }, [def.key, requestId])
+  }, [def.key, requestId, needsCustomer])
 
   const loading = result?.id !== requestId
   const report  = loading ? null : result?.report ?? null
@@ -129,6 +156,17 @@ export function ReportView({ def }: { def: ReportDef }) {
                   Pilih bulan
                 </Button>
           )}
+          {def.customer && (
+            <Flex gap="10px" align="center" flexWrap="wrap">
+              <Box w="280px"><CustomerPicker value={customer} onChange={(c) => { setCustomer(c); setWholeGroup(false) }} /></Box>
+              {groupId && (
+                <Flex as="label" gap="6px" align="center" fontSize="15px" color="#374151">
+                  <input type="checkbox" checked={wholeGroup} onChange={(e) => setWholeGroup(e.target.checked)} />
+                  Seluruh grup {group?.name ?? ""}
+                </Flex>
+              )}
+            </Flex>
+          )}
           {def.insurer && (
             <NativeSelect.Root w="180px" size="sm">
               <NativeSelect.Field aria-label="Insurer" value={insurerId} onChange={(e) => setInsurerId(e.target.value)} {...selectStyle}>
@@ -165,7 +203,8 @@ export function ReportView({ def }: { def: ReportDef }) {
         </Box>
       )}
 
-      {loading ? <Skeleton h="240px" borderRadius="12px" /> : report && (
+      {needsCustomer ? <Text color="#64748B" fontSize="16px">Pilih nasabah untuk melihat rekening korannya.</Text>
+        : loading ? <Skeleton h="240px" borderRadius="12px" /> : report && (
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
           <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0" justify="space-between" align="center" gap="12px" flexWrap="wrap">
             <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{report.title}</Text>
