@@ -3,7 +3,8 @@ import { apiFetch, apiPath, withQuery } from "@/lib/api/client"
 export type ApiDocumentType =
     | 'policy' | 'endorsement' | 'sppa'
     | 'ktp' | 'npwp' | 'nib' | 'akta_pendirian'
-    | 'survey_photo' | 'claim' | 'payment_proof' | 'other'
+    | 'survey_photo' | 'claim' | 'payment_proof'
+    | 'covernote' | 'survey_report' | 'adjuster_report' | 'other'
 
 export const DOCUMENT_TYPE_LABELS: Record<ApiDocumentType, string> = {
     policy:         'Polis',
@@ -16,6 +17,9 @@ export const DOCUMENT_TYPE_LABELS: Record<ApiDocumentType, string> = {
     survey_photo:   'Foto Survei',
     claim:          'Dokumen Klaim',
     payment_proof:  'Bukti Bayar',
+    covernote:      'Covernote',
+    survey_report:  'Laporan Survei',
+    adjuster_report: 'Laporan Adjuster',
     other:          'Lainnya',
 }
 

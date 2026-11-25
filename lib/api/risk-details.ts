@@ -54,7 +54,35 @@ export interface RiskDetails {
     occupation_description?: string | null
     survey_status?: SurveyStatus | null
     survey_date?: string | null
+    // [v2.1.0] motor: pre-cover inspection
+    inspection_status?: InspectionStatus | null
+    inspection_date?: string | null
+    // [v2.1.0] travel: plan structure and benefit limits (in benefit_currency)
+    travel_plan_type?: 'single' | 'annual' | null
+    max_trip_days?: number | null
+    plan_tier?: string | null
+    travel_area?: TravelArea | null
+    family_type?: 'individual' | 'family' | 'group' | null
+    benefit_currency?: string | null
+    medical_limit?: number | null
+    evacuation_limit?: number | null
+    baggage_limit?: number | null
+    delay_limit?: number | null
+    cancellation_limit?: number | null
+    max_age?: number | null
+    // [v2.1.0] fire: business interruption and stock declaration (adjustable) settings
+    bi_gross_profit?: number | null
+    bi_indemnity_months?: number | null
+    bi_time_deductible_days?: number | null
+    is_stock_declaration?: boolean
+    stock_max_sum_insured?: number | null
+    stock_rate_permille?: number | null
+    stock_deposit_premium?: number | null
+    stock_refund_cap_percent?: number | null
 }
+
+export type InspectionStatus = 'not_required' | 'pending' | 'done' | 'waived'
+export type TravelArea = 'asean' | 'asia' | 'worldwide_excl_us' | 'worldwide'
 
 export interface RiskMember {
     member_id?: string
@@ -67,6 +95,10 @@ export interface RiskMember {
     benefit_disability: number | null
     benefit_medical: number | null
     share_percent: number | null
+    /** Travellers only (v2.1.0): certificate and own trip dates for annual / group travel. */
+    certificate_number?: string | null
+    trip_start?: string | null
+    trip_end?: string | null
 }
 
 export interface PolicyRiskDetails {

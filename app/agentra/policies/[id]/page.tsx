@@ -31,11 +31,19 @@ import { PolicyMessagesPanel } from "@/components/communications"
 import { RiskDetailsPanel } from "@/components/risk-details"
 import { PolicyTermsPanel } from "@/components/policy-terms"
 import { ChangeKindFields } from "@/components/policy-change/ChangeKindFields"
+import { BillingPanel } from "@/components/endorsements/BillingPanel"
+import { PolicyAdminPanel } from "@/components/schedules/PolicyAdminPanel"
+import { LocationsPanel } from "@/components/schedules/LocationsPanel"
+import { RiskEngineeringPanel } from "@/components/schedules/RiskEngineeringPanel"
+import { VehiclesPanel } from "@/components/schedules/VehiclesPanel"
+import { PartiesPanel } from "@/components/schedules/PartiesPanel"
+import { TravelAssistButton } from "@/components/risk-details/TravelAssistButton"
 import { CustomerPicker } from "@/components/policy-change/CustomerPicker"
-import { changeFields, newChange, validateChange, type ChangeInfo } from "@/lib/api/policy-change"
+import { CALC_METHOD_LABELS, changeFields, newChange, validateChange, type ChangeInfo, type EndorsementCalcMethod } from "@/lib/api/policy-change"
 import { PolicySubAgent } from "@/components/sub-agents"
 import { errorMessage, errorStatus } from "@/lib/api/client"
 import { getInitials, localISODate, whatsappUrl } from "@/lib/format"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 // Optional money fields in the endorsement/koreksi forms: an emptied field means 0
 // (e.g. removing a discount). The old `Number(x) || undefined` silently kept the old value.
@@ -48,16 +56,6 @@ function pctString(fraction: number | null | undefined): string {
   return String(Math.round((fraction ?? 0) * 100 * 1e6) / 1e6)
 }
 
-const PRODUCT_LABELS: Record<string, string> = {
-  fire:        "Asuransi Kebakaran",
-  motorcycle:  "Asuransi Motor",
-  car:         "Asuransi Kendaraan",
-  travel:      "Asuransi Perjalanan",
-  cargo:       "Asuransi Kargo",
-  other:       "Asuransi Lainnya",
-  kecelakaan:  "Asuransi Kecelakaan",
-  aep:         "AEP",
-}
 
 const ACTION_TYPE_LABELS: Record<string, string> = {
   call:      "Telepon",
@@ -247,6 +245,7 @@ function RiskLocationCascadeFields({ value, onChange }: {
 }
 
 export default function PolicyDetail() {
+  const productCatalog = useProductOptions()
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
 
@@ -255,6 +254,10 @@ export default function PolicyDetail() {
   const { typeInfoOf, error: catalogError } = useProductCatalog()
   const policyTypeInfo = policy ? typeInfoOf(policy.product_type) : null
   const offersClass = policyTypeInfo ? "construction_class" in policyTypeInfo.options : undefined
+  // [v2.1.0] Which schedule panels apply: the product type's risk group, with the legacy code rules as fallback.
+  const riskGroup = policyTypeInfo?.risk_group
+    ?? (policy && ["car", "motorcycle", "motor", "mobil"].includes(policy.product_type.toLowerCase()) ? "motor"
+      : policy && (isFirePolicy(offersClass) || policy.policy_number.trim().startsWith("01")) ? "fire" : null)
   const constructionClassOptions = [
     { value: "", label: "Tidak ditentukan" },
     ...(policyTypeInfo?.options.construction_class ?? []).map((value) => ({
@@ -348,7 +351,7 @@ export default function PolicyDetail() {
     risk_postal_code: '', risk_latitude: '', risk_longitude: '',
   })
   const [endorseSaving, setEndorseSaving] = useState(false)
-  const [endorseRef, setEndorseRef]       = useState({ endorsement_number: '', effective_date: '' })
+  const [endorseRef, setEndorseRef]       = useState<{ endorsement_number: string; effective_date: string; calc_method?: EndorsementCalcMethod; endorsement_materai?: string; endorsement_biaya_polis?: string }>({ endorsement_number: '', effective_date: '' })
   const [endorseError, setEndorseError]   = useState<string | null>(null)
 
   // Must be before early returns — hooks cannot be called conditionally
@@ -399,6 +402,15 @@ export default function PolicyDetail() {
     try {
       applyCoverages(await getCoverages(token, id))
     } catch (err) { console.error('loadCoverages failed', err) }
+  }
+
+  /** After a schedule / billing panel changed something: policy figures, coverage items and the timeline. */
+  function reloadAll() {
+    const token = getAccessToken()
+    if (!token) return
+    getPolicyDetail(token, id).then(setPolicy).catch(() => {})
+    loadCoverages()
+    loadLogs()
   }
 
   useEffect(() => {
@@ -514,7 +526,7 @@ export default function PolicyDetail() {
       risk_longitude:      policy.risk_longitude != null ? String(policy.risk_longitude) : '',
     })
     setEndorseError(null)
-    setEndorseRef({ endorsement_number: '', effective_date: '' })
+    setEndorseRef({ endorsement_number: '', effective_date: '', calc_method: 'pro_rata' })
     setEndorseKey(k => k + 1)
     setEndorseDialog(true)
   }
@@ -945,7 +957,7 @@ export default function PolicyDetail() {
                   </Flex>
                 </Flex>
 
-                <ChangeKindFields value={covChange} onChange={setCovChange} />
+                <ChangeKindFields value={covChange} onChange={setCovChange} billing />
 
                 {covError && (
                   <Text fontSize="14px" color="#DC2626">{covError}</Text>
@@ -1334,6 +1346,24 @@ export default function PolicyDetail() {
                           setEndorseRef((r) => ({ ...r, effective_date: e.target.value }))
                         }
                       />
+                    </Flex>
+                    <Flex flexDir="column" gap="4px">
+                      <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Perhitungan Premi Endosemen</Text>
+                      <SearchSelect value={endorseRef.calc_method ?? "pro_rata"} onChange={(v) => setEndorseRef((r) => ({ ...r, calc_method: v as EndorsementCalcMethod }))}
+                        options={(Object.entries(CALC_METHOD_LABELS) as [EndorsementCalcMethod, string][]).filter(([k]) => k !== "manual").map(([value, label]) => ({ value, label }))} />
+                      <Text fontSize="14px" color="#64748B">Selisih premi tahunan ditagih / dikembalikan lewat nota endosemen sendiri dari tanggal efektif. Nota polis awal tidak berubah.</Text>
+                    </Flex>
+                    <Flex gap="12px" flexDir={{ base: "column", sm: "row" }}>
+                      <Flex flexDir="column" gap="4px" flex="1">
+                        <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Materai Nota (Rp)</Text>
+                        <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="numeric"
+                          value={endorseRef.endorsement_materai ?? ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndorseRef((r) => ({ ...r, endorsement_materai: e.target.value.replace(/\D/g, "") }))} />
+                      </Flex>
+                      <Flex flexDir="column" gap="4px" flex="1">
+                        <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Biaya Endosemen (Rp)</Text>
+                        <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="numeric"
+                          value={endorseRef.endorsement_biaya_polis ?? ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndorseRef((r) => ({ ...r, endorsement_biaya_polis: e.target.value.replace(/\D/g, "") }))} />
+                      </Flex>
                     </Flex>
 
                     <Flex flexDir="column" gap="4px">
@@ -1936,7 +1966,7 @@ export default function PolicyDetail() {
                 </Text>
                 ? Total premi polis akan disesuaikan otomatis.
               </Text>
-              <Box mt="12px"><ChangeKindFields value={covDeleteChange} onChange={setCovDeleteChange} /></Box>
+              <Box mt="12px"><ChangeKindFields value={covDeleteChange} onChange={setCovDeleteChange} billing /></Box>
               {covDeleteError && <Text mt="12px" fontSize="16px" color="#DC2626">{covDeleteError}</Text>}
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
@@ -2237,7 +2267,9 @@ export default function PolicyDetail() {
                 <Text color="#1C2833" fontSize="16px">
                   {policy.insured_name || policy.customer?.display_name || policy.customer_name}
                 </Text>
-                {!policy.insured_name && (
+                {policy.qq_name && policy.qq_name !== (policy.insured_name || policy.customer?.display_name || policy.customer_name) ? (
+                  <Text color="#6D28D9" fontSize="14px">Dicetak: {policy.qq_name}</Text>
+                ) : !policy.insured_name && (
                   <Text color="#64748B" fontSize="14px">Memakai nama nasabah (tidak ada override)</Text>
                 )}
               </Flex>
@@ -2254,7 +2286,7 @@ export default function PolicyDetail() {
             <Flex gap="32px" mb="24px" flexWrap="wrap">
               <Flex flexDir="column" gap="4px" flex="1" minW="160px">
                 <Text {...lbl}>JENIS PRODUK</Text>
-                <Text color="#1C2833" fontSize="16px">{PRODUCT_LABELS[policy.product_type] ?? policy.product_type}</Text>
+                <Text color="#1C2833" fontSize="16px">{productCatalog.label(policy.product_type)}</Text>
               </Flex>
               <Flex flexDir="column" gap="4px" flex="1" minW="160px">
                 <Text {...lbl}>SUB-AGEN</Text>
@@ -2446,8 +2478,27 @@ export default function PolicyDetail() {
             policy={{ id: policy.policy_id, number: policy.policy_number, coverage_start: policy.coverage_start, coverage_end: policy.coverage_end }}
             onChanged={loadLogs}
           />
+          {riskGroup === "travel" && policy.renewal_status !== "cancelled" && (
+            <Flex flexDir="column" gap="4px" mt="-8px">
+              <TravelAssistButton policyNumber={policy.policy_number} policyId={policy.policy_id} insurerName={policy.insurer_name}
+                assistancePhone={policy.insurer_assistance_phone} whatsapp={policy.customer_whatsapp || policy.customer_pic_whatsapp}
+                coverageStart={policy.coverage_start} coverageEnd={policy.coverage_end} />
+            </Flex>
+          )}
 
           <PolicyTermsPanel policyId={policy.policy_id} coverages={coverages} onChanged={loadLogs} />
+
+          {/* ── v2.1.0 large-account panels ── */}
+          <PolicyAdminPanel policy={policy} onChanged={reloadAll} />
+          {riskGroup === "fire" && (
+            <>
+              <LocationsPanel policyId={policy.policy_id} coverages={coverages} cancelled={policy.renewal_status === "cancelled"} onChanged={reloadAll} />
+              <RiskEngineeringPanel policyId={policy.policy_id} cancelled={policy.renewal_status === "cancelled"} onChanged={reloadAll}
+                refreshKey={coverages.map((c) => c.location_id ?? "").join(",")} />
+            </>
+          )}
+          {riskGroup === "motor" && <VehiclesPanel policyId={policy.policy_id} cancelled={policy.renewal_status === "cancelled"} onChanged={reloadAll} />}
+          <PartiesPanel policyId={policy.policy_id} cancelled={policy.renewal_status === "cancelled"} onChanged={reloadAll} />
 
           <PaymentsPanel
             policy={{ id: policy.policy_id, number: policy.policy_number, cancelled: policy.renewal_status === "cancelled" }}
@@ -2457,6 +2508,15 @@ export default function PolicyDetail() {
               const token = getAccessToken()
               if (token) getPolicyDetail(token, id).then(setPolicy).catch(() => {})
             }}
+          />
+
+          <BillingPanel
+            policy={{
+              id: policy.policy_id, number: policy.policy_number, coverage_start: policy.coverage_start, coverage_end: policy.coverage_end,
+              cancelled: policy.renewal_status === "cancelled", hasCoverageItems: coverages.length > 0,
+            }}
+            onChanged={reloadAll}
+            refreshKey={`${policy.updated_at ?? ""}|${coverages.map((c) => `${c.coverage_id}:${c.sum_insured}:${c.rate_permille}`).join(",")}`}
           />
 
           <PolicyMessagesPanel

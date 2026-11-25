@@ -112,7 +112,7 @@ export default function PaymentsPage() {
                                         const wa = r.whatsapp ? whatsappUrl(r.whatsapp) : null
                                         const tone = PAYMENT_URGENCY_COLORS[r.urgency]
                                         return (
-                                            <Table.Row key={r.policy_id}>
+                                            <Table.Row key={`${r.kind ?? "policy"}-${r.reference_id ?? r.policy_id}`}>
                                                 <Table.Cell px="16px" py="10px">
                                                     <Link href={`/agentra/policies/${encodeURIComponent(r.policy_id)}#pembayaran`}>
                                                         <Text color="#1D4ED8" fontSize="15px" fontWeight="semibold">{r.policy_number}</Text>
@@ -127,11 +127,19 @@ export default function PaymentsPage() {
                                                 <Table.Cell px="16px" fontSize="15px" fontWeight="medium">
                                                     {fmtIDR(r.amount_due)}
                                                     {r.is_installment && <Text color="#64748B" fontSize="14px" fontWeight="normal">cicilan</Text>}
+                                                    {r.kind === "endorsement" && <Text color="#B45309" fontSize="14px" fontWeight="normal">nota endorsemen {r.note_number ?? ""}</Text>}
+                                                    {r.kind === "year" && <Text color="#6D28D9" fontSize="14px" fontWeight="normal">premi {r.note_number?.toLowerCase()}</Text>}
                                                 </Table.Cell>
                                                 <Table.Cell px="16px">
                                                     <Badge bg={tone.bg} color={tone.color} px="10px" py="2px" borderRadius="full" fontSize="14px">{PAYMENT_URGENCY_LABELS[r.urgency]}</Badge>
                                                 </Table.Cell>
                                                 <Table.Cell px="16px">
+                                                    <Flex gap="6px" flexWrap="wrap">
+                                                    {r.urgency === "cancellation_risk" && (r.kind ?? "policy") === "policy" && (
+                                                        <Button asChild size="xs" variant="outline" fontSize="14px" color="#DC2626" borderColor="#FECACA">
+                                                            <Link href={`/agentra/policies/${encodeURIComponent(r.policy_id)}#nota`}>Batalkan polis</Link>
+                                                        </Button>
+                                                    )}
                                                     {wa && (
                                                         <Button asChild size="xs" variant="outline" fontSize="14px" gap="4px">
                                                             <a target="_blank" rel="noopener noreferrer"
@@ -140,6 +148,7 @@ export default function PaymentsPage() {
                                                             </a>
                                                         </Button>
                                                     )}
+                                                    </Flex>
                                                 </Table.Cell>
                                             </Table.Row>
                                         )

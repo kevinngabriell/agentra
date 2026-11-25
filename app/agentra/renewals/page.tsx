@@ -16,6 +16,7 @@ import { RENEWAL_LOST_REASON_LABELS, type RenewalWorkflow } from "@/lib/api/rene
 import { errorMessage, errorStatus } from "@/lib/api/client"
 import { getInitials, localISODate, localMonth, shiftMonth } from "@/lib/format"
 import { MonthPickerButton } from "@/components/ui/month-picker"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 type Urgency = "urgent" | "followup" | "done"
 
@@ -59,6 +60,7 @@ function DaysLeftBadge({ days }: { days: number }) {
 const colHeader = { color: "#64748B", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.05em", px: "20px", py: "10px" }
 
 export default function Renewals() {
+  const productCatalog = useProductOptions()
   const router = useRouter()
   const [month, setMonth]   = useState(() => localMonth())
   const [view, setView]     = useState<"list" | "calendar">("list")
@@ -400,7 +402,7 @@ export default function Renewals() {
                                 </Flex>
                               </Table.Cell>
                               <Table.Cell px="20px" py="12px" color="#64748B" fontSize="15px">
-                                {PRODUCT_LABELS[r.product_type] ?? r.product_type}
+                                {productCatalog.label(r.product_type)}
                               </Table.Cell>
                               <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px" fontFamily="mono">
                                 {r.policy_number}

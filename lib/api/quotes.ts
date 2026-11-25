@@ -1,5 +1,6 @@
 import { apiFetch, apiPath, withQuery } from "./client"
 import type { ApiProspect } from "./prospects"
+import type { PolicyTermPayload } from "./policy-terms"
 
 // Quotes with insurer options to compare. Mirrors quotes/index.php.
 
@@ -41,6 +42,47 @@ export interface QuoteOption {
     deductible_note: string | null
     terms_note: string | null
     sort_order: number
+    // [v2.1.0] Placement tracking, co-insurance share, structured terms and per-item rates.
+    placement_status: PlacementStatus
+    submitted_date: string | null
+    responded_date: string | null
+    decline_reason: string | null
+    info_supplied: string | null
+    share_percent: number | null
+    is_leader: boolean
+    terms: QuoteOptionTerm[]
+    item_rates: { item_id: string; rate_permille: number; premium_amount: number }[]
+}
+
+/** A structured deductible / clause / extension offered by an insurer; coverage_index points at the quote items. */
+export type QuoteOptionTerm = PolicyTermPayload & { coverage_index?: number | null }
+
+export type PlacementStatus = 'draft' | 'submitted' | 'quoted' | 'declined' | 'referred' | 'awaiting_ri'
+
+export const PLACEMENT_STATUS_LABELS: Record<PlacementStatus, string> = {
+    draft:       'Belum dikirim',
+    submitted:   'Diajukan',
+    quoted:      'Penawaran diterima',
+    declined:    'Ditolak penanggung',
+    referred:    'Dirujuk (perlu info)',
+    awaiting_ri: 'Menunggu reasuransi',
+}
+
+export const PLACEMENT_STATUS_COLORS: Record<PlacementStatus, { bg: string; color: string }> = {
+    draft:       { bg: '#F1F5F9', color: '#475569' },
+    submitted:   { bg: '#DBEAFE', color: '#1D4ED8' },
+    quoted:      { bg: '#DCFCE7', color: '#16A34A' },
+    declined:    { bg: '#FEE2E2', color: '#DC2626' },
+    referred:    { bg: '#FEF3C7', color: '#B45309' },
+    awaiting_ri: { bg: '#EDE9FE', color: '#6D28D9' },
+}
+
+export interface QuoteItem {
+    item_id: string
+    coverage_type: string
+    label: string | null
+    sum_insured: number
+    count_in_tsi: boolean
 }
 
 export interface ApiQuote {
@@ -71,9 +113,14 @@ export interface ApiQuote {
     lowest_premium: number | null
     created_at: string
     updated_at: string
+    currency: string
+    exchange_rate: number
+    /** Option ids accepted as a co-insurance panel (leader first). */
+    accepted_panel: string[] | null
 }
 
 export interface ApiQuoteDetail extends ApiQuote {
+    items: QuoteItem[]
     options: QuoteOption[]
 }
 
@@ -86,6 +133,23 @@ export interface QuoteOptionPayload {
     materai_amount?: number
     deductible_note?: string | null
     terms_note?: string | null
+    /** One rate (‰) per quote item, in item order. Premium = Σ item SI × rate. */
+    item_rates?: number[]
+    placement_status?: PlacementStatus
+    submitted_date?: string | null
+    responded_date?: string | null
+    decline_reason?: string | null
+    info_supplied?: string | null
+    share_percent?: number | null
+    is_leader?: boolean
+    terms?: QuoteOptionTerm[]
+}
+
+export interface QuoteItemPayload {
+    coverage_type: string
+    label?: string | null
+    sum_insured: number
+    count_in_tsi?: boolean
 }
 
 export interface QuotePayload {
@@ -98,6 +162,10 @@ export interface QuotePayload {
     valid_until?: string | null
     notes?: string | null
     options?: QuoteOptionPayload[]
+    /** Itemised quote; sum_insured is then the total of the items counted in the TSI. */
+    items?: QuoteItemPayload[]
+    currency?: string
+    exchange_rate?: number
 }
 
 export interface QuoteListParams {
@@ -143,8 +211,18 @@ export async function changeQuoteStatus(token: string, id: string, status: Exclu
     return apiFetch<ApiQuoteDetail>(apiPath`/quotes/${id}/status`, { method: 'PUT', token, body: { status } })
 }
 
-export async function acceptQuote(token: string, id: string, optionId: string): Promise<ApiQuoteDetail> {
-    return apiFetch<ApiQuoteDetail>(apiPath`/quotes/${id}/accept`, { method: 'POST', token, body: { option_id: optionId } })
+/** Accepts one option; `panelOptionIds` adds co-insurance followers (shares must total 100%). */
+export async function acceptQuote(token: string, id: string, optionId: string, panelOptionIds: string[] = []): Promise<ApiQuoteDetail> {
+    return apiFetch<ApiQuoteDetail>(apiPath`/quotes/${id}/accept`, {
+        method: 'POST', token, body: { option_id: optionId, ...(panelOptionIds.length ? { panel_option_ids: panelOptionIds } : {}) },
+    })
+}
+
+export async function updateOptionPlacement(token: string, quoteId: string, optionId: string, data: {
+    placement_status?: PlacementStatus; submitted_date?: string | null; responded_date?: string | null
+    decline_reason?: string | null; info_supplied?: string | null; share_percent?: number | null; is_leader?: boolean; premium_amount?: number | null
+}): Promise<ApiQuoteDetail> {
+    return apiFetch<ApiQuoteDetail>(apiPath`/quotes/${quoteId}/options/${optionId}/placement`, { method: 'PUT', token, body: data })
 }
 
 /** Records the policy issued from an accepted quote. */

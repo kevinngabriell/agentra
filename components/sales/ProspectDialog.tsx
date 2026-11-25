@@ -12,7 +12,7 @@ import { getActiveSubAgents, type ApiSubAgent } from "@/lib/api/sub-agents"
 import { SearchSelect } from "@/components/ui/search-select"
 import { FormDialog, FormField, FormRow } from "@/components/ui/form-dialog"
 import { CLAIM_INPUT, MoneyInput } from "@/components/claims/fields"
-import { PRODUCT_OPTIONS } from "./constants"
+import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 interface Form {
     type: ProspectType; name: string; contact_name: string; phone: string; whatsapp: string; email: string
@@ -37,6 +37,7 @@ export function ProspectDialog({ type, editing, onClose, onSaved }: {
     onClose: () => void
     onSaved: (p: ApiProspect) => void
 }) {
+    const productCatalog = useProductOptions()
     const [form, setForm] = useState<Form>(() => initial(type, editing))
     const [agents, setAgents] = useState<ApiSubAgent[]>([])
     const [saving, setSaving] = useState(false)
@@ -100,7 +101,7 @@ export function ProspectDialog({ type, editing, onClose, onSaved }: {
             <FormRow>
                 <FormField label="Minat produk">
                     <SearchSelect value={form.product} onChange={(v) => set({ product: v })} placeholder="Pilih produk"
-                        options={[{ value: "", label: "Belum ditentukan" }, ...PRODUCT_OPTIONS]} />
+                        options={[{ value: "", label: "Belum ditentukan" }, ...productCatalog.options]} />
                 </FormField>
                 <FormField label="Perkiraan premi (Rp)"><MoneyInput value={form.expected} onChange={(v) => set({ expected: v })} /></FormField>
             </FormRow>

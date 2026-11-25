@@ -1,5 +1,6 @@
 "use client"
 
+import { getClaimStats, type ClaimStats } from "@/lib/api/claims"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Box, Button, Checkbox, Dialog, Flex, Input, Skeleton, Table, Text, Textarea } from "@chakra-ui/react"
@@ -79,6 +80,16 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
     const [issuing, setIssuing] = useState(false)
     const [issued, setIssued]   = useState<RenewPolicyResult | null>(null)
     const [uploading, setUploading] = useState(false)
+    const [claimHist, setClaimHist] = useState<ClaimStats | null>(null)
+
+    // Claim history of the expiring policy: no claims → ask for a no-claim discount; claims → expect a loading.
+    useEffect(() => {
+        const token = getAccessToken()
+        if (!token) return
+        let cancelled = false
+        getClaimStats(token, { policy_id: policyId }).then((c) => { if (!cancelled) setClaimHist(c) }).catch(() => {})
+        return () => { cancelled = true }
+    }, [policyId])
 
     useEffect(() => {
         const token = getAccessToken()
@@ -177,8 +188,10 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                     {/* Progress line */}
                                     <Flex gap="6px" flexWrap="wrap" align="center">
                                         {RENEWAL_STAGE_FLOW.map((s, i) => {
-                                            const reached = stage ? RENEWAL_STAGE_FLOW.indexOf(stage) >= i : false
-                                            const current = stage === s
+                                            // Awaiting reinsurance sits between "terms requested" and "terms received".
+                                            const flowStage = stage === "awaiting_ri" ? "terms_requested" : stage
+                                            const reached = flowStage ? RENEWAL_STAGE_FLOW.indexOf(flowStage) >= i : false
+                                            const current = flowStage === s
                                             return (
                                                 <Flex key={s} align="center" gap="6px">
                                                     <Flex align="center" gap="5px" px="10px" py="4px" borderRadius="full" fontSize="16px" fontWeight="semibold"
@@ -204,6 +217,27 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                             <Text fontSize="16px" color="#15803D" fontWeight="semibold">Perpanjangan sudah terbit.</Text>
                                             <Button size="xs" variant="outline" onClick={() => router.push(`/agentra/policies/${encodeURIComponent(data.workflow.renewed_policy_id!)}`)}>Buka polis baru</Button>
                                         </Flex>
+                                    )}
+
+                                    {stage === "awaiting_ri" && (
+                                        <Box bg="#F5F3FF" border="1px solid" borderColor="#DDD6FE" borderRadius="8px" p="12px">
+                                            <Text fontSize="16px" color="#5B21B6">Menunggu dukungan reasuransi fakultatif dari penanggung. Beri tahu nasabah bahwa terms risiko besar perlu waktu lebih lama.</Text>
+                                        </Box>
+                                    )}
+
+                                    {claimHist && editable && (
+                                        <Box bg={claimHist.claim_count === 0 ? "#F0FDF4" : "#FFF7ED"} border="1px solid" borderColor={claimHist.claim_count === 0 ? "#BBF7D0" : "#FED7AA"} borderRadius="8px" p="12px">
+                                            <Text fontSize="16px" fontWeight="semibold" color={claimHist.claim_count === 0 ? "#166534" : "#9A3412"}>
+                                                {claimHist.claim_count === 0 ? "Tanpa klaim periode ini" : `${claimHist.claim_count} klaim · rasio klaim ${claimHist.claim_ratio ?? 0}%`}
+                                            </Text>
+                                            <Text fontSize="16px" color="#64748B">
+                                                {claimHist.claim_count === 0
+                                                    ? "Minta diskon no-claim (NCD) / rate lebih baik ke penanggung saat meminta terms."
+                                                    : (claimHist.claim_ratio ?? 0) >= 60
+                                                        ? "Rasio klaim tinggi: siapkan nasabah untuk kemungkinan kenaikan rate (loading) atau risiko sendiri lebih besar; bandingkan ke penanggung lain."
+                                                        : "Ada klaim: penanggung mungkin menyesuaikan rate. Bandingkan beberapa penanggung bila perlu."}
+                                            </Text>
+                                        </Box>
                                     )}
 
                                     {/* Sum insured review prompt */}

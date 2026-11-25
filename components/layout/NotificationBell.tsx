@@ -19,6 +19,12 @@ const TYPE_STYLE: Record<NotificationType, { label: string; color: string }> = {
   premium_overdue:     { label: "Premi jatuh tempo", color: "#B45309" },
   commission_received: { label: "Komisi diterima", color: "#16A34A" },
   claim_status:        { label: "Status klaim", color: "#1D4ED8" },
+  covernote_due:       { label: "Covernote", color: "#B45309" },
+  claim_deadline:      { label: "Batas waktu klaim", color: "#DC2626" },
+  endorsement_due:     { label: "Nota endorsemen", color: "#B45309" },
+  warranty_due:        { label: "Warranty / survei", color: "#C2410C" },
+  party_proof_due:     { label: "Bank / leasing", color: "#6D28D9" },
+  year_premium_due:    { label: "Premi multi-tahun", color: "#B45309" },
 }
 
 function timeAgo(iso: string): string {

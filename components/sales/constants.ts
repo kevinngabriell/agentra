@@ -1,3 +1,4 @@
+/** Legacy fixed list; pickers use useProductOptions() (the company's master products). */
 export const PRODUCT_OPTIONS = [
     { value: "car", label: "Kendaraan Mobil" },
     { value: "motorcycle", label: "Kendaraan Motor" },

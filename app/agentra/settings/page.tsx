@@ -1,5 +1,6 @@
 "use client"
 
+import { TariffsTab } from "@/components/tariffs/TariffsTab"
 import { Sidebar, MobileHeader, TopBar, MobileBottomNav } from "@/components/layout"
 import {
   Box, Button, Dialog, Field, Flex, Input, Skeleton, Switch, Tabs, Text, Textarea,
@@ -498,22 +499,12 @@ function NotificationsTab() {
 
 // ─── Insurers Tab ─────────────────────────────────────────────────────────────
 
-const PRODUCT_TYPES: ApiInsurerProductType[] = ["fire", "motorcycle", "car", "travel", "cargo", "other"]
-const PRODUCT_LABELS_INS: Record<ApiInsurerProductType, string> = {
-  fire:       "Asuransi Kebakaran",
-  motorcycle: "Asuransi Motor",
-  car:        "Asuransi Kendaraan",
-  travel:     "Asuransi Perjalanan",
-  cargo:      "Asuransi Kargo",
-  other:      "Asuransi Lainnya",
-}
-
-type ProductDraft = { insurer_product_id?: string; product_type: ApiInsurerProductType; commission_rate: string; is_active: boolean }
+// One row per product line (GET /insurers/{id}/products answers every line of /master-products/types).
+// An active rate is used for new policies of that line at this insurer, ahead of the master product's rate.
+type ProductDraft = { insurer_product_id?: string | null; product_type: ApiInsurerProductType; label: string; commission_rate: string; is_active: boolean }
 
 function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () => void }) {
-  const [drafts, setDrafts] = useState<ProductDraft[]>(
-    PRODUCT_TYPES.map((pt) => ({ product_type: pt, commission_rate: "0", is_active: false }))
-  )
+  const [drafts, setDrafts] = useState<ProductDraft[]>([])
   // Which insurer the drafts were loaded for (or failed for). Saving defaults after a failed
   // load would reset every product of this insurer to 0% / inactive, so it is blocked.
   const [loadedFor, setLoadedFor] = useState<{ insurerId: string; ok: boolean } | null>(null)
@@ -529,11 +520,10 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
     getInsurerProducts(token, insurerId)
       .then((products) => {
         if (cancelled) return
-        const map = new Map(products.map((p) => [p.product_type, p]))
-        setDrafts(PRODUCT_TYPES.map((pt) => {
-          const ex = map.get(pt)
-          return { insurer_product_id: ex?.insurer_product_id, product_type: pt, commission_rate: String(ex?.commission_rate ?? "0"), is_active: ex?.is_active ?? false }
-        }))
+        setDrafts(products.map((p) => ({
+          insurer_product_id: p.insurer_product_id, product_type: p.product_type, label: p.label ?? p.product_type,
+          commission_rate: String(p.commission_rate ?? "0"), is_active: p.is_active,
+        })))
         setLoadedFor({ insurerId, ok: true })
       })
       .catch(() => {
@@ -556,14 +546,15 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
       return d.commission_rate !== "" && (Number.isNaN(r) || r < 0 || r > 100)
     })
     if (invalid) {
-      setFeedback({ type: "error", msg: `Komisi ${PRODUCT_LABELS_INS[invalid.product_type]} harus antara 0 dan 100%` })
+      setFeedback({ type: "error", msg: `Komisi ${invalid.label} harus antara 0 dan 100%` })
       return
     }
     setSaving(true)
     setFeedback(null)
     try {
+      // Only lines that are active or already have a saved rate; untouched inactive lines are not written.
       await Promise.all(
-        drafts.map((d) => upsertInsurerProduct(token, insurerId, {
+        drafts.filter((d) => d.is_active || d.insurer_product_id).map((d) => upsertInsurerProduct(token, insurerId, {
           product_type: d.product_type,
           commission_rate: parseFloat(d.commission_rate) || 0,
           is_active: d.is_active,
@@ -580,7 +571,7 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
   return (
     <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
       <Flex px="16px" py="10px" borderBottom="1px solid" borderColor="#E2E8F0" bg="#F1F5F9" align="center">
-        <Text flex="1" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">PRODUK ASURANSI</Text>
+        <Text flex="1" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">LINI PRODUK</Text>
         <Text w="140px" textAlign="center" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">KOMISI DEFAULT (%)</Text>
         <Text w="72px" textAlign="center" color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em">AKTIF</Text>
       </Flex>
@@ -595,23 +586,26 @@ function ProductConfig({ insurerId, onClose }: { insurerId: string; onClose: () 
           ))
         : drafts.map((d) => (
             <Flex key={d.product_type} align="center" px="16px" py="10px" borderBottom="1px solid" borderColor="#F1F5F9" gap="12px">
-              <Text flex="1" fontSize="15px" color="#1C2833">{PRODUCT_LABELS_INS[d.product_type]}</Text>
+              <Text flex="1" fontSize="15px" color="#1C2833">{d.label}</Text>
               <Input
                 w="140px" h="32px" fontSize="15px" textAlign="center" type="number" min={0} max={100} step="0.1"
                 bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="6px" px="8px"
-                aria-label={`Komisi default ${PRODUCT_LABELS_INS[d.product_type]} (%)`}
+                aria-label={`Komisi default ${d.label} (%)`}
                 value={d.commission_rate}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(d.product_type, "commission_rate", e.target.value)}
               />
               <Flex w="72px" justify="center">
                 <Switch.Root checked={d.is_active} onCheckedChange={(e) => setDraft(d.product_type, "is_active", e.checked)} colorPalette="blue" size="sm">
-                  <Switch.HiddenInput aria-label={`${PRODUCT_LABELS_INS[d.product_type]} aktif`} /><Switch.Control />
+                  <Switch.HiddenInput aria-label={`${d.label} aktif`} /><Switch.Control />
                 </Switch.Root>
               </Flex>
             </Flex>
           ))
       }
 
+      <Text px="16px" pt="10px" fontSize="14px" color="#64748B">
+        Komisi yang diaktifkan dipakai otomatis untuk polis baru lini tersebut di insurer ini, menggantikan komisi default master produk.
+      </Text>
       <Flex px="16px" py="12px" justify="space-between" align="center">
         {feedback
           ? <Toast type={feedback.type} message={feedback.msg} />
@@ -692,7 +686,7 @@ function InsurersTab() {
 
   function startEdit(ins: ApiInsurer) {
     setEditingId(ins.insurer_id)
-    setEditForm({ name: ins.name, short_name: ins.short_name, agent_code: ins.agent_code ?? "", is_primary: ins.is_primary, is_active: ins.is_active, notes: ins.notes ?? "" })
+    setEditForm({ name: ins.name, short_name: ins.short_name, agent_code: ins.agent_code ?? "", is_primary: ins.is_primary, is_active: ins.is_active, notes: ins.notes ?? "", assistance_phone: ins.assistance_phone ?? "" })
   }
 
   async function saveEdit(insurerId: string) {
@@ -707,6 +701,7 @@ function InsurersTab() {
         is_primary: editForm.is_primary,
         is_active: editForm.is_active,
         notes: (editForm as Partial<ApiInsurer> & { notes?: string }).notes || undefined,
+        assistance_phone: editForm.assistance_phone?.trim() || null,
       })
       setInsurers((prev) => prev.map((ins) => ins.insurer_id === insurerId ? { ...ins, ...editForm } as ApiInsurer : ins))
       setEditingId(null)
@@ -807,6 +802,11 @@ function InsurersTab() {
                           placeholder="Kode agen" value={editForm.agent_code ?? ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, agent_code: e.target.value }))}
                         />
+                        <Input
+                          fontSize="15px" h="32px" w="170px"
+                          placeholder="Nomor darurat 24 jam" value={editForm.assistance_phone ?? ""}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm((f) => ({ ...f, assistance_phone: e.target.value }))}
+                        />
                       </Flex>
                     ) : (
                       <>
@@ -820,6 +820,9 @@ function InsurersTab() {
                         </Flex>
                         {ins.agent_code && (
                           <Text color="#64748B" fontSize="14px">Kode Agen: {ins.agent_code}</Text>
+                        )}
+                        {ins.assistance_phone && (
+                          <Text color="#64748B" fontSize="14px">Darurat 24 jam: {ins.assistance_phone}</Text>
                         )}
                       </>
                     )}
@@ -1531,6 +1534,7 @@ export default function SettingsPage() {
                   { value: "notifications", label: "Notifikasi",  Icon: LuBell },
                   { value: "insurers",      label: "Asuransi",    Icon: LuBuilding2 },
                   { value: "products",      label: "Produk",      Icon: LuPackage },
+                  { value: "tariffs",       label: "Tarif & Okupasi", Icon: LuPackage },
                   { value: "subscription",  label: "Langganan",   Icon: LuCrown },
                 ].map(({ value, label, Icon }) => (
                   <Tabs.Trigger key={value} value={value}
@@ -1556,6 +1560,9 @@ export default function SettingsPage() {
               </Tabs.Content>
               <Tabs.Content value="products">
                 <MasterProductsTab />
+              </Tabs.Content>
+              <Tabs.Content value="tariffs">
+                <TariffsTab />
               </Tabs.Content>
               <Tabs.Content value="subscription">
                 <SubscriptionTab />

@@ -21,6 +21,7 @@ import { DocumentsTable, UploadDocumentDialog } from "@/components/documents"
 import { ClaimStatusBadge } from "@/components/claims"
 import { TasksPanel } from "@/components/tasks"
 import { ClaimEditDialog, ClaimFollowUpDialog, ClaimStatusDialog } from "@/components/claims/ClaimDialogs"
+import { ClaimDeadlinesCard, LargeLossInfoCard, PaymentsCard, RecoveriesCard, ReservesCard, SettlementCard } from "@/components/claims/LargeLoss"
 
 const EVENT_STYLE: Record<ApiClaimEvent["event_type"], { label: string; bg: string; color: string }> = {
     registered:        { label: "Klaim Didaftarkan", bg: "#DCFCE7", color: "#16A34A" },
@@ -205,6 +206,11 @@ export default function ClaimDetailPage() {
                                         )}
                                     </Box>
 
+                                    <SettlementCard claim={c} onChanged={refresh} />
+                                    <ReservesCard claim={c} onChanged={refresh} />
+                                    <PaymentsCard claim={c} onChanged={refresh} />
+                                    <RecoveriesCard claim={c} onChanged={refresh} />
+
                                     <Box {...CARD} overflow="hidden">
                                         <Flex justify="space-between" align="center" px="20px" pt="18px" pb="12px" gap="12px" flexWrap="wrap">
                                             <Flex flexDir="column">
@@ -258,6 +264,9 @@ export default function ClaimDetailPage() {
                                         </Row>
                                         <Row label="Tanggal Pembayaran">{fmtDate(c.payment_date)}</Row>
                                     </Box>
+
+                                    <ClaimDeadlinesCard claim={c} />
+                                    <LargeLossInfoCard claim={c} productGroup={c.product_group} onChanged={refresh} />
 
                                     <TasksPanel link={{ claim_id: c.claim_id, label: c.claim_number }} />
 

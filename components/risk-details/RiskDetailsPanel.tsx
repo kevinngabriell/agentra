@@ -13,7 +13,8 @@ import { fmtIDR, localISODate } from "@/lib/format"
 import { CLAIM_INPUT, CLAIM_LABEL, MoneyInput } from "@/components/claims/fields"
 import { RiskDetailsFields } from "./RiskDetailsFields"
 import {
-    EXTENSION_LABELS, ICC_OPTIONS, LABEL_OF, MOTOR_COVERAGE_OPTIONS, SURVEY_OPTIONS, TARIFF_REGION_OPTIONS, USAGE_OPTIONS,
+    EXTENSION_LABELS, FAMILY_TYPE_OPTIONS, ICC_OPTIONS, INSPECTION_OPTIONS, LABEL_OF, MOTOR_COVERAGE_OPTIONS, SURVEY_OPTIONS,
+    TARIFF_REGION_OPTIONS, TRAVEL_AREA_OPTIONS, TRAVEL_PLAN_OPTIONS, USAGE_OPTIONS,
     membersFormFrom, membersToPayload, riskFormFrom, riskFormToPayload, validateRisk,
     type MemberForm, type RiskForm,
 } from "./model"
@@ -85,6 +86,7 @@ function rowsFor(group: RiskGroup, d: RiskDetails): Row[] {
             ["Wilayah Tarif OJK", LABEL_OF(TARIFF_REGION_OPTIONS, d.tariff_region ? String(d.tariff_region) : "")],
             ["TJH Pihak Ketiga", rp(d.tpl_limit)], ["PA Pengemudi", rp(d.pa_driver_limit)],
             ["PA Penumpang / orang", d.pa_passenger_limit ? `${rp(d.pa_passenger_limit)} × ${d.pa_passenger_seats ?? "?"} kursi` : ""],
+            ["Inspeksi", LABEL_OF(INSPECTION_OPTIONS, d.inspection_status)], ["Tanggal Inspeksi", fmtDate(d.inspection_date)],
         )
     } else if (group === "cargo") {
         rows.push(
@@ -94,11 +96,25 @@ function rowsFor(group: RiskGroup, d: RiskDetails): Row[] {
             ["Klausul ICC", LABEL_OF(ICC_OPTIONS, d.icc_clause)], ["Deskripsi Barang", d.goods_description ?? ""],
         )
     } else if (group === "travel") {
-        rows.push(["Negara Tujuan", d.destinations ?? ""], ["No. Sertifikat Schengen", d.schengen_certificate_no ?? ""])
+        const cur = d.benefit_currency ?? ""
+        const fc = (n: number | null | undefined) => (n === null || n === undefined ? "" : `${cur} ${n.toLocaleString("id-ID")}`)
+        rows.push(
+            ["Negara Tujuan", d.destinations ?? ""], ["No. Sertifikat Schengen", d.schengen_certificate_no ?? ""],
+            ["Plan", [LABEL_OF(TRAVEL_PLAN_OPTIONS, d.travel_plan_type), d.plan_tier, d.max_trip_days ? `maks. ${d.max_trip_days} hari/perjalanan` : ""].filter(Boolean).join(" · ")],
+            ["Area", LABEL_OF(TRAVEL_AREA_OPTIONS, d.travel_area)], ["Tipe Peserta", LABEL_OF(FAMILY_TYPE_OPTIONS, d.family_type)],
+            ["Batas Usia", d.max_age ? `${d.max_age} tahun` : ""],
+            ["Biaya Medis", fc(d.medical_limit)], ["Evakuasi", fc(d.evacuation_limit)], ["Bagasi", fc(d.baggage_limit)],
+            ["Keterlambatan", fc(d.delay_limit)], ["Pembatalan", fc(d.cancellation_limit)],
+        )
     } else if (group === "fire") {
         rows.push(
             ["Kode Okupasi", d.occupation_code ?? ""], ["Okupasi", d.occupation_description ?? ""],
             ["Status Survei", LABEL_OF(SURVEY_OPTIONS, d.survey_status)], ["Tanggal Survei", fmtDate(d.survey_date)],
+            ["BI — Laba Kotor", rp(d.bi_gross_profit)],
+            ["BI — Periode Ganti Rugi", d.bi_indemnity_months ? `${d.bi_indemnity_months} bulan` : ""],
+            ["BI — Risiko Sendiri Waktu", d.bi_time_deductible_days ? `${d.bi_time_deductible_days} hari` : ""],
+            ["Stok Deklarasi", d.is_stock_declaration
+                ? `Ya · maks. ${rp(d.stock_max_sum_insured)} · rate ${d.stock_rate_permille ?? "?"}‰ · deposit ${rp(d.stock_deposit_premium)}` : ""],
         )
     }
     return rows.filter(([, v]) => v !== "")
@@ -145,7 +161,12 @@ function MembersTable({ members, role, title }: { members: RiskMember[]; role: R
                             <Box as="th" py="6px" pr="12px" fontWeight="semibold">{role === "traveller" ? "Paspor" : "Identitas"}</Box>
                             <Box as="th" py="6px" pr="12px" fontWeight="semibold">Tgl Lahir</Box>
                             <Box as="th" py="6px" pr="12px" fontWeight="semibold">Hubungan</Box>
-                            {role === "beneficiary"
+                            {role === "traveller"
+                                ? <>
+                                    <Box as="th" py="6px" pr="12px" fontWeight="semibold">Sertifikat</Box>
+                                    <Box as="th" py="6px" fontWeight="semibold">Perjalanan</Box>
+                                </>
+                                : role === "beneficiary"
                                 ? <Box as="th" py="6px" fontWeight="semibold" textAlign="right">Bagian</Box>
                                 : <>
                                     <Box as="th" py="6px" pr="12px" fontWeight="semibold" textAlign="right">Meninggal</Box>
@@ -161,7 +182,12 @@ function MembersTable({ members, role, title }: { members: RiskMember[]; role: R
                                 <Box as="td" py="6px" pr="12px">{m.id_number ?? "—"}</Box>
                                 <Box as="td" py="6px" pr="12px">{fmtDate(m.birth_date) || "—"}</Box>
                                 <Box as="td" py="6px" pr="12px">{m.relationship ?? "—"}</Box>
-                                {role === "beneficiary"
+                                {role === "traveller"
+                                    ? <>
+                                        <Box as="td" py="6px" pr="12px">{m.certificate_number ?? "—"}</Box>
+                                        <Box as="td" py="6px">{m.trip_start ? `${fmtDate(m.trip_start)} – ${fmtDate(m.trip_end ?? null) || "?"}` : "—"}</Box>
+                                    </>
+                                    : role === "beneficiary"
                                     ? <Box as="td" py="6px" textAlign="right">{m.share_percent === null ? "—" : `${m.share_percent}%`}</Box>
                                     : <>
                                         <Box as="td" py="6px" pr="12px" textAlign="right">{money(m.benefit_death)}</Box>

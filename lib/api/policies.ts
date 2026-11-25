@@ -2,8 +2,14 @@ import { apiDownload, apiFetch, apiFetchOr, apiPath, withQuery } from "./client"
 import type { PolicyTermPayload } from "./policy-terms"
 import type { ChangeInfo } from "./policy-change"
 import type { RiskDetailsPayload } from "./risk-details"
+import type { PolicyBillingSummary } from "./endorsements"
 
-export type ApiProductType = 'fire' | 'motorcycle' | 'car' | 'travel' | 'cargo' | 'other' | 'kecelakaan' | 'aep'
+/**
+ * The company's master product code (e.g. "kebakaran", "01", "61"). The API validates it against the active
+ * master products; its line of business (fire, motor, liability, engineering...) comes from the product's
+ * type in GET /master-products/types (useProductCatalog().typeInfoOf).
+ */
+export type ApiProductType = string
 export type ApiRenewalStatus = 'pending' | 'renewed' | 'lapsed' | 'cancelled'
 export type ApiPaymentStatus = 'unpaid' | 'paid' | 'confirmed'
 
@@ -53,6 +59,23 @@ export interface ApiPolicy {
     plate_number?: string | null
     chassis_number?: string | null
     bl_awb_number?: string | null
+    // [v2.1.0] Currency, original debit note, covernote, cancellation, renewal lead time.
+    currency?: string
+    exchange_rate?: number | string
+    sum_insured_fc?: number | string | null
+    premium_fc?: number | string | null
+    issued_premium_amount?: number | string | null
+    issued_customer_premium?: number | string | null
+    debit_note_number?: string | null
+    covernote_number?: string | null
+    covernote_date?: string | null
+    covernote_expiry?: string | null
+    policy_doc_received_date?: string | null
+    cancellation_date?: string | null
+    cancellation_reason?: string | null
+    cancellation_method?: string | null
+    cancellation_note?: string | null
+    renewal_lead_days?: number | string | null
 }
 
 export interface ApiFollowUp {
@@ -89,6 +112,15 @@ export interface ApiPolicyDetail extends ApiPolicy {
     follow_ups?: ApiFollowUp[]
     created_at?: string
     updated_at?: string
+    /** "Bank X QQ PT ABC" when a bank / leasing is printed in the insured name. */
+    qq_name?: string
+    billing?: PolicyBillingSummary
+    /** Total share % of the co-insurance panel, null without a panel. Must be 100 to renew. */
+    coassurance_total?: number | null
+    schedule_counts?: { locations: number; vehicles: number; parties: number; years: number; open_recommendations: number }
+    insurer_assistance_phone?: string | null
+    customer_whatsapp?: string | null
+    customer_pic_whatsapp?: string | null
 }
 
 export interface PoliciesListResponse {
@@ -158,6 +190,15 @@ export interface CreatePolicyPayload {
     // Risiko sendiri / klausula / perluasan jaminan saved with the policy (not logged as endorsements).
     // `coverage_index` is the 0-based position in `coverages` the term applies to; omit for the whole policy.
     terms?: (PolicyTermPayload & { coverage_index?: number })[]
+    // [v2.1.0] Fields that change no premium.
+    currency?: string
+    exchange_rate?: number
+    sum_insured_fc?: number | null
+    premium_fc?: number | null
+    covernote_number?: string | null
+    covernote_date?: string | null
+    covernote_expiry?: string | null
+    renewal_lead_days?: number | null
 }
 
 // ── Co-assurance ──────────────────────────────────────────────────────────────
@@ -395,14 +436,17 @@ export async function getPaymentSummary(
 
 // ── Coverages ──────────────────────────────────────────────────────────────
 
-export type ApiCoverageType = 'bangunan' | 'stok' | 'invenisi' | 'mesin' | 'dll'
+// kendaraan = one vehicle of a fleet schedule (managed in the Jadwal Armada panel); berharga = valuables.
+export type ApiCoverageType = 'bangunan' | 'stok' | 'invenisi' | 'mesin' | 'kendaraan' | 'berharga' | 'dll'
 
 export const COVERAGE_TYPE_LABELS: Record<ApiCoverageType, string> = {
-    bangunan: 'Bangunan',
-    stok:     'Stok / Persediaan',
-    invenisi: 'Inventaris / Isi',
-    mesin:    'Mesin',
-    dll:      'Lain-lain (DLL)',
+    bangunan:  'Bangunan',
+    stok:      'Stok / Persediaan',
+    invenisi:  'Inventaris / Isi',
+    mesin:     'Mesin',
+    kendaraan: 'Kendaraan (armada)',
+    berharga:  'Barang berharga',
+    dll:       'Lain-lain (DLL)',
 }
 
 export interface ApiCoverageItem {
@@ -413,6 +457,8 @@ export interface ApiCoverageItem {
     rate_permille:  string   // decimal string from API e.g. "0.3280"
     premium_amount: number
     count_in_tsi:   0 | 1   // 1 = UP counted toward policy TSI; 0 = premium-only row
+    /** Risk location the item belongs to (policy_locations), v2.1.0. */
+    location_id?:   string | null
     created_at:     string
     updated_at:     string
 }
@@ -429,6 +475,7 @@ export interface AddCoveragePayload {
     sum_insured:     number
     rate_permille:   number
     count_in_tsi?:   boolean  // default true; set false for secondary clauses (RSMD, OTHERS) to avoid double-counting TSI
+    location_id?:    string | null
 }
 
 export interface UpdateCoveragePayload {
@@ -437,6 +484,7 @@ export interface UpdateCoveragePayload {
     sum_insured?:    number
     rate_permille?:  number
     count_in_tsi?:   boolean
+    location_id?:    string | null
 }
 
 export async function getCoverages(
