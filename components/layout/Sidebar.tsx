@@ -46,6 +46,7 @@ function NavItem({ icon, label, href, active }: { icon: React.ReactNode; label: 
         px="12px"
         py="12px"
         minH="48px"
+        css={{ "@media (max-height: 900px)": { paddingTop: "7px", paddingBottom: "7px", minHeight: "38px" } }}
         borderRadius="8px"
         cursor="pointer"
         bg={active ? "#EFF6FF" : "transparent"}
@@ -73,12 +74,12 @@ export function Sidebar() {
   }
 
   return (
-    <Flex as="nav" aria-label="Menu utama" display={{ base: "none", md: "flex" }} flexDir="column" w="250px" minH="100vh" bg="#F8FAFC" borderRight="1px solid" borderColor="#E2E8F0" py="24px" px="12px" position="fixed" top={0} left={0} zIndex={10}>
-      <Flex align="center" mb="32px" px="4px">
+    <Flex as="nav" aria-label="Menu utama" display={{ base: "none", md: "flex" }} flexDir="column" w="250px" h="100vh" bg="#F8FAFC" borderRight="1px solid" borderColor="#E2E8F0" py="16px" px="12px" position="fixed" top={0} left={0} zIndex={10}>
+      <Flex align="center" mb="16px" px="4px" flexShrink={0}>
         <Link href="/agentra/dashboard" aria-label="Agentra CRM – Beranda"><Logo height={32} /></Link>
       </Flex>
 
-      <Flex flexDir="column" gap="2px" flex={1}>
+      <Flex flexDir="column" gap="2px" flex={1} minH={0} overflowY="auto">
         {isSubAgent ? (
           subAgentItems.map((item) => (
             <NavItem key={item.href} {...item} active={pathname === item.href} />
@@ -119,6 +120,7 @@ export function Sidebar() {
         borderRadius="8px"
         _hover={{ bg: "#FEE2E2" }}
         mt="8px"
+        flexShrink={0}
         onClick={handleLogout}
         color="#EF4444"
         fontWeight="normal"
