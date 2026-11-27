@@ -72,8 +72,8 @@ export function SearchSelect({
   loading = false,
   loadingText = "Memuat...",
   clearable = false,
-  fontSize = "17px",
-  height = "48px",
+  fontSize = "16px",
+  height = "44px",
   disabled,
   positioning,
   ariaLabel,
@@ -169,7 +169,7 @@ export function SearchSelect({
               _hover={{ color: "#DC2626" }}
               aria-label="Hapus pilihan"
             >
-              <LuX size={18} />
+              <LuX size={16} />
             </Combobox.ClearTrigger>
           )}
           <Combobox.Trigger color="#64748B" aria-label="Buka daftar">
@@ -177,7 +177,7 @@ export function SearchSelect({
               <Spinner size="xs" color="#64748B" />
             ) : (
               <LuChevronDown
-                size={22}
+                size={20}
                 style={{ transition: "transform 0.15s", transform: open ? "rotate(180deg)" : undefined }}
               />
             )}
@@ -218,7 +218,7 @@ export function SearchSelect({
                   {item.label}
                 </Combobox.ItemText>
                 <Combobox.ItemIndicator color="#1D4ED8">
-                  <LuCheck size={18} />
+                  <LuCheck size={16} />
                 </Combobox.ItemIndicator>
               </Combobox.Item>
             ))}

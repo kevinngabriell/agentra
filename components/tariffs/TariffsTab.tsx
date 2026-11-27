@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Box, Button, Flex, Input, Skeleton, Text } from "@chakra-ui/react"
+import { Box, Button, Flex, Input, Skeleton, Table, Text } from "@chakra-ui/react"
 import { LuPencil, LuPlus, LuTrash2, LuUpload } from "react-icons/lu"
 import { getAccessToken } from "@/lib/auth/session"
 import { errorMessage } from "@/lib/api/client"
@@ -15,6 +15,11 @@ import { SearchSelect } from "@/components/ui/search-select"
 import { CLAIM_INPUT } from "@/components/claims/fields"
 import { useConfirm } from "@/components/ui/confirm-dialog"
 import { csvRecords, readFileText } from "@/lib/csv"
+
+const TH = { px: "16px", py: "12px", fontSize: "15px", fontWeight: "bold", color: "#374151", bg: "#F1F5F9", whiteSpace: "nowrap", textAlign: "start" } as const
+const TD = { px: "16px", py: "12px", fontSize: "16px", color: "#111827", borderColor: "#E2E8F0", verticalAlign: "middle" } as const
+const BTN_OUT = { variant: "outline", h: "40px", px: "12px", fontSize: "15px", color: "#111827", borderColor: "#94A3B8", gap: "6px" } as const
+const BTN_DEL = { variant: "outline", h: "40px", px: "12px", fontSize: "15px", color: "#B91C1C", borderColor: "#FCA5A5", gap: "6px" } as const
 
 const CARD = { bg: "white", borderRadius: "16px", border: "1px solid", borderColor: "#CBD5E1", p: "24px" } as const
 
@@ -127,35 +132,51 @@ export function TariffsTab() {
 
     return (
         <Flex flexDir="column" gap="20px">
-            <Text fontSize="17px" color="#1F2937" maxW="820px" lineHeight="1.5">
+            <Text fontSize="16px" color="#1F2937" maxW="820px" lineHeight="1.5">
                 Isi daftar tarif dari surat edaran resmi yang berlaku. Agentra tidak membawa angka tarif sendiri, jadi peringatan &ldquo;tarif terlalu rendah / terlalu tinggi&rdquo; hanya seakurat daftar yang Anda isi di sini.
             </Text>
-            {error && <Text color="#B91C1C" fontSize="17px" role="alert">{error}</Text>}
-            {notice && <Text color="#166534" fontSize="17px">{notice}</Text>}
+            {error && <Text color="#B91C1C" fontSize="16px" role="alert">{error}</Text>}
+            {notice && <Text color="#166534" fontSize="16px">{notice}</Text>}
 
             <Box {...CARD}>
                 <Flex justify="space-between" align="center" mb="12px" gap="8px" flexWrap="wrap">
                     <Text as="h2" fontSize="20px" fontWeight="bold" color="#0D1B3E">Daftar Jenis Usaha / Pekerjaan ({occ?.length ?? 0})</Text>
                     <Flex gap="8px">
-                        <Button as="label" variant="outline" h="48px" px="16px" fontSize="17px" cursor="pointer" color="#111827" borderColor="#94A3B8" gap="6px">
-                            <LuUpload size={18} /> Impor dari file CSV
+                        <Button as="label" variant="outline" h="44px" px="16px" fontSize="16px" cursor="pointer" color="#111827" borderColor="#94A3B8" gap="6px">
+                            <LuUpload size={16} /> Impor dari file CSV
                             <input type="file" accept=".csv,text/csv" hidden onChange={(e) => { importCsv(e.target.files?.[0]); e.target.value = "" }} />
                         </Button>
-                        <Button h="48px" px="16px" fontSize="17px" bg="#0D1B3E" color="white" gap="6px" onClick={() => setDialog({ occ: null })}><LuPlus size={18} /> Tambah</Button>
+                        <Button h="44px" px="16px" fontSize="16px" bg="#0D1B3E" color="white" gap="6px" onClick={() => setDialog({ occ: null })}><LuPlus size={16} /> Tambah</Button>
                     </Flex>
                 </Flex>
                 <Input {...CLAIM_INPUT} mb="8px" placeholder="Ketik untuk mencari kode atau nama" value={search} onChange={(e) => setSearch(e.target.value)} />
                 {!occ ? <Skeleton h="60px" /> : shownOcc.length === 0 ? <Text fontSize="16px" color="#475569">Belum ada data. Anda bisa mengisinya satu per satu dengan tombol Tambah, atau memasukkan banyak sekaligus dari file CSV (kolom: Kode, Deskripsi, Kelas).</Text> : (
-                    <Box maxH="360px" overflowY="auto">
-                        {shownOcc.map((o) => (
-                            <Flex key={o.occupation_id} justify="space-between" align="center" py="12px" borderTop="1px solid #E2E8F0" fontSize="17px" gap="12px">
-                                <Text><Text as="span" fontWeight="semibold">{o.code}</Text> · {o.description}{o.tariff_class ? ` · kelas ${o.tariff_class}` : ""}</Text>
-                                <Flex>
-                                    <Button variant="ghost" h="44px" px="12px" fontSize="16px" color="#111827" gap="6px" onClick={() => setDialog({ occ: o })}><LuPencil size={18} /> Ubah</Button>
-                                    <Button variant="ghost" h="44px" px="12px" fontSize="16px" color="#B91C1C" gap="6px" onClick={() => removeOcc(o)}><LuTrash2 size={18} /> Hapus</Button>
-                                </Flex>
-                            </Flex>
-                        ))}
+                    <Box maxH="420px" overflow="auto" border="1px solid" borderColor="#CBD5E1" borderRadius="10px">
+                        <Table.Root minW="640px" size="md" stickyHeader>
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader {...TH}>Kode</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH}>Jenis Usaha / Pekerjaan</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH}>Kelas Tarif</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH} textAlign="end">Tindakan</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {shownOcc.map((o) => (
+                                    <Table.Row key={o.occupation_id}>
+                                        <Table.Cell {...TD} fontWeight="semibold">{o.code}</Table.Cell>
+                                        <Table.Cell {...TD}>{o.description}</Table.Cell>
+                                        <Table.Cell {...TD}>{o.tariff_class || "—"}</Table.Cell>
+                                        <Table.Cell {...TD}>
+                                            <Flex gap="8px" justify="flex-end">
+                                                <Button {...BTN_OUT} onClick={() => setDialog({ occ: o })}><LuPencil size={16} /> Ubah</Button>
+                                                <Button {...BTN_DEL} onClick={() => removeOcc(o)}><LuTrash2 size={16} /> Hapus</Button>
+                                            </Flex>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 )}
             </Box>
@@ -163,20 +184,43 @@ export function TariffsTab() {
             <Box {...CARD}>
                 <Flex justify="space-between" align="center" mb="12px">
                     <Text as="h2" fontSize="20px" fontWeight="bold" color="#0D1B3E">Daftar Batas Tarif ({bands?.length ?? 0})</Text>
-                    <Button h="48px" px="16px" fontSize="17px" bg="#0D1B3E" color="white" gap="6px" onClick={() => setDialog({ band: null })}><LuPlus size={18} /> Tambah</Button>
+                    <Button h="44px" px="16px" fontSize="16px" bg="#0D1B3E" color="white" gap="6px" onClick={() => setDialog({ band: null })}><LuPlus size={16} /> Tambah</Button>
                 </Flex>
-                {!bands ? <Skeleton h="60px" /> : bands.length === 0 ? <Text fontSize="16px" color="#475569">Belum ada data. Tekan Tambah untuk mengisi.</Text> : bands.map((b) => (
-                    <Flex key={b.band_id} justify="space-between" align="center" py="12px" borderTop="1px solid #E2E8F0" fontSize="17px" gap="12px">
-                        <Box>
-                            <Text><Text as="span" fontWeight="semibold">{b.band_key}</Text> · {TARIFF_TYPE_LABELS[b.tariff_type]}</Text>
-                            <Text color="#475569" fontSize="16px">{b.rate_min ?? "?"}–{b.rate_max ?? "?"}‰{b.discount_max_percent !== null ? ` · diskon maks. ${b.discount_max_percent}%` : ""}{b.description ? ` · ${b.description}` : ""}</Text>
-                        </Box>
-                        <Flex>
-                            <Button variant="ghost" h="44px" px="12px" fontSize="16px" color="#111827" gap="6px" onClick={() => setDialog({ band: b })}><LuPencil size={18} /> Ubah</Button>
-                            <Button variant="ghost" h="44px" px="12px" fontSize="16px" color="#B91C1C" gap="6px" onClick={() => removeBand(b)}><LuTrash2 size={18} /> Hapus</Button>
-                        </Flex>
-                    </Flex>
-                ))}
+                {!bands ? <Skeleton h="60px" /> : bands.length === 0 ? <Text fontSize="16px" color="#475569">Belum ada data. Tekan Tambah untuk mengisi.</Text> : (
+                    <Box overflowX="auto" border="1px solid" borderColor="#CBD5E1" borderRadius="10px">
+                        <Table.Root minW="820px" size="md">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader {...TH}>Kunci</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH}>Jenis Tarif</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH} textAlign="end">Rate Min (‰)</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH} textAlign="end">Rate Maks (‰)</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH} textAlign="end">Diskon Maks</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH}>Keterangan</Table.ColumnHeader>
+                                    <Table.ColumnHeader {...TH} textAlign="end">Tindakan</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {bands.map((b) => (
+                                    <Table.Row key={b.band_id}>
+                                        <Table.Cell {...TD} fontWeight="semibold">{b.band_key}</Table.Cell>
+                                        <Table.Cell {...TD}>{TARIFF_TYPE_LABELS[b.tariff_type]}</Table.Cell>
+                                        <Table.Cell {...TD} textAlign="end">{b.rate_min ?? "—"}</Table.Cell>
+                                        <Table.Cell {...TD} textAlign="end">{b.rate_max ?? "—"}</Table.Cell>
+                                        <Table.Cell {...TD} textAlign="end">{b.discount_max_percent !== null ? `${b.discount_max_percent}%` : "—"}</Table.Cell>
+                                        <Table.Cell {...TD}>{b.description || "—"}</Table.Cell>
+                                        <Table.Cell {...TD}>
+                                            <Flex gap="8px" justify="flex-end">
+                                                <Button {...BTN_OUT} onClick={() => setDialog({ band: b })}><LuPencil size={16} /> Ubah</Button>
+                                                <Button {...BTN_DEL} onClick={() => removeBand(b)}><LuTrash2 size={16} /> Hapus</Button>
+                                            </Flex>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
+                    </Box>
+                )}
                 <Text mt="8px" fontSize="16px" color="#475569">Kategori kendaraan dihitung dari nilai: 1 ≤ 125 jt, 2 ≤ 200 jt, 3 ≤ 400 jt, 4 ≤ 800 jt, 5 di atasnya.</Text>
             </Box>
 

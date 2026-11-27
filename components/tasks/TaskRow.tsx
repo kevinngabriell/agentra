@@ -35,9 +35,9 @@ export function TaskRow({ task, showLink = true, onToggle, onEdit, onDelete }: {
         <Flex align="flex-start" gap="14px" py="14px" borderBottom="1px solid" borderColor="#F1F5F9">
             <input type="checkbox" checked={done} onChange={() => onToggle(task)}
                 aria-label={done ? `Buka kembali: ${task.title}` : `Selesaikan: ${task.title}`}
-                style={{ marginTop: 2, width: 26, height: 26, cursor: "pointer", flexShrink: 0 }} />
+                style={{ marginTop: 2, width: 22, height: 22, cursor: "pointer", flexShrink: 0 }} />
             <Flex flexDir="column" gap="2px" flex="1" minW={0}>
-                <Text fontSize="18px" fontWeight="semibold" color={done ? "#64748B" : "#111827"} textDecoration={done ? "line-through" : "none"}>{task.title}</Text>
+                <Text fontSize="16px" fontWeight="semibold" color={done ? "#64748B" : "#111827"} textDecoration={done ? "line-through" : "none"}>{task.title}</Text>
                 {task.notes && <Text fontSize="16px" color="#374151">{task.notes}</Text>}
                 <Flex gap="8px" align="center" flexWrap="wrap">
                     <Text fontSize="16px" fontWeight="semibold" color={due.color}>{due.text}</Text>
@@ -47,7 +47,7 @@ export function TaskRow({ task, showLink = true, onToggle, onEdit, onDelete }: {
                 </Flex>
             </Flex>
             {onEdit && (
-                <Box as="button" aria-label={`Ubah tugas ${task.title}`} display="flex" alignItems="center" gap="6px" minH="44px" px="10px" fontSize="16px" fontWeight="semibold" color="#111827" _hover={{ bg: "#F1F5F9" }} borderRadius="8px" onClick={() => onEdit(task)}><LuPencil size={18} /> Ubah</Box>
+                <Box as="button" aria-label={`Ubah tugas ${task.title}`} display="flex" alignItems="center" gap="6px" minH="40px" px="10px" fontSize="16px" fontWeight="semibold" color="#111827" _hover={{ bg: "#F1F5F9" }} borderRadius="8px" onClick={() => onEdit(task)}><LuPencil size={16} /> Ubah</Box>
             )}
             {onDelete && (
                 <Box as="button" aria-label={`Hapus tugas ${task.title}`} p="4px" color="#64748B" _hover={{ color: "#B91C1C" }} onClick={() => onDelete(task)}><LuTrash2 size={14} /></Box>

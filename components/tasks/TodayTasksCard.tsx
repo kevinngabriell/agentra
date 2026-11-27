@@ -40,14 +40,14 @@ export function TodayTasksCard() {
         <Box bg="white" borderRadius="16px" border="1px solid" borderColor="#CBD5E1" overflow="hidden">
             <Flex px="24px" py="20px" align="center" gap="12px" flexWrap="wrap" borderBottom="1px solid" borderColor="#E2E8F0">
                 <LuListChecks size={24} color="#1E3A8A" aria-hidden="true" />
-                <Text as="h2" color="#0D1B3E" fontSize="20px" fontWeight="bold" flex="1">Tugas Saya Hari Ini</Text>
-                {!loading && <Badge px="12px" py="2px" borderRadius="full" fontSize="17px" fontWeight="bold" bg="#DBEAFE" color="#1E3A8A">{items.length}</Badge>}
-                <Link href="/agentra/tasks" style={{ fontSize: "17px", color: "#0B5A8A", fontWeight: 700, textDecoration: "underline" }}>Lihat semua</Link>
+                <Text as="h2" color="#0D1B3E" fontSize="18px" fontWeight="bold" flex="1">Tugas Saya Hari Ini</Text>
+                {!loading && <Badge px="12px" py="2px" borderRadius="full" fontSize="16px" fontWeight="bold" bg="#DBEAFE" color="#1E3A8A">{items.length}</Badge>}
+                <Link href="/agentra/tasks" style={{ fontSize: "16px", color: "#0B5A8A", fontWeight: 700, textDecoration: "underline" }}>Lihat semua</Link>
             </Flex>
             <Box px="24px" pb="8px">
-                {(error || result?.error) && <Text color="#B91C1C" fontSize="17px" role="alert" py="8px">{error ?? result?.error}</Text>}
+                {(error || result?.error) && <Text color="#B91C1C" fontSize="16px" role="alert" py="8px">{error ?? result?.error}</Text>}
                 {loading ? <Skeleton h="60px" mt="12px" borderRadius="8px" /> : items.length === 0 ? (
-                    <Text color="#374151" fontSize="18px" py="20px">Tidak ada tugas untuk hari ini. 🎉</Text>
+                    <Text color="#374151" fontSize="16px" py="20px">Tidak ada tugas untuk hari ini. 🎉</Text>
                 ) : items.map((t) => <TaskRow key={t.task_id} task={t} onToggle={complete} />)}
             </Box>
         </Box>
