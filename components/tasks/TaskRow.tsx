@@ -6,11 +6,11 @@ import { LuPencil, LuTrash2 } from "react-icons/lu"
 import type { ApiTask } from "@/lib/api/tasks"
 
 export function dueLabel(t: ApiTask): { text: string; color: string } {
-    if (t.status === "done") return { text: "Selesai", color: "#16A34A" }
-    if (t.days_until_due < 0) return { text: `Terlambat ${Math.abs(t.days_until_due)} hari`, color: "#DC2626" }
-    if (t.days_until_due === 0) return { text: "Hari ini", color: "#EA580C" }
-    if (t.days_until_due === 1) return { text: "Besok", color: "#B45309" }
-    return { text: new Date(t.due_date).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), color: "#64748B" }
+    if (t.status === "done") return { text: "Selesai", color: "#166534" }
+    if (t.days_until_due < 0) return { text: `Terlambat ${Math.abs(t.days_until_due)} hari`, color: "#B91C1C" }
+    if (t.days_until_due === 0) return { text: "Hari ini", color: "#9A3412" }
+    if (t.days_until_due === 1) return { text: "Besok", color: "#78350F" }
+    return { text: new Date(t.due_date).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), color: "#374151" }
 }
 
 /** Where the task points to; the most specific record wins. */
@@ -32,25 +32,25 @@ export function TaskRow({ task, showLink = true, onToggle, onEdit, onDelete }: {
     const target = showLink ? taskTarget(task) : null
     const done = task.status === "done"
     return (
-        <Flex align="flex-start" gap="10px" py="10px" borderBottom="1px solid" borderColor="#F1F5F9">
+        <Flex align="flex-start" gap="14px" py="14px" borderBottom="1px solid" borderColor="#F1F5F9">
             <input type="checkbox" checked={done} onChange={() => onToggle(task)}
                 aria-label={done ? `Buka kembali: ${task.title}` : `Selesaikan: ${task.title}`}
-                style={{ marginTop: 3, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
+                style={{ marginTop: 2, width: 26, height: 26, cursor: "pointer", flexShrink: 0 }} />
             <Flex flexDir="column" gap="2px" flex="1" minW={0}>
-                <Text fontSize="16px" fontWeight="medium" color={done ? "#94A3B8" : "#1C2833"} textDecoration={done ? "line-through" : "none"}>{task.title}</Text>
-                {task.notes && <Text fontSize="16px" color="#64748B">{task.notes}</Text>}
+                <Text fontSize="18px" fontWeight="semibold" color={done ? "#64748B" : "#111827"} textDecoration={done ? "line-through" : "none"}>{task.title}</Text>
+                {task.notes && <Text fontSize="16px" color="#374151">{task.notes}</Text>}
                 <Flex gap="8px" align="center" flexWrap="wrap">
                     <Text fontSize="16px" fontWeight="semibold" color={due.color}>{due.text}</Text>
                     {target && (
-                        <Link href={target.href} style={{ fontSize: "16px", color: "#1D4ED8" }}>{target.label}</Link>
+                        <Link href={target.href} style={{ fontSize: "16px", color: "#0B5A8A", textDecoration: "underline" }}>{target.label}</Link>
                     )}
                 </Flex>
             </Flex>
             {onEdit && (
-                <Box as="button" aria-label={`Ubah tugas ${task.title}`} p="4px" color="#64748B" _hover={{ color: "#1C2833" }} onClick={() => onEdit(task)}><LuPencil size={14} /></Box>
+                <Box as="button" aria-label={`Ubah tugas ${task.title}`} display="flex" alignItems="center" gap="6px" minH="44px" px="10px" fontSize="16px" fontWeight="semibold" color="#111827" _hover={{ bg: "#F1F5F9" }} borderRadius="8px" onClick={() => onEdit(task)}><LuPencil size={18} /> Ubah</Box>
             )}
             {onDelete && (
-                <Box as="button" aria-label={`Hapus tugas ${task.title}`} p="4px" color="#64748B" _hover={{ color: "#DC2626" }} onClick={() => onDelete(task)}><LuTrash2 size={14} /></Box>
+                <Box as="button" aria-label={`Hapus tugas ${task.title}`} p="4px" color="#64748B" _hover={{ color: "#B91C1C" }} onClick={() => onDelete(task)}><LuTrash2 size={14} /></Box>
             )}
         </Flex>
     )

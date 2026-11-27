@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 import { Box, Button, Center, Flex, Grid, IconButton, Spinner, Text } from "@chakra-ui/react"
 import Link from "next/link"
 import {
-  FiBell, FiFileText, FiRefreshCw, FiDollarSign,
-  FiMessageSquare, FiCheckCircle, FiCalendar, FiFilter, FiPlus, FiAlertCircle, FiAlertTriangle,
+  FiFileText, FiRefreshCw, FiDollarSign, FiCheckCircle, FiCalendar, FiPlus,
+  FiAlertCircle, FiAlertTriangle, FiClock, FiChevronRight, FiPhoneCall,
 } from "react-icons/fi"
 import { Sidebar, TopBar, MobileHeader, MobileBottomNav } from "@/components/layout"
 import { getAccessToken } from "@/lib/auth/session"
@@ -18,100 +18,157 @@ import {
 } from "@/lib/api/dashboard"
 import { getMyProfile, type UserProfile } from "@/lib/api/user"
 import { useProductOptions } from "@/lib/hooks/useProductOptions"
+import { fmtIDR } from "@/lib/format"
+
+// ─── Design tokens ───────────────────────────────────────────────────────────
+// Built for readers aged 50+: body text is never below 16px, secondary text keeps
+// at least a 7:1 contrast on white (WCAG AAA), and every tappable control is 48px tall.
+
+const INK = "#111827"        // main text
+const INK_SOFT = "#374151"    // secondary text (10:1 on white)
+const NAVY = "#0D1B3E"        // primary buttons and headings
+const LINK = "#0B5A8A"        // links (7:1 on white)
+const LINE = "#CBD5E1"        // card borders
+const FOCUS = { outline: "3px solid #1D4ED8", outlineOffset: "2px" }
+
+const CARD = {
+  bg: "#FFFFFF",
+  border: "1px solid",
+  borderColor: LINE,
+  borderRadius: "16px",
+} as const
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-
-function formatCommission(amount: number): string {
-  if (amount >= 1_000_000) {
-    const m = amount / 1_000_000
-    return `${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}jt`
-  }
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}rb`
-  return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+function greeting(hour: number): string {
+  if (hour < 11) return "Selamat pagi"
+  if (hour < 15) return "Selamat siang"
+  if (hour < 18) return "Selamat sore"
+  return "Selamat malam"
 }
 
 function formatActivityTime(iso: string): string {
   const d = new Date(iso)
   const now = new Date()
   const time = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false })
-  if (d.toDateString() === now.toDateString()) return `${time} WIB`
+  if (d.toDateString() === now.toDateString()) return `Hari ini, pukul ${time}`
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
-  if (d.toDateString() === yesterday.toDateString()) return `Kemarin, ${time}`
-  return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" }) + `, ${time}`
+  if (d.toDateString() === yesterday.toDateString()) return `Kemarin, pukul ${time}`
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long" }) + `, pukul ${time}`
 }
 
+// Plain wording: "berakhir 3 hari lagi" instead of the shorthand "H-3 Renewal".
 function getActionStatus(days: number) {
-  if (days < 0) return { label: `Lewat ${Math.abs(days)} hari`, color: "#991B1B", bg: "#FEE2E2" }
-  if (days === 0) return { label: "Berakhir Hari Ini", color: "#991B1B", bg: "#FEE2E2" }
-  if (days <= 2) return { label: `H-${days} Expired`, color: "#991B1B", bg: "#FEE2E2" }
-  if (days <= 4) return { label: `H-${days} Renewal`, color: "#92400E", bg: "#FEF3C7" }
-  return { label: `H-${days} Renewal`, color: "#C2410C", bg: "#FFF7ED" }
+  if (days < 0) return { label: `Sudah lewat ${Math.abs(days)} hari`, color: "#991B1B", bg: "#FEE2E2", urgent: true }
+  if (days === 0) return { label: "Berakhir hari ini", color: "#991B1B", bg: "#FEE2E2", urgent: true }
+  if (days <= 2) return { label: `Berakhir ${days} hari lagi`, color: "#991B1B", bg: "#FEE2E2", urgent: true }
+  if (days <= 4) return { label: `Berakhir ${days} hari lagi`, color: "#78350F", bg: "#FEF3C7", urgent: false }
+  return { label: `Berakhir ${days} hari lagi`, color: "#7C2D12", bg: "#FFEDD5", urgent: false }
 }
 
 function getActivityConfig(type: string) {
   switch (type) {
     case "policy_created":
-      return { icon: <FiCheckCircle size={18} />, bg: "#DCFCE7", color: "#16A34A", title: "Polis Baru Diterbitkan" }
+      return { icon: <FiCheckCircle size={22} />, bg: "#DCFCE7", color: "#166534", title: "Polis baru dicatat" }
     case "policy_updated":
-      return { icon: <FiFileText size={18} />, bg: "#EEF2FF", color: "#4F46E5", title: "Polis Diperbarui" }
+      return { icon: <FiFileText size={22} />, bg: "#E0E7FF", color: "#3730A3", title: "Data polis diubah" }
     case "renewal_completed":
-      return { icon: <FiRefreshCw size={18} />, bg: "#EEF2FF", color: "#4F46E5", title: "Perpanjangan Berhasil" }
+      return { icon: <FiRefreshCw size={22} />, bg: "#E0E7FF", color: "#3730A3", title: "Perpanjangan selesai" }
     case "follow_up_added":
-      return { icon: <FiCalendar size={18} />, bg: "#FEF3C7", color: "#D97706", title: "Jadwal Hubungi Lagi" }
+      return { icon: <FiCalendar size={22} />, bg: "#FEF3C7", color: "#78350F", title: "Jadwal menghubungi nasabah" }
     default:
-      return { icon: <FiAlertCircle size={18} />, bg: "#F1F5F9", color: "#64748B", title: "Aktivitas" }
+      return { icon: <FiAlertCircle size={22} />, bg: "#F1F5F9", color: "#334155", title: "Kegiatan lain" }
   }
+}
+
+function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
+  return (
+    <Box>
+      <Text as="h2" color={NAVY} fontWeight="bold" fontSize="20px" lineHeight="1.3">{children}</Text>
+      {hint && <Text color={INK_SOFT} fontSize="16px" mt="2px">{hint}</Text>}
+    </Box>
+  )
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function Welcome({ name, urgentCount }: { name: string; urgentCount: number }) {
+  const now = new Date()
+  const dateText = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+  return (
+    <Flex {...CARD} p={{ base: "20px", md: "24px" }} gap="16px" align={{ base: "stretch", md: "center" }} justify="space-between" flexDir={{ base: "column", md: "row" }}>
+      <Box>
+        <Text color={INK_SOFT} fontSize="16px">{dateText}</Text>
+        <Text as="h2" color={NAVY} fontSize={{ base: "24px", md: "28px" }} fontWeight="bold" lineHeight="1.25">
+          {greeting(now.getHours())}, {name}
+        </Text>
+        <Text color={INK} fontSize="18px" mt="4px">
+          {urgentCount > 0
+            ? `Ada ${urgentCount} polis nasabah yang perlu segera Anda hubungi.`
+            : "Tidak ada polis yang mendesak hari ini. Pekerjaan Anda aman."}
+        </Text>
+      </Box>
+      <Button
+        asChild
+        display={{ base: "none", md: "inline-flex" }}
+        bg={NAVY} color="white" h="52px" px="24px" fontSize="18px" fontWeight="semibold" borderRadius="12px"
+        _hover={{ bg: "#1a2f5c" }} _focusVisible={FOCUS}
+      >
+        <Link href="/agentra/policies/new"><FiPlus size={20} /> Tambah Polis Baru</Link>
+      </Button>
+    </Flex>
+  )
+}
+
 interface StatCardData {
   label: string
   value: string
-  sub: string
+  explain: string
+  note?: string
+  href: string
   icon: React.ReactNode
   iconBg: string
   iconColor: string
-  subColor?: string
 }
 
 function StatCard({ stat }: { stat: StatCardData }) {
   return (
-    <Flex flexDir="column" w="100%" bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" padding="24px" align="center" gap="16px">
-      <Flex justifyContent="space-between" w="100%">
-        <Flex w="32px" h="36px" borderRadius="8px" bg={stat.iconBg} align="center" justify="center" flexShrink={0} padding="8px">
-          <Box color={stat.iconColor}>{stat.icon}</Box>
+    <Link href={stat.href} style={{ display: "block", height: "100%" }} aria-label={`${stat.label}: ${stat.value}. ${stat.explain}`}>
+      <Flex {...CARD} flexDir="column" h="100%" p={{ base: "16px", md: "20px" }} gap="12px" _hover={{ borderColor: NAVY, boxShadow: "0 2px 8px rgba(13,27,62,0.12)" }}>
+        <Flex align="center" gap="12px">
+          <Flex w="44px" h="44px" borderRadius="12px" bg={stat.iconBg} align="center" justify="center" flexShrink={0} color={stat.iconColor} aria-hidden="true">
+            {stat.icon}
+          </Flex>
+          <Text color={INK} fontSize="17px" fontWeight="bold" lineHeight="1.25">{stat.label}</Text>
         </Flex>
-        <Text fontSize="14px" fontWeight="semibold" color={stat.subColor ?? "#8B9BB4"}>{stat.sub}</Text>
+        <Text color={NAVY} fontSize={{ base: "30px", md: "34px" }} fontWeight="bold" lineHeight="1.1">{stat.value}</Text>
+        <Text color={INK_SOFT} fontSize="16px" lineHeight="1.4">{stat.explain}</Text>
+        {stat.note && <Text color={INK} fontSize="16px" fontWeight="semibold">{stat.note}</Text>}
       </Flex>
-      <Box w="100%">
-        <Text color="#5D6D7E" fontSize="14px">{stat.label}</Text>
-        <Text color="#1C2833" fontSize="24px" fontWeight="bold">{stat.value}</Text>
-      </Box>
-    </Flex>
+    </Link>
   )
 }
 
 function KlaimBerjalan({ open, pendingDocs }: { open: number; pendingDocs: number }) {
   return (
     <Link href="/agentra/claims" style={{ display: "block" }}>
-      <Flex bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" paddingX="24px" paddingY="16px" align="center" gap="16px" flexWrap="wrap">
-        <Flex w="36px" h="36px" borderRadius="8px" bg="#FEE2E2" align="center" justify="center" flexShrink={0} color="#DC2626">
-          <FiAlertTriangle size={18} />
+      <Box {...CARD} p="20px" _hover={{ borderColor: NAVY }}>
+        <Flex align="center" gap="12px" mb="12px">
+          <Flex w="44px" h="44px" borderRadius="12px" bg="#FEE2E2" align="center" justify="center" flexShrink={0} color="#991B1B" aria-hidden="true">
+            <FiAlertTriangle size={22} />
+          </Flex>
+          <Text as="h2" color={NAVY} fontWeight="bold" fontSize="20px" flex="1">Klaim yang Sedang Diurus</Text>
+          <FiChevronRight size={22} color={INK_SOFT} aria-hidden="true" />
         </Flex>
-        <Box flex="1" minW="160px">
-          <Text color="#001F40" fontWeight="semibold" fontSize="16px">Klaim Berjalan</Text>
-          <Text color="#5D6D7E" fontSize="15px">
-            {open === 0 ? "Tidak ada klaim yang sedang diproses" : `${open} klaim sedang diproses`}
-          </Text>
-        </Box>
-        <Box textAlign="right">
-          <Text color={pendingDocs > 0 ? "#B45309" : "#16A34A"} fontSize="20px" fontWeight="bold">{pendingDocs}</Text>
-          <Text color="#5D6D7E" fontSize="14px">menunggu dokumen</Text>
-        </Box>
-      </Flex>
+        <Text color={INK} fontSize="18px">
+          {open === 0 ? "Tidak ada klaim yang sedang diproses." : `${open} klaim sedang diproses.`}
+        </Text>
+        <Text color={pendingDocs > 0 ? "#78350F" : "#166534"} fontSize="18px" fontWeight="bold" mt="4px">
+          {pendingDocs > 0 ? `${pendingDocs} klaim masih menunggu dokumen dari nasabah` : "Semua dokumen klaim sudah lengkap"}
+        </Text>
+        <Text color={LINK} fontSize="16px" fontWeight="semibold" mt="12px">Lihat semua klaim →</Text>
+      </Box>
     </Link>
   )
 }
@@ -120,21 +177,15 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
   const productCatalog = useProductOptions()
   const router = useRouter()
   return (
-    <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" overflow="hidden">
-      <Flex justify="space-between" align="center" paddingX="24px" paddingY="16px" borderBottom="1px solid" borderColor="#DDE1E7">
-        <Text color="#001F40" fontWeight="semibold" fontSize="18px">Aksi Hari Ini</Text>
-        <Link href="/agentra/renewals" style={{ color: "#006397", fontSize: "16px" }}>Lihat Semua</Link>
+    <Box {...CARD} overflow="hidden">
+      <Flex justify="space-between" align="center" gap="12px" flexWrap="wrap" px="24px" py="20px" borderBottom="1px solid" borderColor={LINE}>
+        <SectionTitle hint="Polis nasabah yang akan atau sudah habis masa berlakunya">Perlu Dihubungi Hari Ini</SectionTitle>
+        <Link href="/agentra/renewals" style={{ color: LINK, fontSize: "17px", fontWeight: 700, textDecoration: "underline" }}>Lihat semua</Link>
       </Flex>
 
-      <Grid templateColumns="1fr 160px 140px" borderBottom="1px solid" borderColor="#DDE1E7">
-        <Text color="#5D6D7E" fontSize="15px" fontWeight="medium" paddingX="24px" paddingY="12px">Nama Nasabah</Text>
-        <Text color="#5D6D7E" fontSize="15px" fontWeight="medium" paddingX="16px" paddingY="12px">Status</Text>
-        <Text color="#5D6D7E" fontSize="15px" fontWeight="medium" paddingX="16px" paddingY="12px" textAlign="right">Aksi</Text>
-      </Grid>
-
       {actions.length === 0 ? (
-        <Flex align="center" justify="center" py="40px">
-          <Text color="#8B9BB4" fontSize="16px">Tidak ada aksi mendesak hari ini</Text>
+        <Flex align="center" justify="center" py="40px" px="24px">
+          <Text color={INK_SOFT} fontSize="18px" textAlign="center">Tidak ada nasabah yang perlu dihubungi hari ini.</Text>
         </Flex>
       ) : (
         <Flex flexDir="column">
@@ -142,47 +193,53 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
             const status = getActionStatus(a.days_until_expiry)
             const productLabel = productCatalog.label(a.product_type)
             return (
-              <Grid
+              <Flex
                 key={a.policy_id}
-                templateColumns="1fr 160px 140px"
-                alignItems="center"
+                gap="16px"
+                px="24px"
+                py="20px"
+                align={{ base: "stretch", md: "center" }}
+                flexDir={{ base: "column", md: "row" }}
                 borderBottom={i < actions.length - 1 ? "1px solid" : "none"}
-                borderColor="#DDE1E7"
+                borderColor="#E2E8F0"
                 _hover={{ bg: "#F8FAFC" }}
               >
-                <Box paddingX="24px" paddingY="20px">
-                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{a.customer_name}</Text>
-                  <Text color="#5D6D7E" fontSize="14px" mt="2px">{productLabel} — {a.insurer_name}</Text>
+                <Box flex="1" minW={0}>
+                  <Text color={INK} fontSize="20px" fontWeight="bold" lineHeight="1.3">{a.customer_name}</Text>
+                  <Text color={INK_SOFT} fontSize="16px" mt="2px">{productLabel} · {a.insurer_name}</Text>
                 </Box>
-                <Box paddingX="16px" paddingY="20px">
-                  <Flex display="inline-flex" px="12px" py="5px" borderRadius="full" bg={status.bg} align="center">
-                    <Text color={status.color} fontSize="14px" fontWeight="semibold">{status.label}</Text>
-                  </Flex>
-                </Box>
-                <Flex paddingX="16px" paddingY="20px" justify="flex-end">
-                  <Button
-                    size="sm"
-                    bg="#001F40"
-                    color="white"
-                    fontSize="15px"
-                    fontWeight="medium"
-                    borderRadius="8px"
-                    px="16px"
-                    py="10px"
-                    _hover={{ bg: "#0a3060" }}
-                    onClick={() => router.push(`/agentra/policies/${a.policy_id}`)}
-                  >
-                    <Flex align="center" gap="6px">
-                      <FiMessageSquare size={14} />
-                      Follow Up
-                    </Flex>
-                  </Button>
+                <Flex align="center" gap="8px" px="14px" py="8px" borderRadius="full" bg={status.bg} alignSelf={{ base: "flex-start", md: "center" }} flexShrink={0}>
+                  {status.urgent ? <FiAlertCircle size={18} color={status.color} aria-hidden="true" /> : <FiClock size={18} color={status.color} aria-hidden="true" />}
+                  <Text color={status.color} fontSize="16px" fontWeight="bold">{status.label}</Text>
                 </Flex>
-              </Grid>
+                <Button
+                  bg={NAVY} color="white" h="48px" px="20px" fontSize="17px" fontWeight="semibold" borderRadius="12px"
+                  _hover={{ bg: "#1a2f5c" }} _focusVisible={FOCUS}
+                  aria-label={`Buka polis ${a.customer_name} untuk menghubungi nasabah`}
+                  onClick={() => router.push(`/agentra/policies/${a.policy_id}`)}
+                >
+                  <FiPhoneCall size={18} /> Buka & Hubungi
+                </Button>
+              </Flex>
             )
           })}
         </Flex>
       )}
+    </Box>
+  )
+}
+
+function ProgressRow({ label, count, total, pct, color }: { label: string; count: number; total: number; pct: number; color: string }) {
+  return (
+    <Box>
+      <Flex justify="space-between" align="baseline" mb="8px" gap="8px">
+        <Text color={INK} fontSize="18px" fontWeight="semibold">{label}</Text>
+        <Text color={INK} fontSize="20px" fontWeight="bold">{pct}%</Text>
+      </Flex>
+      <Box h="14px" bg="#E2E8F0" borderRadius="full" overflow="hidden" role="progressbar" aria-label={label} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <Box h="100%" w={`${Math.min(pct, 100)}%`} bg={color} borderRadius="full" />
+      </Box>
+      <Text color={INK_SOFT} fontSize="16px" mt="6px">{count} dari {total} polis</Text>
     </Box>
   )
 }
@@ -192,46 +249,20 @@ function StatusPerpanjangan({ breakdown }: { breakdown: RenewalBreakdown }) {
   const inProgressPct = Math.round(breakdown.in_progress_pct)
 
   return (
-    <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" p="24px">
-      <Text color="#001F40" fontWeight="semibold" fontSize="18px" paddingBottom="24px">
-        Status Perpanjangan Bln Ini
-      </Text>
+    <Box {...CARD} p="24px">
+      <Box mb="24px">
+        <SectionTitle hint="Polis yang masa berlakunya habis bulan ini">Perpanjangan Bulan Ini</SectionTitle>
+      </Box>
 
       <Flex flexDir="column" gap="24px">
-        <Box>
-          <Flex justify="space-between" mb="8px">
-            <Text color="#1C2833" fontSize="15px" fontWeight="medium">Berhasil Diperbarui</Text>
-            <Text color="#27AE60" fontSize="15px" fontWeight="bold">{renewedPct}%</Text>
-          </Flex>
-          <Box h="8px" bg="#F1F5F9" borderRadius="full" overflow="hidden">
-            <Box h="100%" w={`${renewedPct}%`} bg="#27AE60" borderRadius="full" />
-          </Box>
-          <Text color="#8B9BB4" fontSize="14px" mt="6px">{breakdown.renewed} dari {breakdown.total} Polis</Text>
-        </Box>
-
-        <Box>
-          <Flex justify="space-between" mb="8px">
-            <Text color="#1C2833" fontSize="15px" fontWeight="medium">Sedang Proses</Text>
-            <Text color="#006397" fontSize="15px" fontWeight="bold">{inProgressPct}%</Text>
-          </Flex>
-          <Box h="8px" bg="#F1F5F9" borderRadius="full" overflow="hidden">
-            <Box h="100%" w={`${inProgressPct}%`} bg="#006397" borderRadius="full" />
-          </Box>
-          <Text color="#8B9BB4" fontSize="14px" mt="6px">{breakdown.in_progress} dari {breakdown.total} Polis</Text>
-        </Box>
+        <ProgressRow label="Sudah diperpanjang" count={breakdown.renewed} total={breakdown.total} pct={renewedPct} color="#15803D" />
+        <ProgressRow label="Sedang diurus" count={breakdown.in_progress} total={breakdown.total} pct={inProgressPct} color="#0B5A8A" />
       </Flex>
 
-      <Box bg="#0C4A6E" borderRadius="12px" mt="32px" padding="16px">
-        <Text color="#7DD3FC" fontSize="14px" textTransform="uppercase" fontWeight="semibold" letterSpacing="0.05em" mb="8px">
-          Omzet Perpanjangan Tercapai
-        </Text>
-        <Flex justify="space-between" align="center" mb="12px">
-          <Text color="white" fontSize="18px" fontWeight="bold">Rp {Math.round(breakdown.achieved_omzet).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</Text>
-          <Text color="#BAE6FD" fontSize="14px">{breakdown.renewed} Polis</Text>
-        </Flex>
-        <Box h="4px" bg="rgba(255,255,255,0.2)" borderRadius="full" overflow="hidden">
-          <Box h="100%" w={`${Math.min(renewedPct, 100)}%`} bg="white" borderRadius="full" />
-        </Box>
+      <Box bg="#0C3A5A" borderRadius="12px" mt="28px" p="20px">
+        <Text color="#E0F2FE" fontSize="16px" fontWeight="semibold" mb="4px">Nilai premi yang sudah diperpanjang</Text>
+        <Text color="white" fontSize="26px" fontWeight="bold" lineHeight="1.2">{fmtIDR(breakdown.achieved_omzet)}</Text>
+        <Text color="#E0F2FE" fontSize="16px" mt="4px">dari {breakdown.renewed} polis</Text>
       </Box>
     </Box>
   )
@@ -239,15 +270,14 @@ function StatusPerpanjangan({ breakdown }: { breakdown: RenewalBreakdown }) {
 
 function AktivitasTerbaru({ activities }: { activities: ActivityItem[] }) {
   return (
-    <Box bg="#FFFFFF" border="1px solid" borderColor="#DDE1E7" borderRadius="12px" p="24px">
-      <Flex justify="space-between" align="center" mb="20px">
-        <Text color="#001F40" fontWeight="semibold" fontSize="18px">Aktivitas Terbaru</Text>
-        <Box color="#8B9BB4" aria-hidden="true"><FiFilter size={18} /></Box>
-      </Flex>
+    <Box {...CARD} p="24px">
+      <Box mb="8px">
+        <SectionTitle hint="5 kegiatan terakhir di akun Anda">Kegiatan Terakhir</SectionTitle>
+      </Box>
 
       {activities.length === 0 ? (
         <Flex align="center" justify="center" py="24px">
-          <Text color="#8B9BB4" fontSize="16px">Belum ada aktivitas</Text>
+          <Text color={INK_SOFT} fontSize="18px">Belum ada kegiatan.</Text>
         </Flex>
       ) : (
         <Flex flexDir="column">
@@ -257,26 +287,24 @@ function AktivitasTerbaru({ activities }: { activities: ActivityItem[] }) {
               <Flex
                 key={a.id}
                 gap="16px"
-                py="16px"
+                py="18px"
                 borderBottom={i < activities.length - 1 ? "1px solid" : "none"}
-                borderColor="#F1F5F9"
+                borderColor="#E2E8F0"
                 align="flex-start"
               >
-                <Flex w="40px" h="40px" borderRadius="full" bg={cfg.bg} align="center" justify="center" flexShrink={0}>
-                  <Box color={cfg.color}>{cfg.icon}</Box>
+                <Flex w="44px" h="44px" borderRadius="full" bg={cfg.bg} align="center" justify="center" flexShrink={0} color={cfg.color} aria-hidden="true">
+                  {cfg.icon}
                 </Flex>
                 <Box flex={1} minW={0}>
-                  <Text color="#1C2833" fontSize="16px" fontWeight="bold" mb="4px">{cfg.title}</Text>
-                  <Text color="#5D6D7E" fontSize="15px" lineHeight="1.6">
+                  <Text color={INK} fontSize="18px" fontWeight="bold" mb="2px">{cfg.title}</Text>
+                  <Text color={INK_SOFT} fontSize="16px" lineHeight="1.6">
                     {a.description}
                     {a.actor?.name && (
-                      <Text as="span" color="#1C2833" fontWeight="bold"> ({a.actor.name})</Text>
+                      <Text as="span" color={INK} fontWeight="bold"> — oleh {a.actor.name}</Text>
                     )}
                   </Text>
+                  <Text color={INK_SOFT} fontSize="16px" mt="4px">{formatActivityTime(a.created_at)}</Text>
                 </Box>
-                <Text color="#8B9BB4" fontSize="14px" flexShrink={0} whiteSpace="nowrap" pt="2px">
-                  {formatActivityTime(a.created_at)}
-                </Text>
               </Flex>
             )
           })}
@@ -350,9 +378,12 @@ export default function DashboardPage() {
 
   if (pageStatus === "error") {
     return shell(
-      <Center h="calc(100vh - 56px)" flexDir="column" gap="16px">
-        <Text color="#E74C3C" fontSize="18px" fontWeight="semibold">Data dashboard belum bisa dibuka. Periksa sinyal internet, lalu coba lagi.</Text>
-        <Button onClick={() => window.location.reload()} bg="#006397" color="white" borderRadius="8px" px="20px">
+      <Center h="calc(100vh - 56px)" flexDir="column" gap="20px" px="24px" textAlign="center">
+        <Text color="#991B1B" fontSize="22px" fontWeight="bold" role="alert">
+          Halaman Beranda belum bisa dibuka.
+        </Text>
+        <Text color={INK_SOFT} fontSize="18px">Periksa sinyal internet Anda, lalu tekan tombol di bawah.</Text>
+        <Button onClick={() => window.location.reload()} bg={NAVY} color="white" borderRadius="12px" h="52px" px="28px" fontSize="18px" fontWeight="semibold" _focusVisible={FOCUS}>
           Coba Lagi
         </Button>
       </Center>
@@ -360,42 +391,47 @@ export default function DashboardPage() {
   }
 
   const { stats, actions, activities, user } = data!
+  const urgentCount = actions.filter((a) => a.days_until_expiry <= 2).length
 
   const statsCards: StatCardData[] = [
     {
-      label: "TOTAL POLIS",
+      label: "Polis Aktif",
       value: stats.total_active_policies.toLocaleString("id-ID"),
-      sub: stats.trends.policies_vs_last_month,
-      icon: <FiFileText size={20} />,
-      iconBg: "#E5EFF5",
-      iconColor: "#006397",
+      explain: "Polis nasabah yang masih berlaku",
+      note: stats.trends.policies_vs_last_month || undefined,
+      href: "/agentra/policies",
+      icon: <FiFileText size={22} />,
+      iconBg: "#DBEAFE",
+      iconColor: "#1E40AF",
     },
     {
-      label: "Pembaruan",
+      label: "Perpanjangan Bulan Ini",
       value: stats.renewals_this_month.toString(),
-      sub: stats.trends.renewals_vs_last_month,
-      icon: <FiRefreshCw size={20} />,
-      iconBg: "#FEF5E7",
-      iconColor: "#F39C12",
-      subColor: "#F59E0B",
+      explain: "Polis yang masa berlakunya habis bulan ini",
+      note: stats.trends.renewals_vs_last_month || undefined,
+      href: "/agentra/renewals",
+      icon: <FiRefreshCw size={22} />,
+      iconBg: "#FEF3C7",
+      iconColor: "#78350F",
     },
     {
-      label: "Jatuh Tempo",
+      label: "Habis Minggu Ini",
       value: stats.expiring_this_week.toString(),
-      sub: stats.expiring_this_week > 0 ? "CRITICAL" : "",
-      icon: <FiBell size={20} />,
-      iconBg: "#FDEDEB",
-      iconColor: "#E74C3C",
-      subColor: "#F87171",
+      explain: "Polis yang berakhir dalam 7 hari ke depan",
+      note: stats.expiring_this_week > 0 ? "Segera hubungi nasabah" : undefined,
+      href: "/agentra/renewals",
+      icon: <FiClock size={22} />,
+      iconBg: "#FEE2E2",
+      iconColor: "#991B1B",
     },
     {
-      label: "Komisi",
-      value: formatCommission(stats.pending_commissions_amount),
-      sub: "Bulan Ini",
-      icon: <FiDollarSign size={20} />,
-      iconBg: "#E9F7EF",
-      iconColor: "#58C083",
-      subColor: "#34D399",
+      label: "Komisi yang Menunggu",
+      value: fmtIDR(stats.pending_commissions_amount),
+      explain: "Komisi Anda yang belum dibayarkan",
+      href: "/agentra/commissions",
+      icon: <FiDollarSign size={22} />,
+      iconBg: "#DCFCE7",
+      iconColor: "#166534",
     },
   ]
 
@@ -409,23 +445,26 @@ export default function DashboardPage() {
           <TopBar title="Dashboard" userName={user.first_name} />
         </Box>
 
-        <Flex p="24px" gap="24px" flexDir="column">
-          <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={{ base: "12px", md: "16px" }}>
+        <Flex p={{ base: "16px", md: "24px" }} gap="24px" flexDir="column" maxW="1400px">
+          <Welcome name={user.first_name || "Bapak/Ibu"} urgentCount={urgentCount} />
+
+          <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr", xl: "repeat(4, 1fr)" }} gap="16px">
             {statsCards.map((s) => (
               <StatCard key={s.label} stat={s} />
             ))}
           </Grid>
 
-          <Grid templateColumns={{ base: "1fr", md: "1fr 340px" }} gap="16px">
-            <AksiHariIni actions={actions} />
-            <StatusPerpanjangan breakdown={stats.renewal_breakdown} />
+          <Grid templateColumns={{ base: "1fr", xl: "minmax(0, 1fr) 380px" }} gap="24px" alignItems="start">
+            <Flex flexDir="column" gap="24px" minW={0}>
+              <AksiHariIni actions={actions} />
+              <TodayTasksCard />
+              <AktivitasTerbaru activities={activities} />
+            </Flex>
+            <Flex flexDir="column" gap="24px" minW={0}>
+              <StatusPerpanjangan breakdown={stats.renewal_breakdown} />
+              <KlaimBerjalan open={stats.open_claims ?? 0} pendingDocs={stats.claims_pending_documents ?? 0} />
+            </Flex>
           </Grid>
-
-          <TodayTasksCard />
-
-          <KlaimBerjalan open={stats.open_claims ?? 0} pendingDocs={stats.claims_pending_documents ?? 0} />
-
-          <AktivitasTerbaru activities={activities} />
         </Flex>
       </Box>
 
@@ -436,16 +475,16 @@ export default function DashboardPage() {
         position="fixed"
         bottom="80px"
         right="20px"
-        w="52px"
-        h="52px"
+        w="60px"
+        h="60px"
         borderRadius="full"
-        bg="#0D1826"
+        bg={NAVY}
         zIndex={19}
-        boxShadow="0 4px 12px rgba(0,0,0,0.25)"
-        _hover={{ bg: "#1a2f4a" }}
+        boxShadow="0 4px 12px rgba(0,0,0,0.3)"
+        _hover={{ bg: "#1a2f5c" }}
       >
         <Link href="/agentra/policies/new">
-          <FiPlus size={22} color="white" />
+          <FiPlus size={26} color="white" />
         </Link>
       </IconButton>
 

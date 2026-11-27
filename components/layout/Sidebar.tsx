@@ -86,21 +86,21 @@ export function Sidebar() {
           ))
         ) : (
           <>
-          <Text fontSize="14px" fontWeight="semibold" color="#475569" px="12px" mb="6px">
+          <Text fontSize="16px" fontWeight="semibold" color="#475569" px="12px" mb="6px">
             Menu Utama
           </Text>
           {mainMenuItems.map((item) => (
             <NavItem key={item.href} {...item} active={pathname === item.href || pathname.startsWith(item.href + "/")} />
           ))}
 
-          <Text fontSize="14px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
+          <Text fontSize="16px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
             Menu Lainnya
           </Text>
           {moreItems.map((item) => (
             <NavItem key={item.href} {...item} active={pathname === item.href || pathname.startsWith(item.href + "/")} />
           ))}
 
-          <Text fontSize="14px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
+          <Text fontSize="16px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
             Kelola Agensi
           </Text>
           {agencyItems.map((item) => (

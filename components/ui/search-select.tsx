@@ -67,13 +67,13 @@ export function SearchSelect({
   value,
   onChange,
   options,
-  placeholder = "Pilih...",
-  emptyText = "Tidak ada hasil",
+  placeholder = "Ketuk untuk memilih",
+  emptyText = "Tidak ada hasil. Coba ketik kata lain.",
   loading = false,
   loadingText = "Memuat...",
   clearable = false,
-  fontSize = "13px",
-  height = "40px",
+  fontSize = "17px",
+  height = "48px",
   disabled,
   positioning,
   ariaLabel,
@@ -138,11 +138,11 @@ export function SearchSelect({
       <Combobox.Control
         bg="white"
         border="1px solid"
-        borderColor={invalid ? "#DC2626" : "#E2E8F0"}
-        borderRadius="8px"
+        borderColor={invalid ? "#B91C1C" : "#94A3B8"}
+        borderRadius="10px"
         h={height}
         transition="border-color 0.15s, box-shadow 0.15s"
-        _hover={{ borderColor: "#CBD5E1" }}
+        _hover={{ borderColor: "#475569" }}
         _focusWithin={{ borderColor: "#3B82F6", boxShadow: "0 0 0 3px rgba(59,130,246,0.15)" }}
         _disabled={{ bg: "#F8FAFC", cursor: "not-allowed", opacity: 0.7 }}
       >
@@ -153,14 +153,14 @@ export function SearchSelect({
           onFocus={(e) => e.currentTarget.select()}
           placeholder={showLabelAsHint ? selected?.label : placeholder}
           fontSize={fontSize}
-          color="#1C2833"
+          color="#111827"
           h="100%"
           px="12px"
           border="none"
           outline="none"
           bg="transparent"
           _focus={{ outline: "none", boxShadow: "none" }}
-          _placeholder={{ color: showLabelAsHint ? "#1C2833" : "#94A3B8" }}
+          _placeholder={{ color: showLabelAsHint ? "#111827" : "#64748B" }}
         />
         <Combobox.IndicatorGroup pe="8px" gap="2px">
           {clearable && value !== "" && !disabled && (
@@ -169,7 +169,7 @@ export function SearchSelect({
               _hover={{ color: "#DC2626" }}
               aria-label="Hapus pilihan"
             >
-              <LuX size={14} />
+              <LuX size={18} />
             </Combobox.ClearTrigger>
           )}
           <Combobox.Trigger color="#64748B" aria-label="Buka daftar">
@@ -177,7 +177,7 @@ export function SearchSelect({
               <Spinner size="xs" color="#64748B" />
             ) : (
               <LuChevronDown
-                size={16}
+                size={22}
                 style={{ transition: "transform 0.15s", transform: open ? "rotate(180deg)" : undefined }}
               />
             )}
@@ -194,7 +194,7 @@ export function SearchSelect({
             borderRadius="10px"
             shadow="lg"
             p="4px"
-            maxH="240px"
+            maxH="320px"
             overflowY="auto"
             // Above the app's dialogs, which sit at 1500 (backdrop) / 1501 (positioner).
             zIndex={1600}
@@ -203,9 +203,9 @@ export function SearchSelect({
               <Combobox.Item
                 key={item.value}
                 item={item}
-                px="10px"
-                py="8px"
-                borderRadius="6px"
+                px="12px"
+                py="12px"
+                borderRadius="8px"
                 cursor="pointer"
                 fontSize={fontSize}
                 color="#1C2833"
@@ -218,17 +218,17 @@ export function SearchSelect({
                   {item.label}
                 </Combobox.ItemText>
                 <Combobox.ItemIndicator color="#1D4ED8">
-                  <LuCheck size={14} />
+                  <LuCheck size={18} />
                 </Combobox.ItemIndicator>
               </Combobox.Item>
             ))}
             {truncated && (
-              <Box px="12px" py="8px" fontSize="14px" color="#64748B">
+              <Box px="12px" py="8px" fontSize="16px" color="#475569">
                 Ketik untuk mempersempit pilihan…
               </Box>
             )}
             {collection.items.length === 0 && (
-              <Combobox.Empty px="12px" py="10px" fontSize={fontSize} color="#64748B">
+              <Combobox.Empty px="12px" py="10px" fontSize={fontSize} color="#475569">
                 {loading ? loadingText : emptyText}
               </Combobox.Empty>
             )}

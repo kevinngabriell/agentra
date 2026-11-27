@@ -30,19 +30,19 @@ export function FormDialog({ title, size = "520px", saving, error, submitLabel =
             <Portal>
             <Dialog.Backdrop bg="rgba(0,0,0,0.25)" zIndex={1500} />
             <Dialog.Positioner zIndex={1501}>
-                <Dialog.Content bg="white" borderRadius="12px" maxW={size} w="94vw" shadow="xl">
+                <Dialog.Content bg="white" borderRadius="16px" maxW={size} w="94vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
-                        <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">{title}</Dialog.Title>
+                        <Dialog.Title color="#0D1B3E" fontSize="22px" fontWeight="bold">{title}</Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body px="24px" py="16px">
-                        <Flex flexDir="column" gap="12px">
+                        <Flex flexDir="column" gap="16px">
                             {children}
-                            {error && <Text color="#DC2626" fontSize="14px" role="alert">{error}</Text>}
+                            {error && <Text color="#B91C1C" fontSize="17px" fontWeight="semibold" role="alert">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
-                    <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button variant="outline" size="sm" fontSize="15px" disabled={saving} onClick={close}>Batal</Button>
-                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                    <Dialog.Footer px="24px" pb="24px" pt="12px" gap="12px" flexWrap="wrap">
+                        <Button variant="outline" h="52px" px="24px" fontSize="18px" color="#111827" borderColor="#94A3B8" disabled={saving} onClick={close}>Batal</Button>
+                        <Button h="52px" px="28px" bg="#0D1B3E" color="white" fontSize="18px" fontWeight="semibold" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>
@@ -53,10 +53,10 @@ export function FormDialog({ title, size = "520px", saving, error, submitLabel =
 
 export function FormField({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
     return (
-        <Flex flexDir="column" gap="4px">
+        <Flex flexDir="column" gap="6px">
             <Text {...CLAIM_LABEL}>{label}</Text>
             {children}
-            {hint && <Text fontSize="14px" color="#64748B">{hint}</Text>}
+            {hint && <Text fontSize="16px" color="#475569">{hint}</Text>}
         </Flex>
     )
 }

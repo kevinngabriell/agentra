@@ -37,17 +37,17 @@ export function TodayTasksCard() {
     }
 
     return (
-        <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
-            <Flex px="20px" py="14px" align="center" gap="10px" borderBottom="1px solid" borderColor="#E2E8F0">
-                <LuListChecks size={16} color="#1D4ED8" aria-hidden="true" />
-                <Text color="#1C2833" fontSize="16px" fontWeight="semibold" flex="1">Tugas Saya Hari Ini</Text>
-                {!loading && <Badge px="8px" py="2px" borderRadius="full" fontSize="16px" bg="#EFF6FF" color="#1D4ED8">{items.length}</Badge>}
-                <Link href="/agentra/tasks" style={{ fontSize: "16px", color: "#1D4ED8", fontWeight: 500 }}>Semua tugas</Link>
+        <Box bg="white" borderRadius="16px" border="1px solid" borderColor="#CBD5E1" overflow="hidden">
+            <Flex px="24px" py="20px" align="center" gap="12px" flexWrap="wrap" borderBottom="1px solid" borderColor="#E2E8F0">
+                <LuListChecks size={24} color="#1E3A8A" aria-hidden="true" />
+                <Text as="h2" color="#0D1B3E" fontSize="20px" fontWeight="bold" flex="1">Tugas Saya Hari Ini</Text>
+                {!loading && <Badge px="12px" py="2px" borderRadius="full" fontSize="17px" fontWeight="bold" bg="#DBEAFE" color="#1E3A8A">{items.length}</Badge>}
+                <Link href="/agentra/tasks" style={{ fontSize: "17px", color: "#0B5A8A", fontWeight: 700, textDecoration: "underline" }}>Lihat semua</Link>
             </Flex>
-            <Box px="20px" pb="8px">
-                {(error || result?.error) && <Text color="#DC2626" fontSize="16px" role="alert" py="8px">{error ?? result?.error}</Text>}
+            <Box px="24px" pb="8px">
+                {(error || result?.error) && <Text color="#B91C1C" fontSize="17px" role="alert" py="8px">{error ?? result?.error}</Text>}
                 {loading ? <Skeleton h="60px" mt="12px" borderRadius="8px" /> : items.length === 0 ? (
-                    <Text color="#64748B" fontSize="16px" py="16px">Tidak ada tugas untuk hari ini. 🎉</Text>
+                    <Text color="#374151" fontSize="18px" py="20px">Tidak ada tugas untuk hari ini. 🎉</Text>
                 ) : items.map((t) => <TaskRow key={t.task_id} task={t} onToggle={complete} />)}
             </Box>
         </Box>
