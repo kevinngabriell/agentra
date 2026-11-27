@@ -85,7 +85,7 @@ function getActivityConfig(type: string) {
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <Box>
-      <Text as="h2" color={NAVY} fontWeight="bold" fontSize="20px" lineHeight="1.3">{children}</Text>
+      <Text as="h2" color={NAVY} fontWeight="bold" fontSize="18px" lineHeight="1.3">{children}</Text>
       {hint && <Text color={INK_SOFT} fontSize="16px" mt="2px">{hint}</Text>}
     </Box>
   )
@@ -103,7 +103,7 @@ function Welcome({ name, urgentCount }: { name: string; urgentCount: number }) {
         <Text as="h2" color={NAVY} fontSize={{ base: "24px", md: "28px" }} fontWeight="bold" lineHeight="1.25">
           {greeting(now.getHours())}, {name}
         </Text>
-        <Text color={INK} fontSize="18px" mt="4px">
+        <Text color={INK} fontSize="16px" mt="4px">
           {urgentCount > 0
             ? `Ada ${urgentCount} polis nasabah yang perlu segera Anda hubungi.`
             : "Tidak ada polis yang mendesak hari ini. Pekerjaan Anda aman."}
@@ -112,7 +112,7 @@ function Welcome({ name, urgentCount }: { name: string; urgentCount: number }) {
       <Button
         asChild
         display={{ base: "none", md: "inline-flex" }}
-        bg={NAVY} color="white" h="52px" px="24px" fontSize="18px" fontWeight="semibold" borderRadius="12px"
+        bg={NAVY} color="white" h="44px" px="24px" fontSize="16px" fontWeight="semibold" borderRadius="12px"
         _hover={{ bg: "#1a2f5c" }} _focusVisible={FOCUS}
       >
         <Link href="/agentra/policies/new"><FiPlus size={20} /> Tambah Polis Baru</Link>
@@ -137,12 +137,12 @@ function StatCard({ stat }: { stat: StatCardData }) {
     <Link href={stat.href} style={{ display: "block", height: "100%" }} aria-label={`${stat.label}: ${stat.value}. ${stat.explain}`}>
       <Flex {...CARD} flexDir="column" h="100%" p={{ base: "16px", md: "20px" }} gap="12px" _hover={{ borderColor: NAVY, boxShadow: "0 2px 8px rgba(13,27,62,0.12)" }}>
         <Flex align="center" gap="12px">
-          <Flex w="44px" h="44px" borderRadius="12px" bg={stat.iconBg} align="center" justify="center" flexShrink={0} color={stat.iconColor} aria-hidden="true">
+          <Flex w="40px" h="40px" borderRadius="12px" bg={stat.iconBg} align="center" justify="center" flexShrink={0} color={stat.iconColor} aria-hidden="true">
             {stat.icon}
           </Flex>
-          <Text color={INK} fontSize="17px" fontWeight="bold" lineHeight="1.25">{stat.label}</Text>
+          <Text color={INK} fontSize="16px" fontWeight="bold" lineHeight="1.25">{stat.label}</Text>
         </Flex>
-        <Text color={NAVY} fontSize={{ base: "30px", md: "34px" }} fontWeight="bold" lineHeight="1.1">{stat.value}</Text>
+        <Text color={NAVY} fontSize={{ base: "26px", md: "28px" }} fontWeight="bold" lineHeight="1.1">{stat.value}</Text>
         <Text color={INK_SOFT} fontSize="16px" lineHeight="1.4">{stat.explain}</Text>
         {stat.note && <Text color={INK} fontSize="16px" fontWeight="semibold">{stat.note}</Text>}
       </Flex>
@@ -155,16 +155,16 @@ function KlaimBerjalan({ open, pendingDocs }: { open: number; pendingDocs: numbe
     <Link href="/agentra/claims" style={{ display: "block" }}>
       <Box {...CARD} p="20px" _hover={{ borderColor: NAVY }}>
         <Flex align="center" gap="12px" mb="12px">
-          <Flex w="44px" h="44px" borderRadius="12px" bg="#FEE2E2" align="center" justify="center" flexShrink={0} color="#991B1B" aria-hidden="true">
+          <Flex w="40px" h="40px" borderRadius="12px" bg="#FEE2E2" align="center" justify="center" flexShrink={0} color="#991B1B" aria-hidden="true">
             <FiAlertTriangle size={22} />
           </Flex>
-          <Text as="h2" color={NAVY} fontWeight="bold" fontSize="20px" flex="1">Klaim yang Sedang Diurus</Text>
+          <Text as="h2" color={NAVY} fontWeight="bold" fontSize="18px" flex="1">Klaim yang Sedang Diurus</Text>
           <FiChevronRight size={22} color={INK_SOFT} aria-hidden="true" />
         </Flex>
-        <Text color={INK} fontSize="18px">
+        <Text color={INK} fontSize="16px">
           {open === 0 ? "Tidak ada klaim yang sedang diproses." : `${open} klaim sedang diproses.`}
         </Text>
-        <Text color={pendingDocs > 0 ? "#78350F" : "#166534"} fontSize="18px" fontWeight="bold" mt="4px">
+        <Text color={pendingDocs > 0 ? "#78350F" : "#166534"} fontSize="16px" fontWeight="bold" mt="4px">
           {pendingDocs > 0 ? `${pendingDocs} klaim masih menunggu dokumen dari nasabah` : "Semua dokumen klaim sudah lengkap"}
         </Text>
         <Text color={LINK} fontSize="16px" fontWeight="semibold" mt="12px">Lihat semua klaim →</Text>
@@ -180,12 +180,12 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
     <Box {...CARD} overflow="hidden">
       <Flex justify="space-between" align="center" gap="12px" flexWrap="wrap" px="24px" py="20px" borderBottom="1px solid" borderColor={LINE}>
         <SectionTitle hint="Polis nasabah yang akan atau sudah habis masa berlakunya">Perlu Dihubungi Hari Ini</SectionTitle>
-        <Link href="/agentra/renewals" style={{ color: LINK, fontSize: "17px", fontWeight: 700, textDecoration: "underline" }}>Lihat semua</Link>
+        <Link href="/agentra/renewals" style={{ color: LINK, fontSize: "16px", fontWeight: 700, textDecoration: "underline" }}>Lihat semua</Link>
       </Flex>
 
       {actions.length === 0 ? (
         <Flex align="center" justify="center" py="40px" px="24px">
-          <Text color={INK_SOFT} fontSize="18px" textAlign="center">Tidak ada nasabah yang perlu dihubungi hari ini.</Text>
+          <Text color={INK_SOFT} fontSize="16px" textAlign="center">Tidak ada nasabah yang perlu dihubungi hari ini.</Text>
         </Flex>
       ) : (
         <Flex flexDir="column">
@@ -205,7 +205,7 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
                 _hover={{ bg: "#F8FAFC" }}
               >
                 <Box flex="1" minW={0}>
-                  <Text color={INK} fontSize="20px" fontWeight="bold" lineHeight="1.3">{a.customer_name}</Text>
+                  <Text color={INK} fontSize="18px" fontWeight="bold" lineHeight="1.3">{a.customer_name}</Text>
                   <Text color={INK_SOFT} fontSize="16px" mt="2px">{productLabel} · {a.insurer_name}</Text>
                 </Box>
                 <Flex align="center" gap="8px" px="14px" py="8px" borderRadius="full" bg={status.bg} alignSelf={{ base: "flex-start", md: "center" }} flexShrink={0}>
@@ -213,12 +213,12 @@ function AksiHariIni({ actions }: { actions: TodayAction[] }) {
                   <Text color={status.color} fontSize="16px" fontWeight="bold">{status.label}</Text>
                 </Flex>
                 <Button
-                  bg={NAVY} color="white" h="48px" px="20px" fontSize="17px" fontWeight="semibold" borderRadius="12px"
+                  bg={NAVY} color="white" h="44px" px="20px" fontSize="16px" fontWeight="semibold" borderRadius="12px"
                   _hover={{ bg: "#1a2f5c" }} _focusVisible={FOCUS}
                   aria-label={`Buka polis ${a.customer_name} untuk menghubungi nasabah`}
                   onClick={() => router.push(`/agentra/policies/${a.policy_id}`)}
                 >
-                  <FiPhoneCall size={18} /> Buka & Hubungi
+                  <FiPhoneCall size={16} /> Buka & Hubungi
                 </Button>
               </Flex>
             )
@@ -233,8 +233,8 @@ function ProgressRow({ label, count, total, pct, color }: { label: string; count
   return (
     <Box>
       <Flex justify="space-between" align="baseline" mb="8px" gap="8px">
-        <Text color={INK} fontSize="18px" fontWeight="semibold">{label}</Text>
-        <Text color={INK} fontSize="20px" fontWeight="bold">{pct}%</Text>
+        <Text color={INK} fontSize="16px" fontWeight="semibold">{label}</Text>
+        <Text color={INK} fontSize="18px" fontWeight="bold">{pct}%</Text>
       </Flex>
       <Box h="14px" bg="#E2E8F0" borderRadius="full" overflow="hidden" role="progressbar" aria-label={label} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
         <Box h="100%" w={`${Math.min(pct, 100)}%`} bg={color} borderRadius="full" />
@@ -261,7 +261,7 @@ function StatusPerpanjangan({ breakdown }: { breakdown: RenewalBreakdown }) {
 
       <Box bg="#0C3A5A" borderRadius="12px" mt="28px" p="20px">
         <Text color="#E0F2FE" fontSize="16px" fontWeight="semibold" mb="4px">Nilai premi yang sudah diperpanjang</Text>
-        <Text color="white" fontSize="26px" fontWeight="bold" lineHeight="1.2">{fmtIDR(breakdown.achieved_omzet)}</Text>
+        <Text color="white" fontSize="22px" fontWeight="bold" lineHeight="1.2">{fmtIDR(breakdown.achieved_omzet)}</Text>
         <Text color="#E0F2FE" fontSize="16px" mt="4px">dari {breakdown.renewed} polis</Text>
       </Box>
     </Box>
@@ -277,7 +277,7 @@ function AktivitasTerbaru({ activities }: { activities: ActivityItem[] }) {
 
       {activities.length === 0 ? (
         <Flex align="center" justify="center" py="24px">
-          <Text color={INK_SOFT} fontSize="18px">Belum ada kegiatan.</Text>
+          <Text color={INK_SOFT} fontSize="16px">Belum ada kegiatan.</Text>
         </Flex>
       ) : (
         <Flex flexDir="column">
@@ -292,11 +292,11 @@ function AktivitasTerbaru({ activities }: { activities: ActivityItem[] }) {
                 borderColor="#E2E8F0"
                 align="flex-start"
               >
-                <Flex w="44px" h="44px" borderRadius="full" bg={cfg.bg} align="center" justify="center" flexShrink={0} color={cfg.color} aria-hidden="true">
+                <Flex w="40px" h="40px" borderRadius="full" bg={cfg.bg} align="center" justify="center" flexShrink={0} color={cfg.color} aria-hidden="true">
                   {cfg.icon}
                 </Flex>
                 <Box flex={1} minW={0}>
-                  <Text color={INK} fontSize="18px" fontWeight="bold" mb="2px">{cfg.title}</Text>
+                  <Text color={INK} fontSize="16px" fontWeight="bold" mb="2px">{cfg.title}</Text>
                   <Text color={INK_SOFT} fontSize="16px" lineHeight="1.6">
                     {a.description}
                     {a.actor?.name && (
@@ -379,11 +379,11 @@ export default function DashboardPage() {
   if (pageStatus === "error") {
     return shell(
       <Center h="calc(100vh - 56px)" flexDir="column" gap="20px" px="24px" textAlign="center">
-        <Text color="#991B1B" fontSize="22px" fontWeight="bold" role="alert">
+        <Text color="#991B1B" fontSize="18px" fontWeight="bold" role="alert">
           Halaman Beranda belum bisa dibuka.
         </Text>
-        <Text color={INK_SOFT} fontSize="18px">Periksa sinyal internet Anda, lalu tekan tombol di bawah.</Text>
-        <Button onClick={() => window.location.reload()} bg={NAVY} color="white" borderRadius="12px" h="52px" px="28px" fontSize="18px" fontWeight="semibold" _focusVisible={FOCUS}>
+        <Text color={INK_SOFT} fontSize="16px">Periksa sinyal internet Anda, lalu tekan tombol di bawah.</Text>
+        <Button onClick={() => window.location.reload()} bg={NAVY} color="white" borderRadius="12px" h="44px" px="28px" fontSize="16px" fontWeight="semibold" _focusVisible={FOCUS}>
           Coba Lagi
         </Button>
       </Center>

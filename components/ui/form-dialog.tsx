@@ -32,17 +32,17 @@ export function FormDialog({ title, size = "520px", saving, error, submitLabel =
             <Dialog.Positioner zIndex={1501}>
                 <Dialog.Content bg="white" borderRadius="16px" maxW={size} w="94vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
-                        <Dialog.Title color="#0D1B3E" fontSize="22px" fontWeight="bold">{title}</Dialog.Title>
+                        <Dialog.Title color="#0D1B3E" fontSize="20px" fontWeight="bold">{title}</Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body px="24px" py="16px">
                         <Flex flexDir="column" gap="16px">
                             {children}
-                            {error && <Text color="#B91C1C" fontSize="17px" fontWeight="semibold" role="alert">{error}</Text>}
+                            {error && <Text color="#B91C1C" fontSize="16px" fontWeight="semibold" role="alert">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="12px" gap="12px" flexWrap="wrap">
-                        <Button variant="outline" h="52px" px="24px" fontSize="18px" color="#111827" borderColor="#94A3B8" disabled={saving} onClick={close}>Batal</Button>
-                        <Button h="52px" px="28px" bg="#0D1B3E" color="white" fontSize="18px" fontWeight="semibold" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                        <Button variant="outline" h="44px" px="24px" fontSize="16px" color="#111827" borderColor="#94A3B8" disabled={saving} onClick={close}>Batal</Button>
+                        <Button h="44px" px="24px" bg="#0D1B3E" color="white" fontSize="16px" fontWeight="semibold" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>

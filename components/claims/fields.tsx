@@ -3,7 +3,7 @@
 import { Input, Text, type InputProps } from "@chakra-ui/react"
 
 export const CLAIM_LABEL = { fontSize: "16px", color: "#1F2937", fontWeight: "semibold" } as const
-export const CLAIM_INPUT = { fontSize: "17px", h: "48px", borderColor: "#94A3B8", borderRadius: "10px" } as const
+export const CLAIM_INPUT = { fontSize: "16px", h: "44px", borderColor: "#94A3B8", borderRadius: "10px" } as const
 
 export function Required() {
     return <Text as="span" color="#B91C1C">*</Text>
