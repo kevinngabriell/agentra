@@ -2,11 +2,11 @@
 
 import { Input, Text, type InputProps } from "@chakra-ui/react"
 
-export const CLAIM_LABEL = { fontSize: "14px", color: "#5D6D7E", fontWeight: "medium" } as const
-export const CLAIM_INPUT = { fontSize: "15px", borderColor: "#E2E8F0", borderRadius: "8px" } as const
+export const CLAIM_LABEL = { fontSize: "16px", color: "#1F2937", fontWeight: "semibold" } as const
+export const CLAIM_INPUT = { fontSize: "17px", h: "48px", borderColor: "#94A3B8", borderRadius: "10px" } as const
 
 export function Required() {
-    return <Text as="span" color="#DC2626">*</Text>
+    return <Text as="span" color="#B91C1C">*</Text>
 }
 
 /** "1500000" → "1.500.000" for display; the state keeps plain digits. */
