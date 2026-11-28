@@ -200,8 +200,8 @@ function Section({ title, count, onAdd, children }: { title: string; count: numb
     return (
         <Flex flexDir="column" gap="8px">
             <Flex justify="space-between" align="center" gap="8px">
-                <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()} ({count})</Text>
-                <Button size="xs" variant="outline" fontSize="14px" onClick={onAdd}><LuPlus size={12} /> Tambah</Button>
+                <Text color="#0D1B3E" fontSize="13px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()} ({count})</Text>
+                <Button size="xs" variant="outline" fontSize="13px" onClick={onAdd}><LuPlus size={12} /> Tambah</Button>
             </Flex>
             {children}
         </Flex>
@@ -214,13 +214,13 @@ function TermRow({ term, onEdit, onDelete }: { term: PolicyTerm; onEdit: () => v
         <Flex justify="space-between" align="flex-start" gap="12px" p="10px 12px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px">
             <Flex flexDir="column" gap="3px" minW="0">
                 <Flex align="center" gap="8px" flexWrap="wrap">
-                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{term.title}</Text>
-                    <Badge px="8px" py="1px" borderRadius="full" fontSize="14px" bg={term.coverage_id ? "#FEF3C7" : "#E0F2FE"} color={term.coverage_id ? "#B45309" : "#0369A1"}>
+                    <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{term.title}</Text>
+                    <Badge px="8px" py="1px" borderRadius="full" fontSize="13px" bg={term.coverage_id ? "#FEF3C7" : "#E0F2FE"} color={term.coverage_id ? "#B45309" : "#0369A1"}>
                         {term.coverage_id ? coverageName(term) : "Seluruh polis"}
                     </Badge>
                 </Flex>
-                {isDeductible && <Text color="#1C2833" fontSize="15px">{deductibleText(term)}</Text>}
-                {term.description && <Text color="#64748B" fontSize="14px" whiteSpace="pre-wrap">{term.description}</Text>}
+                {isDeductible && <Text color="#1C2833" fontSize="14px">{deductibleText(term)}</Text>}
+                {term.description && <Text color="#64748B" fontSize="13px" whiteSpace="pre-wrap">{term.description}</Text>}
             </Flex>
             <Flex flexShrink={0}>
                 <IconButton size="2xs" variant="ghost" aria-label={`Ubah ${term.title}`} onClick={onEdit}><LuPencil size={13} /></IconButton>
@@ -262,25 +262,25 @@ export function PolicyTermsPanel({ policyId, coverages, onChanged }: PolicyTerms
             <Flex align="center" justify="space-between" gap="8px" mb="16px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
                     <LuShieldCheck size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan</Text>
                 </Flex>
                 {terms && terms.length > 0 && (
                     <Flex align="center" gap="6px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="10px" h="32px" minW={{ base: "100%", sm: "220px" }}>
                         <LuSearch size={13} color="#64748B" />
-                        <Input variant="subtle" bg="transparent" border="0" outline="0" h="30px" px="0" fontSize="15px"
+                        <Input variant="subtle" bg="transparent" border="0" outline="0" h="30px" px="0" fontSize="14px"
                             placeholder="Cari, mis. banjir" aria-label="Cari ketentuan polis" value={query} onChange={(e) => setQuery(e.target.value)} />
                     </Flex>
                 )}
             </Flex>
 
-            {error && <Text color="#DC2626" fontSize="14px" role="alert" mb="8px">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" role="alert" mb="8px">{error}</Text>}
             {!terms ? <Skeleton h="80px" /> : (
                 <Flex flexDir="column" gap="18px">
                     {terms.length === 0 && (
-                        <Text color="#64748B" fontSize="15px">Belum ada risiko sendiri, klausula, atau perluasan. Isi agar mudah menjawab &ldquo;apakah ini dijamin?&rdquo;.</Text>
+                        <Text color="#64748B" fontSize="14px">Belum ada risiko sendiri, klausula, atau perluasan. Isi agar mudah menjawab &ldquo;apakah ini dijamin?&rdquo;.</Text>
                     )}
                     {query.trim() && shown.length === 0 && (
-                        <Text color="#64748B" fontSize="15px">Tidak ada ketentuan yang cocok dengan &ldquo;{query.trim()}&rdquo;. Berarti belum tercatat sebagai dijamin pada polis ini.</Text>
+                        <Text color="#64748B" fontSize="14px">Tidak ada ketentuan yang cocok dengan &ldquo;{query.trim()}&rdquo;. Berarti belum tercatat sebagai dijamin pada polis ini.</Text>
                     )}
                     {sections.map(type => {
                         const rows = shown.filter(t => t.term_type === type)
@@ -288,7 +288,7 @@ export function PolicyTermsPanel({ policyId, coverages, onChanged }: PolicyTerms
                         return (
                             <Section key={type} title={TERM_TYPE_LABELS[type]} count={rows.length} onAdd={() => setDialog({ type, editing: null })}>
                                 {rows.length === 0
-                                    ? <Text color="#64748B" fontSize="15px">Belum ada</Text>
+                                    ? <Text color="#64748B" fontSize="14px">Belum ada</Text>
                                     : rows.map(t => <TermRow key={t.term_id} term={t} onEdit={() => setDialog({ type, editing: t })} onDelete={() => setDeleting(t)} />)}
                             </Section>
                         )
@@ -356,8 +356,8 @@ export function DraftTermsEditor({ terms, onChange, coverages }: DraftTermsEdito
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
             <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0" align="center" gap="8px">
                 <Box borderLeft="3px solid #0D1B3E" pl="10px">
-                    <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan Jaminan</Text>
-                    <Text color="#64748B" fontSize="14px">Opsional. Bisa juga diisi nanti dari halaman detail polis.</Text>
+                    <Text color="#0D1B3E" fontSize="15px" fontWeight="semibold">Risiko Sendiri, Klausula & Perluasan Jaminan</Text>
+                    <Text color="#64748B" fontSize="13px">Opsional. Bisa juga diisi nanti dari halaman detail polis.</Text>
                 </Box>
             </Flex>
             <Flex flexDir="column" gap="18px" p="20px">
@@ -366,7 +366,7 @@ export function DraftTermsEditor({ terms, onChange, coverages }: DraftTermsEdito
                     return (
                         <Section key={type} title={TERM_TYPE_LABELS[type]} count={rows.length} onAdd={() => setDialog({ type, editing: null })}>
                             {rows.length === 0
-                                ? <Text color="#64748B" fontSize="15px">Belum ada</Text>
+                                ? <Text color="#64748B" fontSize="14px">Belum ada</Text>
                                 : rows.map(t => (
                                     <TermRow key={t.term_id} term={t} onEdit={() => setDialog({ type, editing: t })}
                                         onDelete={() => onChange(items.filter(x => x.term_id !== t.term_id))} />

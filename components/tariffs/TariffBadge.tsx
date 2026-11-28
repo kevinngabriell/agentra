@@ -28,12 +28,12 @@ export function TariffBadge({ params, showMissing = false }: { params: Record<st
     if (!res) return null
     if (res.verdict === "within") return null
     if (res.verdict === "no_band") {
-        return showMissing ? <Badge fontSize="14px" bg="#F1F5F9" color="#64748B" title="Isi rentang tarif di Pengaturan → Tarif & Okupasi">Tarif belum diisi</Badge> : null
+        return showMissing ? <Badge fontSize="13px" bg="#F1F5F9" color="#64748B" title="Isi rentang tarif di Pengaturan → Tarif & Okupasi">Tarif belum diisi</Badge> : null
     }
     const b = res.band
     const range = b ? `${b.rate_min ?? "?"}–${b.rate_max ?? "?"}‰` : ""
     return (
-        <Badge fontSize="14px" bg="#FEE2E2" color="#B91C1C" title={b?.description ?? undefined}>
+        <Badge fontSize="13px" bg="#FEE2E2" color="#B91C1C" title={b?.description ?? undefined}>
             {res.verdict === "below" ? "Di bawah tarif" : "Di atas tarif"} {range}
         </Badge>
     )

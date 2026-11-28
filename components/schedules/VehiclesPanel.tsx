@@ -103,7 +103,7 @@ function VehicleDialog({ policyId, editing, onClose, onSaved }: { policyId: stri
             <Flex gap="14px" flexWrap="wrap">
                 {EXT.map(([k, label]) => (
                     <Switch.Root key={k} checked={f[k]} onCheckedChange={(e) => set({ [k]: e.checked })} colorPalette="blue" size="sm">
-                        <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">{label}</Switch.Label>
+                        <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">{label}</Switch.Label>
                     </Switch.Root>
                 ))}
             </Flex>
@@ -154,7 +154,7 @@ function ImportDialog({ policyId, onClose, onSaved }: { policyId: string; onClos
 
     return (
         <FormDialog title="Impor jadwal armada (CSV)" size="600px" saving={saving} error={error} submitLabel={`Impor ${rows.length || ""} kendaraan`} onClose={onClose} onSubmit={submit}>
-            <Text fontSize="14px" color="#64748B">
+            <Text fontSize="13px" color="#64748B">
                 Kolom: Nomor Polisi, Nomor Rangka, Nomor Mesin, Merek, Model, Tahun, Jenis (Comprehensive/TLO), Wilayah (1-3), Nilai Pertanggungan, Rate (%).
                 Semua baris disimpan sekaligus; satu baris salah membatalkan seluruh impor.
             </Text>
@@ -163,7 +163,7 @@ function ImportDialog({ policyId, onClose, onSaved }: { policyId: string; onClos
                 <input type="file" accept=".csv,text/csv" hidden onChange={(e) => { pick(e.target.files?.[0]); e.target.value = "" }} />
             </Button>
             {rows.length > 0 && (
-                <Text fontSize="14px" color="#1C2833">{rows.length} kendaraan siap diimpor · total {fmtIDR(rows.reduce((s, r) => s + Number(r.sum_insured || 0), 0))}
+                <Text fontSize="13px" color="#1C2833">{rows.length} kendaraan siap diimpor · total {fmtIDR(rows.reduce((s, r) => s + Number(r.sum_insured || 0), 0))}
                     {skipped > 0 && ` · ${skipped} baris dilewati (tanpa nomor polisi / nilai)`}</Text>
             )}
             <ChangeKindFields value={change} onChange={setChange} billing />
@@ -185,7 +185,7 @@ function RemoveDialog({ policyId, vehicle, onClose, onSaved }: { policyId: strin
     }
     return (
         <FormDialog title={`Keluarkan ${vehicle.plate_number ?? "kendaraan"} dari armada?`} saving={saving} error={error} submitLabel="Keluarkan" onClose={onClose} onSubmit={submit}>
-            <Text fontSize="14px" color="#64748B">Sebagai endorsemen, premi sisa periode ({fmtIDR(vehicle.premium_amount)} setahun) dikembalikan lewat nota kredit.</Text>
+            <Text fontSize="13px" color="#64748B">Sebagai endorsemen, premi sisa periode ({fmtIDR(vehicle.premium_amount)} setahun) dikembalikan lewat nota kredit.</Text>
             <ChangeKindFields value={change} onChange={setChange} billing />
         </FormDialog>
     )
@@ -215,28 +215,28 @@ export function VehiclesPanel({ policyId, cancelled, onChanged }: { policyId: st
             <Flex align="center" justify="space-between" mb="14px" gap="8px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
                     <LuCar size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Jadwal Armada</Text>
-                    {data && data.summary.vehicle_count > 0 && <Badge fontSize="14px" bg="#E0F2FE" color="#0369A1">{data.summary.vehicle_count} kendaraan</Badge>}
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Jadwal Armada</Text>
+                    {data && data.summary.vehicle_count > 0 && <Badge fontSize="13px" bg="#E0F2FE" color="#0369A1">{data.summary.vehicle_count} kendaraan</Badge>}
                 </Flex>
                 {!cancelled && (
                     <Flex gap="8px">
-                        <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog("import")}><LuUpload size={12} /> Impor CSV</Button>
-                        <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog({ edit: null })}><LuPlus size={12} /> Tambah</Button>
+                        <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog("import")}><LuUpload size={12} /> Impor CSV</Button>
+                        <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog({ edit: null })}><LuPlus size={12} /> Tambah</Button>
                     </Flex>
                 )}
             </Flex>
-            {error && <Text color="#DC2626" fontSize="14px" mb="8px" role="alert">{error}</Text>}
-            {notice && <Text color="#16A34A" fontSize="14px" mb="8px">{notice}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" mb="8px" role="alert">{error}</Text>}
+            {notice && <Text color="#16A34A" fontSize="13px" mb="8px">{notice}</Text>}
             {!data ? <Skeleton h="60px" /> : data.items.length === 0 ? (
-                <Text color="#64748B" fontSize="15px">Belum ada kendaraan. Untuk polis armada, tambahkan tiap kendaraan atau impor dari Excel (simpan sebagai CSV).</Text>
+                <Text color="#64748B" fontSize="14px">Belum ada kendaraan. Untuk polis armada, tambahkan tiap kendaraan atau impor dari Excel (simpan sebagai CSV).</Text>
             ) : (
                 <>
-                    <Text fontSize="14px" color="#64748B" mb="8px">
+                    <Text fontSize="13px" color="#64748B" mb="8px">
                         TSI {fmtIDR(data.summary.total_sum_insured)} · premi setahun {fmtIDR(data.summary.total_premium)} · {data.summary.comprehensive_count} comprehensive, {data.summary.tlo_count} TLO
                     </Text>
                     {data.items.length > 8 && <Input {...CLAIM_INPUT} mb="8px" placeholder="Cari nomor polisi / rangka / merek" value={query} onChange={(e) => setQuery(e.target.value)} />}
                     <Box overflowX="auto">
-                        <Box as="table" w="100%" fontSize="14px" style={{ borderCollapse: "collapse" }}>
+                        <Box as="table" w="100%" fontSize="13px" style={{ borderCollapse: "collapse" }}>
                             <Box as="thead"><Box as="tr" color="#64748B" textAlign="left">
                                 {["Kendaraan", "Jenis", "Nilai", "Rate", "Premi", ""].map((h) => <Box as="th" key={h} py="6px" pr="10px" fontWeight="semibold">{h}</Box>)}
                             </Box></Box>

@@ -58,7 +58,7 @@ function formatCell(col: ReportColumn, v: string | number | null | undefined): s
   }
 }
 
-const selectStyle = { bg: "white", borderColor: "#E2E8F0", fontSize: "16px", color: "#374151" } as const
+const selectStyle = { bg: "white", borderColor: "#E2E8F0", fontSize: "15px", color: "#374151" } as const
 
 export function ReportView({ def }: { def: ReportDef }) {
   const thisYear = new Date().getFullYear()
@@ -149,9 +149,9 @@ export function ReportView({ def }: { def: ReportDef }) {
             month
               ? <Flex gap="8px" align="center">
                   <MonthPickerButton month={month} onChange={setMonth} />
-                  <Button size="sm" variant="ghost" fontSize="16px" onClick={() => setMonth(null)}>Setahun penuh</Button>
+                  <Button size="sm" variant="ghost" fontSize="15px" onClick={() => setMonth(null)}>Setahun penuh</Button>
                 </Flex>
-              : <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px"
+              : <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px"
                   onClick={() => setMonth(`${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}`)}>
                   Pilih bulan
                 </Button>
@@ -160,7 +160,7 @@ export function ReportView({ def }: { def: ReportDef }) {
             <Flex gap="10px" align="center" flexWrap="wrap">
               <Box w="280px"><CustomerPicker value={customer} onChange={(c) => { setCustomer(c); setWholeGroup(false) }} /></Box>
               {groupId && (
-                <Flex as="label" gap="6px" align="center" fontSize="15px" color="#374151">
+                <Flex as="label" gap="6px" align="center" fontSize="14px" color="#374151">
                   <input type="checkbox" checked={wholeGroup} onChange={(e) => setWholeGroup(e.target.checked)} />
                   Seluruh grup {group?.name ?? ""}
                 </Flex>
@@ -186,11 +186,11 @@ export function ReportView({ def }: { def: ReportDef }) {
           )}
         </Flex>
         <Flex gap="8px">
-          <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px" gap="6px"
+          <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" gap="6px"
             onClick={handleExport} loading={exporting} disabled={loading || !report}>
             <LuDownload size={13} /> Excel
           </Button>
-          <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px" gap="6px"
+          <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" gap="6px"
             onClick={() => window.print()} disabled={loading || !report}>
             <LuPrinter size={13} /> PDF
           </Button>
@@ -199,20 +199,20 @@ export function ReportView({ def }: { def: ReportDef }) {
 
       {error && (
         <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-          <Text color="#DC2626" fontSize="16px">{error}</Text>
+          <Text color="#DC2626" fontSize="15px">{error}</Text>
         </Box>
       )}
 
-      {needsCustomer ? <Text color="#64748B" fontSize="16px">Pilih nasabah untuk melihat rekening korannya.</Text>
+      {needsCustomer ? <Text color="#64748B" fontSize="15px">Pilih nasabah untuk melihat rekening korannya.</Text>
         : loading ? <Skeleton h="240px" borderRadius="12px" /> : report && (
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
           <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0" justify="space-between" align="center" gap="12px" flexWrap="wrap">
-            <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{report.title}</Text>
-            <Text color="#64748B" fontSize="16px">{report.rows.length} baris</Text>
+            <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{report.title}</Text>
+            <Text color="#64748B" fontSize="15px">{report.rows.length} baris</Text>
           </Flex>
           {report.rows.length === 0 ? (
             <Flex align="center" justify="center" py="32px">
-              <Text color="#64748B" fontSize="16px">Tidak ada data untuk filter ini</Text>
+              <Text color="#64748B" fontSize="15px">Tidak ada data untuk filter ini</Text>
             </Flex>
           ) : (
             <Box overflowX="auto">
@@ -220,7 +220,7 @@ export function ReportView({ def }: { def: ReportDef }) {
                 <Table.Header>
                   <Table.Row bg="#F8FAFC">
                     {report.columns.map((c) => (
-                      <Table.ColumnHeader key={c.key} color="#64748B" fontSize="16px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px"
+                      <Table.ColumnHeader key={c.key} color="#64748B" fontSize="15px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px"
                         textAlign={c.type === "text" || c.type === "date" ? "left" : "right"}>
                         {c.label.toUpperCase()}
                       </Table.ColumnHeader>
@@ -231,7 +231,7 @@ export function ReportView({ def }: { def: ReportDef }) {
                   {report.rows.map((row, i) => (
                     <Table.Row key={i} borderBottom="1px solid" borderColor="#F1F5F9">
                       {report.columns.map((c, ci) => (
-                        <Table.Cell key={c.key} px="16px" py="10px" fontSize="16px" color={ci === 0 ? "#1C2833" : "#475569"}
+                        <Table.Cell key={c.key} px="16px" py="10px" fontSize="15px" color={ci === 0 ? "#1C2833" : "#475569"}
                           fontWeight={ci === 0 ? "medium" : "normal"} textAlign={c.type === "text" || c.type === "date" ? "left" : "right"}>
                           {formatCell(c, row[c.key])}
                         </Table.Cell>
@@ -241,7 +241,7 @@ export function ReportView({ def }: { def: ReportDef }) {
                   {report.totals && (
                     <Table.Row bg="#F8FAFC">
                       {report.columns.map((c, ci) => (
-                        <Table.Cell key={c.key} px="16px" py="10px" fontSize="16px" fontWeight="bold" color="#1C2833"
+                        <Table.Cell key={c.key} px="16px" py="10px" fontSize="15px" fontWeight="bold" color="#1C2833"
                           textAlign={c.type === "text" || c.type === "date" ? "left" : "right"}>
                           {ci === 0 ? "TOTAL" : report.totals?.[c.key] !== undefined ? formatCell(c, report.totals[c.key]) : ""}
                         </Table.Cell>

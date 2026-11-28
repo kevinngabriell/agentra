@@ -26,16 +26,16 @@ function ConfirmDialog({ options, onDecide, onGone }: { options: ConfirmOptions;
                 <Dialog.Positioner zIndex={1501}>
                     <Dialog.Content bg="white" borderRadius="12px" maxW="420px" w="92vw" shadow="xl">
                         <Dialog.Header px="24px" pt="24px" pb="0">
-                            <Dialog.Title color="#0D1B3E" fontSize="20px" fontWeight="bold">{title}</Dialog.Title>
+                            <Dialog.Title color="#0D1B3E" fontSize="18px" fontWeight="bold">{title}</Dialog.Title>
                         </Dialog.Header>
                         {message && (
                             <Dialog.Body px="24px" py="12px">
-                                <Text color="#1F2937" fontSize="16px" lineHeight="1.6">{message}</Text>
+                                <Text color="#1F2937" fontSize="15px" lineHeight="1.6">{message}</Text>
                             </Dialog.Body>
                         )}
                         <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                            <Button variant="outline" h="44px" px="24px" fontSize="16px" color="#111827" borderColor="#94A3B8" onClick={() => decide(false)}>{cancelLabel}</Button>
-                            <Button h="44px" px="24px" fontSize="16px" fontWeight="semibold" color="white" bg={danger ? "#B91C1C" : "#0D1B3E"}
+                            <Button variant="outline" h="44px" px="24px" fontSize="15px" color="#111827" borderColor="#94A3B8" onClick={() => decide(false)}>{cancelLabel}</Button>
+                            <Button h="44px" px="24px" fontSize="15px" fontWeight="semibold" color="white" bg={danger ? "#B91C1C" : "#0D1B3E"}
                                 _hover={{ bg: danger ? "#991B1B" : "#1A2F5C" }} onClick={() => decide(true)}>{confirmLabel}</Button>
                         </Dialog.Footer>
                     </Dialog.Content>

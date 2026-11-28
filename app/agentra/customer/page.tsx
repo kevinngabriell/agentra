@@ -262,15 +262,15 @@ export default function Customer() {
         <Flex p={{ base: "16px", md: "24px" }} gap="24px" flexDir="column">
           {/* Heading */}
           <Flex gap="4px" flexDir="column">
-            <Text color="#1C2833" fontSize="24px" fontWeight="bold">Cari Nasabah</Text>
-            <Text color="#5D6D7E" fontSize="16px">Cari data nasabah atau entitas bisnis di seluruh database agensi</Text>
+            <Text color="#1C2833" fontSize="22px" fontWeight="bold">Cari Nasabah</Text>
+            <Text color="#5D6D7E" fontSize="15px">Cari data nasabah atau entitas bisnis di seluruh database agensi</Text>
           </Flex>
 
           {/* Search bar */}
           <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" px="14px" py="5px">
             <LuSearch size={16} color="#64748B" />
             <Input
-              outline="none" border="none" fontSize="16px" color="#1C2833"
+              outline="none" border="none" fontSize="15px" color="#1C2833"
               placeholder="Cari Nama, NIK, NPWP, atau PIC..."
               aria-label="Cari nasabah"
               value={query}
@@ -299,9 +299,9 @@ export default function Customer() {
               flexWrap="wrap" gap="10px"
             >
               <Flex align="baseline" gap="6px">
-                <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Hasil Pencarian</Text>
+                <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Hasil Pencarian</Text>
                 {!loading && (
-                  <Text color="#5D6D7E" fontSize="15px">({total} ditemukan)</Text>
+                  <Text color="#5D6D7E" fontSize="14px">({total} ditemukan)</Text>
                 )}
               </Flex>
 
@@ -314,12 +314,12 @@ export default function Customer() {
                       borderColor={hasActiveFilter ? "#1D4ED8" : "#E2E8F0"}
                       color={hasActiveFilter ? "#1D4ED8" : "#374151"}
                       bg={hasActiveFilter ? "#EFF6FF" : "white"}
-                      fontWeight="medium" fontSize="15px" gap="6px"
+                      fontWeight="medium" fontSize="14px" gap="6px"
                     >
                       <FaFilter size={12} />
                       Filter
                       {hasActiveFilter && (
-                        <Badge ml="2px" px="5px" py="0" borderRadius="full" fontSize="14px" bg="#1D4ED8" color="white">
+                        <Badge ml="2px" px="5px" py="0" borderRadius="full" fontSize="13px" bg="#1D4ED8" color="white">
                           {[filterType, filterStatus].filter(Boolean).length}
                         </Badge>
                       )}
@@ -331,11 +331,11 @@ export default function Customer() {
 
                         {/* Type */}
                         <Flex flexDir="column" gap="8px">
-                          <Text fontSize="14px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">TIPE NASABAH</Text>
+                          <Text fontSize="13px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">TIPE NASABAH</Text>
                           <Flex gap="6px" flexWrap="wrap">
                             {(["individual", "company"] as ApiCustomerType[]).map((t) => (
                               <Box
-                                key={t} as="button" aria-pressed={pendingType === t} px="10px" py="4px" borderRadius="full" fontSize="14px"
+                                key={t} as="button" aria-pressed={pendingType === t} px="10px" py="4px" borderRadius="full" fontSize="13px"
                                 border="1px solid" cursor="pointer"
                                 borderColor={pendingType === t ? "#1D4ED8" : "#E2E8F0"}
                                 bg={pendingType === t ? "#EFF6FF" : "white"}
@@ -351,11 +351,11 @@ export default function Customer() {
 
                         {/* Status */}
                         <Flex flexDir="column" gap="8px">
-                          <Text fontSize="14px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">STATUS</Text>
+                          <Text fontSize="13px" fontWeight="bold" color="#64748B" letterSpacing="0.06em">STATUS</Text>
                           <Flex gap="6px" flexWrap="wrap">
                             {(["active", "inactive", "lapsed"] as ApiCustomerStatus[]).map((s) => (
                               <Box
-                                key={s} as="button" aria-pressed={pendingStatus === s} px="10px" py="4px" borderRadius="full" fontSize="14px"
+                                key={s} as="button" aria-pressed={pendingStatus === s} px="10px" py="4px" borderRadius="full" fontSize="13px"
                                 border="1px solid" cursor="pointer"
                                 borderColor={pendingStatus === s ? STATUS_CONFIG[s].color : "#E2E8F0"}
                                 bg={pendingStatus === s ? STATUS_CONFIG[s].bg : "white"}
@@ -371,11 +371,11 @@ export default function Customer() {
 
                         {/* Actions */}
                         <Flex gap="8px" borderTop="1px solid" borderColor="#F1F5F9" pt="12px">
-                          <Button flex="1" size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px" onClick={resetFilter}>
+                          <Button flex="1" size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px" onClick={resetFilter}>
                             Reset
                           </Button>
                           <Popover.CloseTrigger asChild>
-                            <Button flex="1" size="sm" bg="#0D1B3E" color="white" fontSize="14px" onClick={applyFilter}>
+                            <Button flex="1" size="sm" bg="#0D1B3E" color="white" fontSize="13px" onClick={applyFilter}>
                               Terapkan
                             </Button>
                           </Popover.CloseTrigger>
@@ -387,7 +387,7 @@ export default function Customer() {
                 </Popover.Root>
 
                 <Button
-                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="15px" gap="6px"
+                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="14px" gap="6px"
                   loading={exporting} loadingText="Mengekspor..."
                   onClick={handleExport}
                 >
@@ -396,7 +396,7 @@ export default function Customer() {
                 </Button>
 
                 <Button
-                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="16px" gap="6px"
+                  size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontWeight="medium" fontSize="15px" gap="6px"
                   onClick={() => router.push("/agentra/import?type=customers")}
                 >
                   <LuUpload size={14} />
@@ -405,7 +405,7 @@ export default function Customer() {
 
                 {/* Always-visible create button */}
                 <Button
-                  size="sm" bg="#001F40" color="white" fontWeight="medium" fontSize="15px" gap="6px"
+                  size="sm" bg="#001F40" color="white" fontWeight="medium" fontSize="14px" gap="6px"
                   w={{ base: "100%", md: "auto" }}
                   onClick={() => router.push("/agentra/customer/detail")}
                 >
@@ -417,17 +417,17 @@ export default function Customer() {
 
             {exportErrorMsg && (
               <Flex px="20px" py="10px" bg="#FEF2F2" borderBottom="1px solid" borderColor="#FECACA">
-                <Text fontSize="15px" color="#DC2626">{exportErrorMsg}</Text>
+                <Text fontSize="14px" color="#DC2626">{exportErrorMsg}</Text>
               </Flex>
             )}
 
             {/* Empty state — inside the card, no table rendered */}
             {isEmpty && (
               <Flex flexDir="column" align="center" gap="8px" py="64px" px="24px">
-                <Text color="#1C2833" fontWeight="semibold" fontSize="18px" textAlign="center">
+                <Text color="#1C2833" fontWeight="semibold" fontSize="17px" textAlign="center">
                   Tidak menemukan yang Anda cari?
                 </Text>
-                <Text color="#5D6D7E" fontSize="16px" pb="16px" textAlign="center" maxW="360px">
+                <Text color="#5D6D7E" fontSize="15px" pb="16px" textAlign="center" maxW="360px">
                   Pastikan ejaan nama benar atau gunakan nomor identitas (NIK/NPWP) untuk hasil yang lebih akurat
                 </Text>
                 <Button
@@ -447,11 +447,11 @@ export default function Customer() {
             <Table.Root bg="white">
               <Table.Header>
                 <Table.Row bg="#F8FAFC">
-                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NAMA NASABAH</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NIK / NPWP</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">PIC / KONTAK</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">STATUS</Table.ColumnHeader>
-                  <Table.ColumnHeader color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px" textAlign="end">AKSI</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NAMA NASABAH</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">NIK / NPWP</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">PIC / KONTAK</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px">STATUS</Table.ColumnHeader>
+                  <Table.ColumnHeader color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="12px" textAlign="end">AKSI</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
 
@@ -464,7 +464,7 @@ export default function Customer() {
                   <Table.Row>
                     <Table.Cell colSpan={5} px="20px" py="40px" textAlign="center">
                       <Flex flexDir="column" align="center" gap="10px">
-                        <Text color="#DC2626" fontSize="16px">{error}</Text>
+                        <Text color="#DC2626" fontSize="15px">{error}</Text>
                         <Button size="sm" variant="outline" borderColor="#E2E8F0" onClick={() => setRetryKey((k) => k + 1)}>
                           Coba Lagi
                         </Button>
@@ -484,30 +484,30 @@ export default function Customer() {
                     <Table.Cell px="20px" py="14px">
                       <Flex align="center" gap="12px">
                         <Avatar.Root w="36px" h="36px" bg={getAvatarColor(c.customer_id)} borderRadius="full">
-                          <Avatar.Fallback color="white" fontSize="14px" fontWeight="bold">
+                          <Avatar.Fallback color="white" fontSize="13px" fontWeight="bold">
                             {getInitials(c.display_name)}
                           </Avatar.Fallback>
                         </Avatar.Root>
                         <Flex flexDir="column" gap="2px">
-                          <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{c.display_name}</Text>
-                          <Badge px="6px" py="1px" borderRadius="4px" fontSize="14px" fontWeight="medium" w="max-content" bg={TYPE_CONFIG[c.customer_type].bg} color={TYPE_CONFIG[c.customer_type].color}>
+                          <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{c.display_name}</Text>
+                          <Badge px="6px" py="1px" borderRadius="4px" fontSize="13px" fontWeight="medium" w="max-content" bg={TYPE_CONFIG[c.customer_type].bg} color={TYPE_CONFIG[c.customer_type].color}>
                             {TYPE_CONFIG[c.customer_type].label}
                           </Badge>
                         </Flex>
                       </Flex>
                     </Table.Cell>
 
-                    <Table.Cell px="20px" py="14px" color="#64748B" fontSize="14px" fontFamily="mono">
+                    <Table.Cell px="20px" py="14px" color="#64748B" fontSize="13px" fontFamily="mono">
                       {getNik(c)}
                     </Table.Cell>
 
                     <Table.Cell px="20px" py="14px">
-                      <Text color="#1C2833" fontSize="15px">{getPic(c)}</Text>
-                      <Text color="#64748B" fontSize="14px">{getPicSub(c)}</Text>
+                      <Text color="#1C2833" fontSize="14px">{getPic(c)}</Text>
+                      <Text color="#64748B" fontSize="13px">{getPicSub(c)}</Text>
                     </Table.Cell>
 
                     <Table.Cell px="20px" py="14px">
-                      <Badge px="10px" py="3px" borderRadius="full" fontSize="14px" fontWeight="medium" bg={STATUS_CONFIG[c.status].bg} color={STATUS_CONFIG[c.status].color}>
+                      <Badge px="10px" py="3px" borderRadius="full" fontSize="13px" fontWeight="medium" bg={STATUS_CONFIG[c.status].bg} color={STATUS_CONFIG[c.status].color}>
                         {STATUS_LABELS[c.status]}
                       </Badge>
                     </Table.Cell>
@@ -545,7 +545,7 @@ export default function Customer() {
             {/* Pagination */}
             {!loading && !error && customers.length > 0 && (
               <Flex px="20px" py="14px" justify="space-between" align="center" borderTop="1px solid" borderColor="#E2E8F0">
-                <Text color="#64748B" fontSize="15px">
+                <Text color="#64748B" fontSize="14px">
                   Menampilkan {start}–{end} dari {total} nasabah
                 </Text>
                 <Pagination.Root count={total} pageSize={PAGE_SIZE} page={page} onPageChange={(e) => setPage(e.page)}>
@@ -556,7 +556,7 @@ export default function Customer() {
                       </IconButton>
                     </Pagination.PrevTrigger>
                     <Pagination.Items
-                      ellipsis={<Flex w="32px" h="32px" align="center" justify="center" color="#64748B" fontSize="15px">…</Flex>}
+                      ellipsis={<Flex w="32px" h="32px" align="center" justify="center" color="#64748B" fontSize="14px">…</Flex>}
                       render={(item) => (
                         <Pagination.Item key={item.value} type="page" value={item.value} asChild>
                           <Button
@@ -564,7 +564,7 @@ export default function Customer() {
                             borderColor={item.value === page ? "#1D4ED8" : "#E2E8F0"}
                             bg={item.value === page ? "#1D4ED8" : "white"}
                             color={item.value === page ? "white" : "#374151"}
-                            fontSize="15px" fontWeight={item.value === page ? "semibold" : "normal"}
+                            fontSize="14px" fontWeight={item.value === page ? "semibold" : "normal"}
                             _hover={{ bg: item.value === page ? "#1E40AF" : "#F1F5F9" }}
                           >
                             {item.value}
@@ -597,13 +597,13 @@ export default function Customer() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="12px" p="0" maxW="420px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="18px" fontWeight="bold">
+              <Dialog.Title color="#1C2833" fontSize="17px" fontWeight="bold">
                 Hapus Nasabah
               </Dialog.Title>
             </Dialog.Header>
 
             <Dialog.Body px="24px" py="16px">
-              <Text color="#5D6D7E" fontSize="16px" lineHeight="1.6">
+              <Text color="#5D6D7E" fontSize="15px" lineHeight="1.6">
                 Apakah Anda yakin ingin menghapus{" "}
                 <Text as="span" color="#1C2833" fontWeight="semibold">
                   {customerToDelete?.display_name}
@@ -616,7 +616,7 @@ export default function Customer() {
                   mt="14px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA"
                   borderRadius="8px" px="12px" py="10px"
                 >
-                  <Text fontSize="15px" color="#DC2626" lineHeight="1.5">
+                  <Text fontSize="14px" color="#DC2626" lineHeight="1.5">
                     {deleteErrorMsg}
                   </Text>
                 </Flex>
@@ -626,7 +626,7 @@ export default function Customer() {
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Button
                 flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
-                fontSize="16px" borderRadius="8px"
+                fontSize="15px" borderRadius="8px"
                 _hover={{ bg: "#F1F5F9" }}
                 disabled={deleting}
                 onClick={() => { setCustomerToDelete(null); setDeleteErrorMsg("") }}
@@ -635,7 +635,7 @@ export default function Customer() {
               </Button>
               <Button
                 flex="1" bg="#DC2626" color="white"
-                fontSize="16px" borderRadius="8px"
+                fontSize="15px" borderRadius="8px"
                 loading={deleting} loadingText="Menghapus..."
                 _hover={{ bg: "#B91C1C" }}
                 onClick={handleDelete}

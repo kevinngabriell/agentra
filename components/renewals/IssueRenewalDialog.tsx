@@ -50,12 +50,12 @@ export function IssueRenewalDialog({ data, onClose, onIssued }: { data: RenewalW
 
     return (
         <FormDialog title="Terbitkan Perpanjangan" saving={saving} error={error} submitLabel="Terbitkan" onClose={onClose} onSubmit={submit}>
-            <Text fontSize="16px" color="#64748B">
+            <Text fontSize="15px" color="#64748B">
                 {policy.customer_name} — polis lama {policy.policy_number}.{" "}
                 {applied.length > 0 ? `Dipakai dari ketentuan yang disetujui: ${applied.join(", ")}.` : "Tidak ada ketentuan baru, nilai disalin dari polis lama."}
             </Text>
             {usesItems && (workflow.new_sum_insured !== null || workflow.new_premium !== null) && (
-                <Text fontSize="16px" color="#B45309">
+                <Text fontSize="15px" color="#B45309">
                     Polis ini punya item pertanggungan, jadi nilai pertanggungan dan premi dihitung dari item yang disalin. Sesuaikan item di halaman polis baru setelah terbit.
                 </Text>
             )}
@@ -64,7 +64,7 @@ export function IssueRenewalDialog({ data, onClose, onIssued }: { data: RenewalW
                 <FormField label="Mulai Periode"><Input {...CLAIM_INPUT} type="date" value={start} onChange={(e) => setStart(e.target.value)} /></FormField>
                 <FormField label="Akhir Periode"><Input {...CLAIM_INPUT} type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></FormField>
             </FormRow>
-            <Text fontSize="16px" color="#64748B">Kosongkan tanggal untuk melanjutkan dari polis lama (akhir periode = mulai + 365 hari).</Text>
+            <Text fontSize="15px" color="#64748B">Kosongkan tanggal untuk melanjutkan dari polis lama (akhir periode = mulai + 365 hari).</Text>
         </FormDialog>
     )
 }

@@ -31,7 +31,7 @@ export function DeclineRenewalDialog({ data, onClose, onSaved }: { data: Renewal
 
     return (
         <FormDialog title="Perpanjangan Hilang" saving={saving} error={error} submitLabel="Tandai Hilang" onClose={onClose} onSubmit={submit}>
-            <Text fontSize="16px" color="#64748B">
+            <Text fontSize="15px" color="#64748B">
                 Mengapa {data.policy.customer_name} tidak memperpanjang polis {data.policy.policy_number}? Polis ditandai lapsed; alasan ini muncul di statistik bulan tersebut.
             </Text>
             <FormField label="Alasan *">

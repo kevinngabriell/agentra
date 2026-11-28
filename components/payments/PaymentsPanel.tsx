@@ -40,17 +40,17 @@ function Shell({ title, saving, error, submitLabel, onClose, onSubmit, children 
             <Dialog.Positioner zIndex={1501}>
                 <Dialog.Content bg="white" borderRadius="12px" maxW="480px" w="92vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
-                        <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">{title}</Dialog.Title>
+                        <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">{title}</Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body px="24px" py="16px">
                         <Flex flexDir="column" gap="12px">
                             {children}
-                            {error && <Text color="#DC2626" fontSize="14px">{error}</Text>}
+                            {error && <Text color="#DC2626" fontSize="13px">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button variant="outline" size="sm" fontSize="15px" disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                        <Button variant="outline" size="sm" fontSize="14px" disabled={saving} onClick={onClose}>Batal</Button>
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>
@@ -116,21 +116,21 @@ export function PaymentsPanel({ policy, customer, onChanged }: PaymentsPanelProp
                 <Flex gap="10px" align="center">
                     <Box p="8px" bg="#ECFEFF" borderRadius="8px" color="#0891B2"><LuCreditCard size={18} /></Box>
                     <Flex flexDir="column">
-                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Pembayaran Premi</Text>
-                        <Text color="#5D6D7E" fontSize="14px">{data ? fmtIDR(data.expected_amount) + " ditagihkan ke customer" : "Memuat..."}</Text>
+                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Pembayaran Premi</Text>
+                        <Text color="#5D6D7E" fontSize="13px">{data ? fmtIDR(data.expected_amount) + " ditagihkan ke customer" : "Memuat..."}</Text>
                     </Flex>
                 </Flex>
                 <Flex gap="8px" flexWrap="wrap">
-                    <Button asChild size="sm" variant="outline" fontSize="15px" gap="6px">
+                    <Button asChild size="sm" variant="outline" fontSize="14px" gap="6px">
                         <Link href={`/agentra/policies/${encodeURIComponent(policy.id)}/invoice`} target="_blank"><LuFileText size={14} /> Invoice</Link>
                     </Button>
                     {waUrl && (
-                        <Button asChild size="sm" variant="outline" fontSize="15px" gap="6px">
+                        <Button asChild size="sm" variant="outline" fontSize="14px" gap="6px">
                             <a href={waUrl} target="_blank" rel="noopener noreferrer"><FaWhatsapp color="#25D366" size={14} /> Ingatkan</a>
                         </Button>
                     )}
                     {unpaid && !hasSchedule && data && (
-                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" gap="6px" _hover={{ bg: "#1A2F5C" }}
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" gap="6px" _hover={{ bg: "#1A2F5C" }}
                             onClick={() => setDialog({ kind: "pay", installmentId: null, amount: data.expected_amount })}>
                             <LuCreditCard size={14} /> Catat Pembayaran
                         </Button>
@@ -138,78 +138,78 @@ export function PaymentsPanel({ policy, customer, onChanged }: PaymentsPanelProp
                 </Flex>
             </Flex>
 
-            {error && <Text px="24px" pb="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+            {error && <Text px="24px" pb="20px" fontSize="14px" color="#DC2626">{error}</Text>}
             {!error && !data && <Box px="24px" pb="20px"><Skeleton h="56px" borderRadius="8px" /></Box>}
 
             {data && (
                 <Flex flexDir="column" gap="14px" px="24px" pb="20px">
                     <Flex gap="10px" flexWrap="wrap">
                         <Flex flexDir="column" flex="1" minW="150px" px="12px" py="10px" borderRadius="10px" bg="#F8FAFC">
-                            <Text color="#64748B" fontSize="14px">Jatuh Tempo{data.is_default_due_date ? " (otomatis 30 hari)" : ""}</Text>
+                            <Text color="#64748B" fontSize="13px">Jatuh Tempo{data.is_default_due_date ? " (otomatis 30 hari)" : ""}</Text>
                             <Flex align="center" gap="6px">
-                                <Text color="#1C2833" fontSize="16px" fontWeight="bold">{fmtDate(data.effective_due_date)}</Text>
+                                <Text color="#1C2833" fontSize="15px" fontWeight="bold">{fmtDate(data.effective_due_date)}</Text>
                                 {!policy.cancelled && !hasSchedule && (
                                     <IconButton aria-label="Ubah jatuh tempo" size="2xs" variant="ghost" onClick={() => setDialog({ kind: "due" })}><LuPencil /></IconButton>
                                 )}
                             </Flex>
                         </Flex>
                         <Flex flexDir="column" flex="1" minW="150px" px="12px" py="10px" borderRadius="10px" bg={urgency ? PAYMENT_URGENCY_COLORS[urgency].bg : "#F0FDF4"}>
-                            <Text color={urgency ? PAYMENT_URGENCY_COLORS[urgency].color : "#16A34A"} fontSize="14px">Status</Text>
-                            <Text color={urgency ? PAYMENT_URGENCY_COLORS[urgency].color : "#16A34A"} fontSize="16px" fontWeight="bold">
+                            <Text color={urgency ? PAYMENT_URGENCY_COLORS[urgency].color : "#16A34A"} fontSize="13px">Status</Text>
+                            <Text color={urgency ? PAYMENT_URGENCY_COLORS[urgency].color : "#16A34A"} fontSize="15px" fontWeight="bold">
                                 {unpaid
                                     ? (urgency ? PAYMENT_URGENCY_LABELS[urgency] : "Belum dibayar")
                                     : data.payment_status === "confirmed" ? "Dikonfirmasi insurer" : data.payment_status === "paid" ? "Sudah dibayar" : "Belum dibayar"}
                             </Text>
                             {unpaid && data.days_until_due !== null && (
-                                <Text color={urgency ? PAYMENT_URGENCY_COLORS[urgency].color : "#64748B"} fontSize="14px">
+                                <Text color={urgency ? PAYMENT_URGENCY_COLORS[urgency].color : "#64748B"} fontSize="13px">
                                     {data.days_until_due >= 0 ? `${data.days_until_due} hari lagi` : `Terlambat ${Math.abs(data.days_until_due)} hari`}
                                 </Text>
                             )}
                         </Flex>
                         {data.payment_date && (
                             <Flex flexDir="column" flex="1" minW="150px" px="12px" py="10px" borderRadius="10px" bg="#F8FAFC">
-                                <Text color="#64748B" fontSize="14px">Dibayar pada</Text>
-                                <Text color="#1C2833" fontSize="16px" fontWeight="bold">{fmtDate(data.payment_date)}</Text>
-                                {data.payment_reference && <Text color="#64748B" fontSize="14px">Ref: {data.payment_reference}</Text>}
+                                <Text color="#64748B" fontSize="13px">Dibayar pada</Text>
+                                <Text color="#1C2833" fontSize="15px" fontWeight="bold">{fmtDate(data.payment_date)}</Text>
+                                {data.payment_reference && <Text color="#64748B" fontSize="13px">Ref: {data.payment_reference}</Text>}
                             </Flex>
                         )}
                     </Flex>
 
                     {urgency === "cancellation_risk" && (
-                        <Text color="#DC2626" fontSize="14px" fontWeight="medium">
+                        <Text color="#DC2626" fontSize="13px" fontWeight="medium">
                             Premi sudah lewat jatuh tempo lebih dari 14 hari. Polis berisiko dibatalkan insurer karena premi belum dibayar.
                         </Text>
                     )}
 
                     <Flex justify="space-between" align="center">
-                        <Flex align="center" gap="6px" color="#1C2833" fontSize="15px" fontWeight="semibold"><LuCalendarClock size={14} /> Jadwal Cicilan</Flex>
+                        <Flex align="center" gap="6px" color="#1C2833" fontSize="14px" fontWeight="semibold"><LuCalendarClock size={14} /> Jadwal Cicilan</Flex>
                         {!policy.cancelled && data.payment_status === "unpaid" && !data.installments.some((i) => i.is_paid) && (
-                            <Button size="xs" variant="outline" fontSize="14px" gap="4px" onClick={() => setDialog({ kind: "schedule" })}>
+                            <Button size="xs" variant="outline" fontSize="13px" gap="4px" onClick={() => setDialog({ kind: "schedule" })}>
                                 {hasSchedule ? <><LuPencil size={12} /> Ubah</> : <><LuPlus size={12} /> Atur Cicilan</>}
                             </Button>
                         )}
                     </Flex>
-                    {!hasSchedule && <Text color="#64748B" fontSize="15px">Dibayar sekaligus. Atur cicilan jika premi dibayar bertahap.</Text>}
+                    {!hasSchedule && <Text color="#64748B" fontSize="14px">Dibayar sekaligus. Atur cicilan jika premi dibayar bertahap.</Text>}
                     {data.installments.map((i) => (
                         <Flex key={i.installment_id} align="center" justify="space-between" gap="10px" flexWrap="wrap" px="12px" py="8px" borderRadius="8px" border="1px solid" borderColor="#F1F5F9">
                             <Flex flexDir="column">
-                                <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Cicilan {i.seq} · {fmtIDR(i.amount)}</Text>
-                                <Text color="#64748B" fontSize="14px">
+                                <Text color="#1C2833" fontSize="14px" fontWeight="semibold">Cicilan {i.seq} · {fmtIDR(i.amount)}</Text>
+                                <Text color="#64748B" fontSize="13px">
                                     Jatuh tempo {fmtDate(i.due_date)}
                                     {i.paid_date ? ` · dibayar ${fmtDate(i.paid_date)}${i.payment_reference ? ` (ref ${i.payment_reference})` : ""}` : ""}
                                 </Text>
                             </Flex>
                             {i.is_paid ? (
-                                <Badge bg="#DCFCE7" color="#16A34A" px="10px" py="2px" borderRadius="full" fontSize="14px">Lunas</Badge>
+                                <Badge bg="#DCFCE7" color="#16A34A" px="10px" py="2px" borderRadius="full" fontSize="13px">Lunas</Badge>
                             ) : (
                                 <Flex align="center" gap="8px">
                                     {i.urgency && i.urgency !== "upcoming" && (
-                                        <Badge bg={PAYMENT_URGENCY_COLORS[i.urgency].bg} color={PAYMENT_URGENCY_COLORS[i.urgency].color} px="10px" py="2px" borderRadius="full" fontSize="14px">
+                                        <Badge bg={PAYMENT_URGENCY_COLORS[i.urgency].bg} color={PAYMENT_URGENCY_COLORS[i.urgency].color} px="10px" py="2px" borderRadius="full" fontSize="13px">
                                             {PAYMENT_URGENCY_LABELS[i.urgency]}
                                         </Badge>
                                     )}
                                     {!policy.cancelled && (
-                                        <Button size="xs" variant="outline" fontSize="14px"
+                                        <Button size="xs" variant="outline" fontSize="13px"
                                             onClick={() => setDialog({ kind: "pay", installmentId: i.installment_id, seq: i.seq, amount: i.amount })}>
                                             Catat Bayar
                                         </Button>
@@ -262,7 +262,7 @@ function PayDialog({ policyId, installmentId, seq, amount, onClose, onDone }: {
 
     return (
         <Shell title={seq ? `Catat Pembayaran Cicilan ${seq}` : "Catat Pembayaran Premi"} saving={saving} error={error} submitLabel="Simpan" onClose={onClose} onSubmit={submit}>
-            <Text color="#64748B" fontSize="15px">Jumlah: <b>{fmtIDR(amount)}</b></Text>
+            <Text color="#64748B" fontSize="14px">Jumlah: <b>{fmtIDR(amount)}</b></Text>
             <Field label="Tanggal pembayaran">
                 <Input {...CLAIM_INPUT} type="date" max={localISODate()} value={date} onChange={(e) => setDate(e.target.value)} />
             </Field>
@@ -297,7 +297,7 @@ function DueDateDialog({ policyId, current, onClose, onDone }: { policyId: strin
             <Field label="Jatuh tempo">
                 <Input {...CLAIM_INPUT} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </Field>
-            <Button size="xs" variant="ghost" alignSelf="flex-start" fontSize="14px" disabled={saving} onClick={() => submit(null)}>
+            <Button size="xs" variant="ghost" alignSelf="flex-start" fontSize="13px" disabled={saving} onClick={() => submit(null)}>
                 Kembalikan ke otomatis (30 hari sejak mulai)
             </Button>
         </Shell>
@@ -346,7 +346,7 @@ function ScheduleDialog({ policyId, total, firstDue, existing, onClose, onDone }
 
     return (
         <Shell title="Atur Jadwal Cicilan" saving={saving} error={error} submitLabel="Simpan" onClose={onClose} onSubmit={() => submit(false)}>
-            <Text color="#64748B" fontSize="14px">Total yang harus dicicil: <b>{fmtIDR(total)}</b></Text>
+            <Text color="#64748B" fontSize="13px">Total yang harus dicicil: <b>{fmtIDR(total)}</b></Text>
             {rows.map((r, i) => (
                 <Flex key={i} gap="8px" align="flex-end">
                     <Field label={`Cicilan ${i + 1} · jatuh tempo`}>
@@ -361,11 +361,11 @@ function ScheduleDialog({ policyId, total, firstDue, existing, onClose, onDone }
                 </Flex>
             ))}
             <Flex gap="8px" flexWrap="wrap">
-                {rows.length < 12 && <Button size="xs" variant="outline" fontSize="14px" onClick={() => setRows([...rows, { due_date: "", amount: "" }])}><LuPlus size={12} /> Tambah cicilan</Button>}
-                <Button size="xs" variant="outline" fontSize="14px" onClick={splitEvenly}>Bagi rata</Button>
-                {existing.length > 0 && <Button size="xs" variant="ghost" color="#DC2626" fontSize="14px" disabled={saving} onClick={() => submit(true)}>Hapus jadwal</Button>}
+                {rows.length < 12 && <Button size="xs" variant="outline" fontSize="13px" onClick={() => setRows([...rows, { due_date: "", amount: "" }])}><LuPlus size={12} /> Tambah cicilan</Button>}
+                <Button size="xs" variant="outline" fontSize="13px" onClick={splitEvenly}>Bagi rata</Button>
+                {existing.length > 0 && <Button size="xs" variant="ghost" color="#DC2626" fontSize="13px" disabled={saving} onClick={() => submit(true)}>Hapus jadwal</Button>}
             </Flex>
-            <Text fontSize="14px" color={sum === total ? "#16A34A" : "#B45309"}>Terisi {fmtIDR(sum)} dari {fmtIDR(total)}</Text>
+            <Text fontSize="13px" color={sum === total ? "#16A34A" : "#B45309"}>Terisi {fmtIDR(sum)} dari {fmtIDR(total)}</Text>
         </Shell>
     )
 }

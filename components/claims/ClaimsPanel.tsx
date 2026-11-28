@@ -35,8 +35,8 @@ function ratioTone(ratio: number) {
 function Metric({ label, value, tone }: { label: string; value: string; tone?: { bg: string; color: string } }) {
     return (
         <Flex flexDir="column" flex="1" minW="120px" px="12px" py="10px" borderRadius="10px" bg={tone?.bg ?? "#F8FAFC"}>
-            <Text color="#64748B" fontSize="14px">{label}</Text>
-            <Text color={tone?.color ?? "#1C2833"} fontSize="16px" fontWeight="bold">{value}</Text>
+            <Text color="#64748B" fontSize="13px">{label}</Text>
+            <Text color={tone?.color ?? "#1C2833"} fontSize="15px" fontWeight="bold">{value}</Text>
         </Flex>
     )
 }
@@ -76,12 +76,12 @@ export function ClaimsPanel({ policy, customer, onChanged }: ClaimsPanelProps) {
                 <Flex gap="10px" align="center">
                     <Box p="8px" bg="#FEF2F2" borderRadius="8px" color="#DC2626"><LuShieldAlert size={18} /></Box>
                     <Flex flexDir="column">
-                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{policy ? "Klaim Polis" : "Riwayat Klaim"}</Text>
-                        <Text color="#5D6D7E" fontSize="14px">{loading ? "Memuat..." : `${claims.length} klaim`}</Text>
+                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{policy ? "Klaim Polis" : "Riwayat Klaim"}</Text>
+                        <Text color="#5D6D7E" fontSize="13px">{loading ? "Memuat..." : `${claims.length} klaim`}</Text>
                     </Flex>
                 </Flex>
                 {!policy?.cancelled && (
-                    <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setRegisterOpen(true)}>
+                    <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="14px" _hover={{ bg: "#1A2F5C" }} onClick={() => setRegisterOpen(true)}>
                         <LuPlus size={14} /> Daftarkan Klaim
                     </Button>
                 )}
@@ -97,7 +97,7 @@ export function ClaimsPanel({ policy, customer, onChanged }: ClaimsPanelProps) {
                 </Flex>
             )}
 
-            {error && <Text px="24px" pb="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+            {error && <Text px="24px" pb="20px" fontSize="14px" color="#DC2626">{error}</Text>}
 
             {!error && loading && (
                 <Flex flexDir="column" gap="8px" px="24px" pb="20px">
@@ -106,7 +106,7 @@ export function ClaimsPanel({ policy, customer, onChanged }: ClaimsPanelProps) {
             )}
 
             {!error && !loading && claims.length === 0 && (
-                <Text px="24px" pb="20px" color="#64748B" fontSize="15px">Belum ada klaim.</Text>
+                <Text px="24px" pb="20px" color="#64748B" fontSize="14px">Belum ada klaim.</Text>
             )}
 
             {!error && !loading && claims.length > 0 && (
@@ -117,13 +117,13 @@ export function ClaimsPanel({ policy, customer, onChanged }: ClaimsPanelProps) {
                             borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
                             <Link href={`/agentra/claims/${encodeURIComponent(c.claim_id)}`}>
                             <Flex flexDir="column" minW="0" flex="1">
-                                <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{c.claim_number} · {c.cause}</Text>
-                                <Text color="#64748B" fontSize="14px" truncate>
+                                <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{c.claim_number} · {c.cause}</Text>
+                                <Text color="#64748B" fontSize="13px" truncate>
                                     {fmtDate(c.date_of_loss)}{policy ? "" : ` · ${c.policy_number}`}
                                     {c.insurer_short_name ? ` · ${c.insurer_short_name}` : ""}
                                 </Text>
                             </Flex>
-                            <Text color="#1C2833" fontSize="15px" fontWeight="medium">
+                            <Text color="#1C2833" fontSize="14px" fontWeight="medium">
                                 {fmtIDR(c.settlement_amount ?? c.approved_amount ?? c.estimated_loss)}
                             </Text>
                             <ClaimStatusBadge status={c.status} />

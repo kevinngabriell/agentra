@@ -31,9 +31,9 @@ function StatCard({ icon, label, value, sub, tone }: { icon: React.ReactNode; la
         <Flex flex="1" minW="200px" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="12px" p="16px" gap="12px" align="center">
             <Box p="10px" borderRadius="10px" bg={tone.bg} color={tone.color}>{icon}</Box>
             <Flex flexDir="column" flex="1" minW="0">
-                <Text color="#64748B" fontSize="14px">{label}</Text>
-                {value === null ? <Skeleton h="24px" w="80px" mt="2px" /> : <Text color="#1C2833" fontSize="22px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
-                {sub && <Text color="#64748B" fontSize="14px">{sub}</Text>}
+                <Text color="#64748B" fontSize="13px">{label}</Text>
+                {value === null ? <Skeleton h="24px" w="80px" mt="2px" /> : <Text color="#1C2833" fontSize="20px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
+                {sub && <Text color="#64748B" fontSize="13px">{sub}</Text>}
             </Flex>
         </Flex>
     )
@@ -72,8 +72,8 @@ export default function PaymentsPage() {
 
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column">
                     <Box>
-                        <Text color="#1C2833" fontSize="22px" fontWeight="bold">Tagihan Premi</Text>
-                        <Text color="#64748B" fontSize="15px">Premi yang belum dibayar customer, diurutkan dari jatuh tempo terdekat.</Text>
+                        <Text color="#1C2833" fontSize="20px" fontWeight="bold">Tagihan Premi</Text>
+                        <Text color="#64748B" fontSize="14px">Premi yang belum dibayar customer, diurutkan dari jatuh tempo terdekat.</Text>
                     </Box>
 
                     <Flex gap="12px" flexWrap="wrap">
@@ -87,7 +87,7 @@ export default function PaymentsPage() {
 
                     <Flex gap="8px" flexWrap="wrap">
                         {SCOPES.map((s) => (
-                            <Button key={s.value} size="sm" fontSize="15px" variant={scope === s.value ? "solid" : "outline"}
+                            <Button key={s.value} size="sm" fontSize="14px" variant={scope === s.value ? "solid" : "outline"}
                                 bg={scope === s.value ? "#0D1B3E" : undefined} color={scope === s.value ? "white" : "#374151"} onClick={() => setScope(s.value)}>
                                 {s.label}
                             </Button>
@@ -95,15 +95,15 @@ export default function PaymentsPage() {
                     </Flex>
 
                     <Box bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="12px" overflowX="auto">
-                        {error && <Text p="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+                        {error && <Text p="20px" fontSize="14px" color="#DC2626">{error}</Text>}
                         {!error && loading && <Flex flexDir="column" gap="8px" p="20px">{[1, 2, 3].map((i) => <Skeleton key={i} h="40px" />)}</Flex>}
-                        {!error && !loading && rows.length === 0 && <Text p="20px" fontSize="15px" color="#64748B">Tidak ada premi yang perlu ditagih.</Text>}
+                        {!error && !loading && rows.length === 0 && <Text p="20px" fontSize="14px" color="#64748B">Tidak ada premi yang perlu ditagih.</Text>}
                         {!error && !loading && rows.length > 0 && (
                             <Table.Root size="sm">
                                 <Table.Header>
                                     <Table.Row>
                                         {["Polis", "Nasabah", "Jatuh Tempo", "Jumlah", "Status", ""].map((h) => (
-                                            <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" px="16px" py="10px">{h}</Table.ColumnHeader>
+                                            <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" px="16px" py="10px">{h}</Table.ColumnHeader>
                                         ))}
                                     </Table.Row>
                                 </Table.Header>
@@ -115,33 +115,33 @@ export default function PaymentsPage() {
                                             <Table.Row key={`${r.kind ?? "policy"}-${r.reference_id ?? r.policy_id}`}>
                                                 <Table.Cell px="16px" py="10px">
                                                     <Link href={`/agentra/policies/${encodeURIComponent(r.policy_id)}#pembayaran`}>
-                                                        <Text color="#1D4ED8" fontSize="15px" fontWeight="semibold">{r.policy_number}</Text>
+                                                        <Text color="#1D4ED8" fontSize="14px" fontWeight="semibold">{r.policy_number}</Text>
                                                     </Link>
-                                                    <Text color="#64748B" fontSize="14px">{r.insurer_short_name ?? "-"}</Text>
+                                                    <Text color="#64748B" fontSize="13px">{r.insurer_short_name ?? "-"}</Text>
                                                 </Table.Cell>
-                                                <Table.Cell px="16px" fontSize="15px">{r.customer_name}</Table.Cell>
-                                                <Table.Cell px="16px" fontSize="15px">
+                                                <Table.Cell px="16px" fontSize="14px">{r.customer_name}</Table.Cell>
+                                                <Table.Cell px="16px" fontSize="14px">
                                                     {fmtDate(r.due_date)}
-                                                    <Text color="#64748B" fontSize="14px">{r.days_until_due >= 0 ? `${r.days_until_due} hari lagi` : `Terlambat ${Math.abs(r.days_until_due)} hari`}</Text>
+                                                    <Text color="#64748B" fontSize="13px">{r.days_until_due >= 0 ? `${r.days_until_due} hari lagi` : `Terlambat ${Math.abs(r.days_until_due)} hari`}</Text>
                                                 </Table.Cell>
-                                                <Table.Cell px="16px" fontSize="15px" fontWeight="medium">
+                                                <Table.Cell px="16px" fontSize="14px" fontWeight="medium">
                                                     {fmtIDR(r.amount_due)}
-                                                    {r.is_installment && <Text color="#64748B" fontSize="14px" fontWeight="normal">cicilan</Text>}
-                                                    {r.kind === "endorsement" && <Text color="#B45309" fontSize="14px" fontWeight="normal">nota endorsemen {r.note_number ?? ""}</Text>}
-                                                    {r.kind === "year" && <Text color="#6D28D9" fontSize="14px" fontWeight="normal">premi {r.note_number?.toLowerCase()}</Text>}
+                                                    {r.is_installment && <Text color="#64748B" fontSize="13px" fontWeight="normal">cicilan</Text>}
+                                                    {r.kind === "endorsement" && <Text color="#B45309" fontSize="13px" fontWeight="normal">nota endorsemen {r.note_number ?? ""}</Text>}
+                                                    {r.kind === "year" && <Text color="#6D28D9" fontSize="13px" fontWeight="normal">premi {r.note_number?.toLowerCase()}</Text>}
                                                 </Table.Cell>
                                                 <Table.Cell px="16px">
-                                                    <Badge bg={tone.bg} color={tone.color} px="10px" py="2px" borderRadius="full" fontSize="14px">{PAYMENT_URGENCY_LABELS[r.urgency]}</Badge>
+                                                    <Badge bg={tone.bg} color={tone.color} px="10px" py="2px" borderRadius="full" fontSize="13px">{PAYMENT_URGENCY_LABELS[r.urgency]}</Badge>
                                                 </Table.Cell>
                                                 <Table.Cell px="16px">
                                                     <Flex gap="6px" flexWrap="wrap">
                                                     {r.urgency === "cancellation_risk" && (r.kind ?? "policy") === "policy" && (
-                                                        <Button asChild size="xs" variant="outline" fontSize="14px" color="#DC2626" borderColor="#FECACA">
+                                                        <Button asChild size="xs" variant="outline" fontSize="13px" color="#DC2626" borderColor="#FECACA">
                                                             <Link href={`/agentra/policies/${encodeURIComponent(r.policy_id)}#nota`}>Batalkan polis</Link>
                                                         </Button>
                                                     )}
                                                     {wa && (
-                                                        <Button asChild size="xs" variant="outline" fontSize="14px" gap="4px">
+                                                        <Button asChild size="xs" variant="outline" fontSize="13px" gap="4px">
                                                             <a target="_blank" rel="noopener noreferrer"
                                                                 href={`${wa}?text=${encodeURIComponent(paymentReminderText({ customerName: r.customer_name, policyNumber: r.policy_number, amount: r.amount_due, dueDate: r.due_date }))}`}>
                                                                 <FaWhatsapp color="#25D366" size={13} /> Ingatkan

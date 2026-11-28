@@ -78,15 +78,15 @@ export function DocumentsPanel({ customer, policy, onChanged, refreshKey = 0 }: 
                 <Flex gap="10px" align="center">
                     <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#0D1B3E"><LuFolderOpen size={18} /></Box>
                     <Flex flexDir="column">
-                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">
+                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">
                             {policy ? "Dokumen Polis" : "Dokumen Nasabah"}
                         </Text>
-                        <Text color="#5D6D7E" fontSize="14px">
+                        <Text color="#5D6D7E" fontSize="13px">
                             {loading ? "Memuat..." : `${docs.length} dokumen${policy ? "" : " (termasuk dokumen polis)"}`}
                         </Text>
                     </Flex>
                 </Flex>
-                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }}
+                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="14px" _hover={{ bg: "#1A2F5C" }}
                     onClick={() => setUploadType(policy ? "policy" : "other")}>
                     <LuUpload size={14} /> Unggah Dokumen
                 </Button>
@@ -97,28 +97,28 @@ export function DocumentsPanel({ customer, policy, onChanged, refreshKey = 0 }: 
                     bg={kyc.complete ? "#F0FDF4" : "#FFFBEB"} border="1px solid" borderColor={kyc.complete ? "#BBF7D0" : "#FDE68A"}>
                     <Flex align="center" gap="6px" color={kyc.complete ? "#16A34A" : "#B45309"} mr="4px">
                         {kyc.complete ? <LuCircleCheck size={16} /> : <LuCircleAlert size={16} />}
-                        <Text fontSize="15px" fontWeight="semibold">{kyc.complete ? "KYC lengkap" : "KYC belum lengkap"}</Text>
+                        <Text fontSize="14px" fontWeight="semibold">{kyc.complete ? "KYC lengkap" : "KYC belum lengkap"}</Text>
                     </Flex>
                     {kyc.required.map((t) => {
                         const ok = kyc.present.includes(t)
                         return ok ? (
-                            <Badge key={t} px="8px" py="2px" borderRadius="full" fontSize="14px" bg="#DCFCE7" color="#16A34A" gap="4px">
+                            <Badge key={t} px="8px" py="2px" borderRadius="full" fontSize="13px" bg="#DCFCE7" color="#16A34A" gap="4px">
                                 <LuCircleCheck size={11} /> {KYC_LABELS[t] ?? t}
                             </Badge>
                         ) : (
                             <Button key={t} size="2xs" variant="outline" borderRadius="full" borderColor="#F59E0B" color="#B45309"
-                                bg="white" fontSize="14px" gap="4px" px="8px" onClick={() => setUploadType(t)}>
+                                bg="white" fontSize="13px" gap="4px" px="8px" onClick={() => setUploadType(t)}>
                                 <LuUpload size={10} /> {KYC_LABELS[t] ?? t}
                             </Button>
                         )
                     })}
                     {customer?.type === "company" && !kyc.complete && (
-                        <Text color="#92400E" fontSize="14px" flexBasis="100%">KTP untuk nasabah perusahaan adalah KTP direktur / pengurus.</Text>
+                        <Text color="#92400E" fontSize="13px" flexBasis="100%">KTP untuk nasabah perusahaan adalah KTP direktur / pengurus.</Text>
                     )}
                 </Flex>
             )}
 
-            {error && <Text px="24px" pb="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+            {error && <Text px="24px" pb="20px" fontSize="14px" color="#DC2626">{error}</Text>}
 
             {!error && loading && (
                 <Flex flexDir="column" gap="8px" px="24px" pb="20px">
@@ -127,7 +127,7 @@ export function DocumentsPanel({ customer, policy, onChanged, refreshKey = 0 }: 
             )}
 
             {!error && !loading && docs.length === 0 && (
-                <Text px="24px" pb="20px" color="#64748B" fontSize="15px">Belum ada dokumen.</Text>
+                <Text px="24px" pb="20px" color="#64748B" fontSize="14px">Belum ada dokumen.</Text>
             )}
 
             {!error && !loading && docs.length > 0 && (

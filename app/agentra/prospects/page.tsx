@@ -49,9 +49,9 @@ function StatCard({ icon, label, value, sub, tone, onClick }: {
             onClick={onClick}>
             <Box p="10px" borderRadius="10px" bg={tone.bg} color={tone.color}>{icon}</Box>
             <Flex flexDir="column" flex="1" minW="0">
-                <Text color="#64748B" fontSize="14px">{label}</Text>
-                {value === null ? <Skeleton h="24px" w="60px" mt="2px" /> : <Text color="#1C2833" fontSize="22px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
-                {sub && <Text color="#64748B" fontSize="14px">{sub}</Text>}
+                <Text color="#64748B" fontSize="13px">{label}</Text>
+                {value === null ? <Skeleton h="24px" w="60px" mt="2px" /> : <Text color="#1C2833" fontSize="20px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
+                {sub && <Text color="#64748B" fontSize="13px">{sub}</Text>}
             </Flex>
         </Flex>
     )
@@ -140,10 +140,10 @@ export default function ProspectsPage() {
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column">
                     <Flex justify="space-between" align="flex-start" gap="12px" flexWrap="wrap">
                         <Flex gap="4px" flexDir="column">
-                            <Text color="#1C2833" fontSize="24px" fontWeight="bold">Prospek & Penawaran</Text>
-                            <Text color="#5D6D7E" fontSize="16px">Catat calon nasabah dan polis di tempat lain, buat penawaran, lalu jadikan nasabah</Text>
+                            <Text color="#1C2833" fontSize="22px" fontWeight="bold">Prospek & Penawaran</Text>
+                            <Text color="#5D6D7E" fontSize="15px">Catat calon nasabah dan polis di tempat lain, buat penawaran, lalu jadikan nasabah</Text>
                         </Flex>
-                        <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialogOpen(true)}>
+                        <Button bg="#0D1B3E" color="white" gap="6px" fontSize="14px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialogOpen(true)}>
                             <LuPlus size={14} /> {isCompetitor ? "Tambah Polis Pesaing" : "Tambah Prospek"}
                         </Button>
                     </Flex>
@@ -161,12 +161,12 @@ export default function ProspectsPage() {
                         <StatCard icon={<LuTarget size={18} />} label="Polis Pesaing Sudah Lewat" value={summary ? String(summary.competitor_past_expiry) : null}
                             tone={{ bg: "#FEE2E2", color: "#DC2626" }} />
                     </Flex>
-                    {summaryError && <Text fontSize="15px" color="#DC2626">{summaryError}</Text>}
+                    {summaryError && <Text fontSize="14px" color="#DC2626">{summaryError}</Text>}
 
                     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                         <Flex px="20px" pt="12px" gap="6px" borderBottom="1px solid" borderColor="#E2E8F0" role="tablist">
                             {([["lead", "Prospek"], ["competitor_policy", "Polis di Tempat Lain"]] as const).map(([value, label]) => (
-                                <Button key={value} role="tab" aria-selected={tab === value} size="sm" variant="ghost" fontSize="15px" borderRadius="8px 8px 0 0"
+                                <Button key={value} role="tab" aria-selected={tab === value} size="sm" variant="ghost" fontSize="14px" borderRadius="8px 8px 0 0"
                                     color={tab === value ? "#0D1B3E" : "#64748B"} fontWeight={tab === value ? "bold" : "medium"}
                                     borderBottom="2px solid" borderColor={tab === value ? "#0D1B3E" : "transparent"}
                                     onClick={() => { setTab(value); setExpiry(""); setPage(1) }}>
@@ -177,7 +177,7 @@ export default function ProspectsPage() {
                         <Flex px="20px" py="14px" gap="10px" flexWrap="wrap" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
                             <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="12px" h="40px" flex="1" minW="200px">
                                 <LuSearch size={15} color="#64748B" />
-                                <Input border="none" outline="none" fontSize="15px" color="#1C2833" aria-label="Cari prospek"
+                                <Input border="none" outline="none" fontSize="14px" color="#1C2833" aria-label="Cari prospek"
                                     placeholder="Cari nama, telepon, atau asuransi..." value={query}
                                     onChange={(e) => set(setQuery)(e.target.value)} style={{ background: "transparent" }} />
                                 {query && <IconButton size="xs" variant="ghost" aria-label="Hapus pencarian" color="#64748B" onClick={() => set(setQuery)("")}><LuX size={14} /></IconButton>}
@@ -187,13 +187,13 @@ export default function ProspectsPage() {
                             {isCompetitor && <Box w={{ base: "100%", sm: "200px" }}><SearchSelect value={expiry} onChange={set(setExpiry)} options={EXPIRY_OPTIONS} ariaLabel="Filter tanggal berakhir" /></Box>}
                         </Flex>
 
-                        {error && <Text px="20px" py="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+                        {error && <Text px="20px" py="20px" fontSize="14px" color="#DC2626">{error}</Text>}
                         {!error && loading && <Flex flexDir="column" gap="8px" p="20px">{[1, 2, 3, 4].map(i => <Skeleton key={i} h="44px" borderRadius="8px" />)}</Flex>}
 
                         {!error && !loading && rows.length === 0 && (
                             <Flex flexDir="column" align="center" gap="8px" py="48px" px="20px" textAlign="center">
                                 <LuUsers size={40} color="#CBD5E1" />
-                                <Text color="#64748B" fontSize="16px">
+                                <Text color="#64748B" fontSize="15px">
                                     {filtered ? "Tidak ada data yang cocok dengan filter."
                                         : isCompetitor ? "Belum ada polis di tempat lain. Catat tanggal berakhirnya agar Anda bisa menawarkan sebelum jatuh tempo."
                                             : "Belum ada prospek. Tambahkan calon nasabah untuk mulai membuat penawaran."}
@@ -211,7 +211,7 @@ export default function ProspectsPage() {
                                                     ? ["NAMA", "POLIS SAAT INI", "BERAKHIR", "PRODUK", "TAHAP"]
                                                     : ["NAMA", "KONTAK", "PRODUK", "POTENSI PREMI", "TINDAK LANJUT", "TAHAP"]
                                                 ).map(h => (
-                                                    <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">{h}</Table.ColumnHeader>
+                                                    <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">{h}</Table.ColumnHeader>
                                                 ))}
                                             </Table.Row>
                                         </Table.Header>
@@ -222,31 +222,31 @@ export default function ProspectsPage() {
                                                     <Table.Row key={p.prospect_id} borderBottom="1px solid" borderColor="#F1F5F9" cursor="pointer" _hover={{ bg: "#F8FAFC" }}
                                                         onClick={() => router.push(`/agentra/prospects/${encodeURIComponent(p.prospect_id)}`)}>
                                                         <Table.Cell px="16px" py="10px">
-                                                            <Text color="#1D4ED8" fontSize="15px" fontWeight="semibold">{p.name}</Text>
-                                                            {p.quote_count > 0 && <Text color="#64748B" fontSize="14px">{p.quote_count} penawaran</Text>}
+                                                            <Text color="#1D4ED8" fontSize="14px" fontWeight="semibold">{p.name}</Text>
+                                                            {p.quote_count > 0 && <Text color="#64748B" fontSize="13px">{p.quote_count} penawaran</Text>}
                                                         </Table.Cell>
                                                         {isCompetitor ? (
                                                             <>
                                                                 <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                                    <Text color="#1C2833" fontSize="15px">{p.competitor_insurer ?? "—"}</Text>
-                                                                    <Text color="#64748B" fontSize="14px">{p.competitor_policy_number ?? ""}{p.competitor_premium ? ` · ${fmtIDR(p.competitor_premium)}` : ""}</Text>
+                                                                    <Text color="#1C2833" fontSize="14px">{p.competitor_insurer ?? "—"}</Text>
+                                                                    <Text color="#64748B" fontSize="13px">{p.competitor_policy_number ?? ""}{p.competitor_premium ? ` · ${fmtIDR(p.competitor_premium)}` : ""}</Text>
                                                                 </Table.Cell>
                                                                 <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                                    <Text color="#1C2833" fontSize="15px">{fmtDate(p.competitor_expiry)}</Text>
+                                                                    <Text color="#1C2833" fontSize="14px">{fmtDate(p.competitor_expiry)}</Text>
                                                                     {days !== null && (
-                                                                        <Text fontSize="14px" fontWeight="medium" color={days < 0 ? "#DC2626" : days <= 30 ? "#B45309" : "#94A3B8"}>
+                                                                        <Text fontSize="13px" fontWeight="medium" color={days < 0 ? "#DC2626" : days <= 30 ? "#B45309" : "#94A3B8"}>
                                                                             {days < 0 ? `lewat ${-days} hari` : days === 0 ? "hari ini" : `${days} hari lagi`}
                                                                         </Text>
                                                                     )}
                                                                 </Table.Cell>
-                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{productCatalog.label(p.product_interest)}</Table.Cell>
+                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{productCatalog.label(p.product_interest)}</Table.Cell>
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{p.whatsapp ?? p.phone ?? p.email ?? "—"}</Table.Cell>
-                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{productCatalog.label(p.product_interest)}</Table.Cell>
-                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{p.expected_premium ? fmtIDR(p.expected_premium) : "—"}</Table.Cell>
-                                                                <Table.Cell px="16px" py="10px" fontSize="15px" whiteSpace="nowrap"
+                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{p.whatsapp ?? p.phone ?? p.email ?? "—"}</Table.Cell>
+                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{productCatalog.label(p.product_interest)}</Table.Cell>
+                                                                <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{p.expected_premium ? fmtIDR(p.expected_premium) : "—"}</Table.Cell>
+                                                                <Table.Cell px="16px" py="10px" fontSize="14px" whiteSpace="nowrap"
                                                                     color={p.follow_up_date && daysUntil(p.follow_up_date) < 0 && p.stage !== "won" && p.stage !== "lost" ? "#DC2626" : "#1C2833"}>
                                                                     {fmtDate(p.follow_up_date)}
                                                                 </Table.Cell>
@@ -260,7 +260,7 @@ export default function ProspectsPage() {
                                     </Table.Root>
                                 </Table.ScrollArea>
                                 <Flex justify="space-between" align="center" px="20px" py="12px" borderTop="1px solid" borderColor="#F1F5F9">
-                                    <Text color="#64748B" fontSize="14px">{start}–{end} dari {total}</Text>
+                                    <Text color="#64748B" fontSize="13px">{start}–{end} dari {total}</Text>
                                     <Flex gap="6px">
                                         <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage(page - 1)}><LuChevronLeft size={13} /></Button>
                                         <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151" aria-label="Halaman berikutnya" disabled={page >= totalPages} onClick={() => setPage(page + 1)}><LuChevronRight size={13} /></Button>

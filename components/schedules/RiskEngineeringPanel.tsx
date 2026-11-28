@@ -56,7 +56,7 @@ function RecDialog({ policyId, editing, locations, onClose, onSaved }: { policyI
                 <FormField label="Sumber"><Input {...CLAIM_INPUT} maxLength={150} placeholder="Laporan survei, tanggal" value={f.source} onChange={(e) => set({ source: e.target.value })} /></FormField>
             </FormRow>
             <Switch.Root checked={f.warranty} onCheckedChange={(e) => set({ warranty: e.checked })} colorPalette="red" size="sm">
-                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">Warranty: pelanggaran bisa membatalkan klaim</Switch.Label>
+                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">Warranty: pelanggaran bisa membatalkan klaim</Switch.Label>
             </Switch.Root>
             <FormField label="Catatan"><Input {...CLAIM_INPUT} maxLength={500} value={f.notes} onChange={(e) => set({ notes: e.target.value })} /></FormField>
         </FormDialog>
@@ -149,25 +149,25 @@ export function RiskEngineeringPanel({ policyId, cancelled, onChanged, refreshKe
             <Flex align="center" justify="space-between" mb="14px" gap="8px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
                     <LuClipboardCheck size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Rekomendasi Survei & Warranty</Text>
-                    {open.length > 0 && <Badge fontSize="14px" bg="#FEF3C7" color="#B45309">{open.length} terbuka</Badge>}
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Rekomendasi Survei & Warranty</Text>
+                    {open.length > 0 && <Badge fontSize="13px" bg="#FEF3C7" color="#B45309">{open.length} terbuka</Badge>}
                 </Flex>
-                {!cancelled && <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog({ rec: null })}><LuPlus size={12} /> Tambah</Button>}
+                {!cancelled && <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog({ rec: null })}><LuPlus size={12} /> Tambah</Button>}
             </Flex>
-            {error && <Text color="#DC2626" fontSize="14px" mb="8px" role="alert">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" mb="8px" role="alert">{error}</Text>}
             {!recs ? <Skeleton h="50px" /> : recs.length === 0
-                ? <Text color="#64748B" fontSize="15px">Belum ada rekomendasi. Catat temuan surveyor agar tenggatnya diingatkan, terutama warranty.</Text>
+                ? <Text color="#64748B" fontSize="14px">Belum ada rekomendasi. Catat temuan surveyor agar tenggatnya diingatkan, terutama warranty.</Text>
                 : recs.map((r) => (
                     <Flex key={r.recommendation_id} justify="space-between" gap="10px" py="8px" borderTop="1px solid #E2E8F0" opacity={r.status === "open" ? 1 : 0.6}>
                         <Box minW="0">
                             <Flex gap="6px" align="center" flexWrap="wrap">
-                                {r.is_warranty && <Badge fontSize="14px" bg="#FEE2E2" color="#B91C1C">Warranty</Badge>}
-                                <Badge fontSize="14px" bg={PRIORITY[r.priority].bg} color={PRIORITY[r.priority].color}>{PRIORITY[r.priority].label}</Badge>
-                                {r.status !== "open" && <Badge fontSize="14px" bg="#DCFCE7" color="#15803D">{r.status === "done" ? `Selesai ${fmtDate(r.completed_date)}` : "Dibebaskan"}</Badge>}
-                                {r.is_overdue && <Badge fontSize="14px" bg="#DC2626" color="white">Lewat tenggat</Badge>}
+                                {r.is_warranty && <Badge fontSize="13px" bg="#FEE2E2" color="#B91C1C">Warranty</Badge>}
+                                <Badge fontSize="13px" bg={PRIORITY[r.priority].bg} color={PRIORITY[r.priority].color}>{PRIORITY[r.priority].label}</Badge>
+                                {r.status !== "open" && <Badge fontSize="13px" bg="#DCFCE7" color="#15803D">{r.status === "done" ? `Selesai ${fmtDate(r.completed_date)}` : "Dibebaskan"}</Badge>}
+                                {r.is_overdue && <Badge fontSize="13px" bg="#DC2626" color="white">Lewat tenggat</Badge>}
                             </Flex>
-                            <Text fontSize="15px" color="#1C2833" mt="2px">{r.description}</Text>
-                            <Text fontSize="14px" color="#64748B">{[r.location_label, r.due_date && `tenggat ${fmtDate(r.due_date)}`, r.source].filter(Boolean).join(" · ")}</Text>
+                            <Text fontSize="14px" color="#1C2833" mt="2px">{r.description}</Text>
+                            <Text fontSize="13px" color="#64748B">{[r.location_label, r.due_date && `tenggat ${fmtDate(r.due_date)}`, r.source].filter(Boolean).join(" · ")}</Text>
                         </Box>
                         <Flex flexShrink={0}>
                             {r.status === "open" && !cancelled && <IconButton size="2xs" variant="ghost" color="#16A34A" aria-label="Tandai selesai" onClick={() => markDone(r)}><LuCheck size={13} /></IconButton>}
@@ -180,26 +180,26 @@ export function RiskEngineeringPanel({ policyId, cancelled, onChanged, refreshKe
             {stock && stock !== "off" && (
                 <Box mt="20px" pt="16px" borderTop="1px solid" borderColor="#E2E8F0">
                     <Flex align="center" justify="space-between" mb="10px" gap="8px" flexWrap="wrap">
-                        <Flex align="center" gap="8px"><LuPackage size={15} color="#0D1B3E" /><Text fontSize="15px" fontWeight="semibold" color="#1C2833">Stok Deklarasi</Text></Flex>
+                        <Flex align="center" gap="8px"><LuPackage size={15} color="#0D1B3E" /><Text fontSize="14px" fontWeight="semibold" color="#1C2833">Stok Deklarasi</Text></Flex>
                         {!cancelled && <Flex gap="8px">
-                            <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog("declare")}><LuPlus size={12} /> Deklarasi</Button>
-                            <Button size="xs" variant="outline" fontSize="14px" loading={adjusting} disabled={stock.calculation.months_declared === 0} onClick={adjust}>Hitung penyesuaian</Button>
+                            <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog("declare")}><LuPlus size={12} /> Deklarasi</Button>
+                            <Button size="xs" variant="outline" fontSize="13px" loading={adjusting} disabled={stock.calculation.months_declared === 0} onClick={adjust}>Hitung penyesuaian</Button>
                         </Flex>}
                     </Flex>
-                    <Text fontSize="14px" color="#64748B">
+                    <Text fontSize="13px" color="#64748B">
                         Maks. {fmtIDR(stock.calculation.max_sum_insured)} · rate {stock.calculation.rate_permille}‰ · deposit {fmtIDR(stock.calculation.deposit_premium)} ·
                         rata-rata {fmtIDR(stock.calculation.average_declared)} ({stock.calculation.months_declared} bulan) · puncak {fmtIDR(stock.calculation.peak_declared)}
                     </Text>
                     {stock.calculation.months_over_max > 0 && (
-                        <Text fontSize="14px" color="#B91C1C">{stock.calculation.months_over_max} bulan melebihi nilai maksimum: stok di atas batas tidak terjamin penuh. Pertimbangkan endorsemen kenaikan nilai.</Text>
+                        <Text fontSize="13px" color="#B91C1C">{stock.calculation.months_over_max} bulan melebihi nilai maksimum: stok di atas batas tidak terjamin penuh. Pertimbangkan endorsemen kenaikan nilai.</Text>
                     )}
-                    <Text fontSize="14px" color="#0D1B3E" fontWeight="semibold" mt="4px">
+                    <Text fontSize="13px" color="#0D1B3E" fontWeight="semibold" mt="4px">
                         Premi akhir {fmtIDR(stock.calculation.earned_premium)} → {stock.calculation.adjustment >= 0 ? "tagihan tambahan" : "pengembalian"} {fmtIDR(Math.abs(stock.calculation.adjustment))}
                         {stock.adjustment_note && ` · nota ${stock.adjustment_note.note_number ?? ""} sudah dibuat`}
                     </Text>
                     <Flex flexDir="column" mt="8px">
                         {stock.items.map((d) => (
-                            <Flex key={d.declaration_id} justify="space-between" align="center" py="4px" borderTop="1px dashed #E2E8F0" fontSize="14px">
+                            <Flex key={d.declaration_id} justify="space-between" align="center" py="4px" borderTop="1px dashed #E2E8F0" fontSize="13px">
                                 <Text>{d.period_month}{d.location_label ? ` · ${d.location_label}` : ""}</Text>
                                 <Flex align="center" gap="6px">
                                     <Text>{fmtIDR(d.declared_value)}</Text>

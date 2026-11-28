@@ -92,7 +92,7 @@ export function SendMessageDialog({ customer, policy, templateType, onClose, onS
 
     return (
         <FormDialog title="Kirim WhatsApp" saving={saving} error={error} submitLabel="Kirim" onClose={onClose} onSubmit={submit}>
-            <Text fontSize="16px" color="#64748B">
+            <Text fontSize="15px" color="#64748B">
                 Kepada <b>{customer.name}</b>{policy ? <> · polis {policy.number}</> : null}
             </Text>
             <FormField label="Template Pesan">
@@ -100,16 +100,16 @@ export function SendMessageDialog({ customer, policy, templateType, onClose, onS
                     options={templates.map((t) => ({ value: t.template_id, label: `${t.name} · ${TEMPLATE_TYPE_LABELS[t.template_type]}` }))} />
             </FormField>
             <FormField label="Pesan" hint="Gunakan {customer_name}, {policy_number}, {amount_due}, {due_date} dan penanda lain; diisi otomatis saat dikirim.">
-                <Textarea fontSize="16px" rows={6} maxLength={2000} value={body}
+                <Textarea fontSize="15px" rows={6} maxLength={2000} value={body}
                     onChange={(e) => { setBody(e.target.value); setPreview(null) }} />
             </FormField>
             <Box>
-                <Text as="button" fontSize="16px" color="#1D4ED8" fontWeight="semibold" onClick={() => void doPreview()} aria-busy={busy}>
+                <Text as="button" fontSize="15px" color="#1D4ED8" fontWeight="semibold" onClick={() => void doPreview()} aria-busy={busy}>
                     {busy ? "Memuat pratinjau..." : "Lihat pratinjau"}
                 </Text>
                 {preview !== null && (
                     <Box mt="6px" bg="#F0FDF4" border="1px solid #BBF7D0" borderRadius="8px" p="10px">
-                        <Text fontSize="16px" color="#166534" whiteSpace="pre-wrap">{preview}</Text>
+                        <Text fontSize="15px" color="#166534" whiteSpace="pre-wrap">{preview}</Text>
                     </Box>
                 )}
             </Box>

@@ -55,7 +55,7 @@ function NavItem({ icon, label, href, active }: { icon: React.ReactNode; label: 
         transition="background 0.15s"
       >
         <Box color={active ? "#1D4ED8" : "#64748B"}>{icon}</Box>
-        <Text fontSize="16px" fontWeight={active ? "semibold" : "normal"} color={active ? "#1D4ED8" : "#1E293B"} lineHeight="1.3">
+        <Text fontSize="15px" fontWeight={active ? "semibold" : "normal"} color={active ? "#1D4ED8" : "#1E293B"} lineHeight="1.3">
           {label}
         </Text>
       </Flex>
@@ -86,21 +86,21 @@ export function Sidebar() {
           ))
         ) : (
           <>
-          <Text fontSize="16px" fontWeight="semibold" color="#475569" px="12px" mb="6px">
+          <Text fontSize="15px" fontWeight="semibold" color="#475569" px="12px" mb="6px">
             Menu Utama
           </Text>
           {mainMenuItems.map((item) => (
             <NavItem key={item.href} {...item} active={pathname === item.href || pathname.startsWith(item.href + "/")} />
           ))}
 
-          <Text fontSize="16px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
+          <Text fontSize="15px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
             Menu Lainnya
           </Text>
           {moreItems.map((item) => (
             <NavItem key={item.href} {...item} active={pathname === item.href || pathname.startsWith(item.href + "/")} />
           ))}
 
-          <Text fontSize="16px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
+          <Text fontSize="15px" fontWeight="semibold" color="#475569" px="12px" mt="16px" mb="6px">
             Kelola Agensi
           </Text>
           {agencyItems.map((item) => (
@@ -127,7 +127,7 @@ export function Sidebar() {
         justifyContent="flex-start"
       >
         <Box color="#EF4444" aria-hidden="true"><FiLogOut size={22} /></Box>
-        <Text fontSize="16px" color="#EF4444">Keluar</Text>
+        <Text fontSize="15px" color="#EF4444">Keluar</Text>
       </Button>
     </Flex>
   )

@@ -43,17 +43,17 @@ function Shell({ title, wide, saving, error, submitLabel, onClose, onSubmit, chi
             <Dialog.Positioner zIndex={1501}>
                 <Dialog.Content bg="white" borderRadius="12px" maxW={wide ? "720px" : "520px"} w="94vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
-                        <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">{title}</Dialog.Title>
+                        <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">{title}</Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body px="24px" py="16px">
                         <Flex flexDir="column" gap="12px">
                             {children}
-                            {error && <Text color="#DC2626" fontSize="14px" role="alert">{error}</Text>}
+                            {error && <Text color="#DC2626" fontSize="13px" role="alert">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button variant="outline" size="sm" fontSize="15px" disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
+                        <Button variant="outline" size="sm" fontSize="14px" disabled={saving} onClick={onClose}>Batal</Button>
+                        <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" _hover={{ bg: "#1A2F5C" }} loading={saving} onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
             </Dialog.Positioner>
@@ -125,8 +125,8 @@ function ViewGrid({ rows }: { rows: Row[] }) {
         <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap="14px 20px">
             {rows.map(([label, value]) => (
                 <Flex key={label} flexDir="column" gap="2px" minW="0">
-                    <Text color="#64748B" fontSize="14px" fontWeight="semibold">{label.toUpperCase()}</Text>
-                    <Text color="#1C2833" fontSize="15px" wordBreak="break-word">{value}</Text>
+                    <Text color="#64748B" fontSize="13px" fontWeight="semibold">{label.toUpperCase()}</Text>
+                    <Text color="#1C2833" fontSize="14px" wordBreak="break-word">{value}</Text>
                 </Flex>
             ))}
         </Grid>
@@ -138,9 +138,9 @@ function ExtensionBadges({ details }: { details: RiskDetails }) {
     if (taken.length === 0) return null
     return (
         <Flex flexDir="column" gap="6px">
-            <Text color="#64748B" fontSize="14px" fontWeight="semibold">PERLUASAN JAMINAN</Text>
+            <Text color="#64748B" fontSize="13px" fontWeight="semibold">PERLUASAN JAMINAN</Text>
             <Flex gap="6px" flexWrap="wrap">
-                {taken.map(k => <Badge key={k} px="8px" py="2px" borderRadius="full" bg="#DCFCE7" color="#16A34A" fontSize="14px">{EXTENSION_LABELS[k]}</Badge>)}
+                {taken.map(k => <Badge key={k} px="8px" py="2px" borderRadius="full" bg="#DCFCE7" color="#16A34A" fontSize="13px">{EXTENSION_LABELS[k]}</Badge>)}
             </Flex>
         </Flex>
     )
@@ -152,9 +152,9 @@ function MembersTable({ members, role, title }: { members: RiskMember[]; role: R
     const money = (n: number | null) => (n === null ? "—" : fmtIDR(n))
     return (
         <Flex flexDir="column" gap="6px">
-            <Text color="#64748B" fontSize="14px" fontWeight="semibold">{title.toUpperCase()} ({rows.length})</Text>
+            <Text color="#64748B" fontSize="13px" fontWeight="semibold">{title.toUpperCase()} ({rows.length})</Text>
             <Box overflowX="auto">
-                <Box as="table" w="100%" fontSize="14px" style={{ borderCollapse: "collapse" }}>
+                <Box as="table" w="100%" fontSize="13px" style={{ borderCollapse: "collapse" }}>
                     <Box as="thead">
                         <Box as="tr" color="#64748B" textAlign="left">
                             <Box as="th" py="6px" pr="12px" fontWeight="semibold">Nama</Box>
@@ -300,28 +300,28 @@ function DeclarationsSection({ policyId, onChanged }: { policyId: string; onChan
       {confirmDialog}
             <Flex justify="space-between" align="center" gap="8px" flexWrap="wrap">
                 <Box>
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Deklarasi Pengiriman (Open Cover)</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Deklarasi Pengiriman (Open Cover)</Text>
                     {data && data.items.length > 0 && (
-                        <Text color="#64748B" fontSize="14px">
+                        <Text color="#64748B" fontSize="13px">
                             {data.items.length} pengiriman · nilai {fmtIDR(data.total_sum_insured)} · premi {fmtIDR(data.total_premium)}
                         </Text>
                     )}
                 </Box>
-                <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog({ editing: null })}><LuPlus size={12} /> Tambah Deklarasi</Button>
+                <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog({ editing: null })}><LuPlus size={12} /> Tambah Deklarasi</Button>
             </Flex>
-            {error && <Text color="#DC2626" fontSize="14px" role="alert">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" role="alert">{error}</Text>}
             {!data ? <Skeleton h="48px" /> : data.items.length === 0 ? (
-                <Text color="#64748B" fontSize="15px">Belum ada deklarasi pengiriman</Text>
+                <Text color="#64748B" fontSize="14px">Belum ada deklarasi pengiriman</Text>
             ) : (
                 <Flex flexDir="column" gap="8px">
                     {data.items.map(d => (
                         <Flex key={d.declaration_id} justify="space-between" align="flex-start" gap="12px" p="10px 12px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px">
                             <Flex flexDir="column" gap="2px" minW="0">
-                                <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{d.bl_awb_number ?? "Tanpa No. B/L"} · {fmtDate(d.declaration_date)}</Text>
-                                <Text color="#64748B" fontSize="14px">
+                                <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{d.bl_awb_number ?? "Tanpa No. B/L"} · {fmtDate(d.declaration_date)}</Text>
+                                <Text color="#64748B" fontSize="13px">
                                     {[d.conveyance_name, d.voyage_from || d.voyage_to ? `${d.voyage_from ?? "?"} → ${d.voyage_to ?? "?"}` : null, d.goods_description].filter(Boolean).join(" · ")}
                                 </Text>
-                                <Text color="#1C2833" fontSize="14px">Nilai {fmtIDR(d.sum_insured)} · Premi {fmtIDR(d.premium_amount)}</Text>
+                                <Text color="#1C2833" fontSize="13px">Nilai {fmtIDR(d.sum_insured)} · Premi {fmtIDR(d.premium_amount)}</Text>
                             </Flex>
                             <Flex flexShrink={0}>
                                 <IconButton size="2xs" variant="ghost" aria-label="Ubah deklarasi" onClick={() => setDialog({ editing: d })}><LuPencil size={13} /></IconButton>
@@ -358,7 +358,7 @@ export function RiskDetailsPanel({ policy, onChanged }: RiskDetailsPanelProps) {
 
     useEffect(() => { load() }, [load])
 
-    if (error) return <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px"><Text color="#DC2626" fontSize="15px" role="alert">{error}</Text></Box>
+    if (error) return <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px"><Text color="#DC2626" fontSize="14px" role="alert">{error}</Text></Box>
     if (!data) return <Skeleton h="120px" borderRadius="12px" />
     const group = data.risk_group
     if (!group) return null
@@ -373,16 +373,16 @@ export function RiskDetailsPanel({ policy, onChanged }: RiskDetailsPanelProps) {
             <Flex align="center" justify="space-between" gap="8px" mb="16px">
                 <Flex align="center" gap="8px">
                     <LuCar size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{RISK_GROUP_LABELS[group]}</Text>
-                    {isOpenCover && <Badge px="8px" py="2px" borderRadius="full" bg="#E0F2FE" color="#0369A1" fontSize="14px">Open Cover</Badge>}
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{RISK_GROUP_LABELS[group]}</Text>
+                    {isOpenCover && <Badge px="8px" py="2px" borderRadius="full" bg="#E0F2FE" color="#0369A1" fontSize="13px">Open Cover</Badge>}
                 </Flex>
-                <Button size="xs" variant="outline" fontSize="14px" onClick={() => setEditing(true)}>
+                <Button size="xs" variant="outline" fontSize="13px" onClick={() => setEditing(true)}>
                     <LuPencil size={12} /> {hasContent ? "Ubah" : "Isi Detail"}
                 </Button>
             </Flex>
 
             {!hasContent ? (
-                <Text color="#64748B" fontSize="15px">Belum ada detail risiko. Isi agar mudah dicari dan menjawab pertanyaan nasabah.</Text>
+                <Text color="#64748B" fontSize="14px">Belum ada detail risiko. Isi agar mudah dicari dan menjawab pertanyaan nasabah.</Text>
             ) : (
                 <Flex flexDir="column" gap="18px">
                     {rows.length > 0 && <ViewGrid rows={rows} />}

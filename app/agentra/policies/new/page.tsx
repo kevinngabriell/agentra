@@ -39,12 +39,12 @@ const uid = (): string => {
 
 const INPUT = {
   bg: "white", border: "1px solid", borderColor: "#E2E8F0",
-  borderRadius: "8px", fontSize: "15px", color: "#1C2833", h: "40px",
+  borderRadius: "8px", fontSize: "14px", color: "#1C2833", h: "40px",
 } as const
 
-const INPUT_LG = { ...INPUT, fontSize: "16px" } as const
+const INPUT_LG = { ...INPUT, fontSize: "15px" } as const
 
-const LBL = { color: "#5D6D7E", fontSize: "14px", fontWeight: "semibold", letterSpacing: "0.04em" } as const
+const LBL = { color: "#5D6D7E", fontSize: "13px", fontWeight: "semibold", letterSpacing: "0.04em" } as const
 
 // ─── IDR number helpers ───────────────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
       <Box borderLeft="3px solid #0D1B3E" pl="10px" mb="20px">
-        <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">{title}</Text>
+        <Text color="#0D1B3E" fontSize="15px" fontWeight="semibold">{title}</Text>
       </Box>
       {children}
     </Box>
@@ -87,7 +87,7 @@ function FField({ label, required, hint, children }: {
         {required && <Text as="span" color="#DC2626"> *</Text>}
       </Text>
       {children}
-      {hint && <Text fontSize="14px" color="#64748B">{hint}</Text>}
+      {hint && <Text fontSize="13px" color="#64748B">{hint}</Text>}
     </Flex>
   )
 }
@@ -794,14 +794,14 @@ export default function NewPolicy() {
               <LuFileText size={20} />
             </Box>
             <Flex flexDir="column">
-              <Text color="#1C2833" fontSize="18px" fontWeight="bold">Tambah Polis Baru</Text>
-              <Text color="#64748B" fontSize="14px">Lengkapi semua informasi polis</Text>
+              <Text color="#1C2833" fontSize="17px" fontWeight="bold">Tambah Polis Baru</Text>
+              <Text color="#64748B" fontSize="13px">Lengkapi semua informasi polis</Text>
             </Flex>
           </Flex>
 
           {loadError && (
             <Box px="14px" py="10px" borderRadius="8px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA" role="alert">
-              <Text fontSize="15px" color="#DC2626">{loadError}</Text>
+              <Text fontSize="14px" color="#DC2626">{loadError}</Text>
             </Box>
           )}
 
@@ -824,10 +824,10 @@ export default function NewPolicy() {
                         borderColor={isEndorsement ? "#FDE68A" : "#E2E8F0"}
                       >
                         <Flex flexDir="column" gap="1px">
-                          <Text fontSize="15px" fontWeight="semibold" color={isEndorsement ? "#92400E" : "#1C2833"}>
+                          <Text fontSize="14px" fontWeight="semibold" color={isEndorsement ? "#92400E" : "#1C2833"}>
                             Endorsement
                           </Text>
-                          <Text fontSize="14px" color={isEndorsement ? "#B45309" : "#94A3B8"}>
+                          <Text fontSize="13px" color={isEndorsement ? "#B45309" : "#94A3B8"}>
                             {isEndorsement
                               ? "Item coverage tidak tersedia untuk endorsement"
                               : "Aktifkan jika ini adalah endorsement polis"}
@@ -851,17 +851,17 @@ export default function NewPolicy() {
                             bg="#F0FDF4" border="1px solid" borderColor="#86EFAC" borderRadius="8px"
                           >
                             <Flex flexDir="column" gap="2px">
-                              <Text fontSize="18px" fontWeight="semibold" color="#14532D">
+                              <Text fontSize="17px" fontWeight="semibold" color="#14532D">
                                 {selectedCustomer?.display_name}
                               </Text>
-                              <Text fontSize="16px" fontWeight="medium" color="#166534">
+                              <Text fontSize="15px" fontWeight="medium" color="#166534">
                                 {selectedCustomer?.customer_type === "company" ? "Korporat" : "Individu"}
                               </Text>
                             </Flex>
                             <Button
                               size="sm" variant="outline" gap="6px" flexShrink={0}
                               bg="white" color="#DC2626" border="1px solid" borderColor="#DC2626"
-                              fontSize="16px" fontWeight="semibold"
+                              fontSize="15px" fontWeight="semibold"
                               _hover={{ bg: "#FEE2E2", color: "#B91C1C", borderColor: "#B91C1C" }}
                               onClick={clearCustomer}
                             >
@@ -885,7 +885,7 @@ export default function NewPolicy() {
                             >
                               <Combobox.Input
                                 placeholder="Ketik nama nasabah untuk mencari..."
-                                fontSize="15px" color="#1C2833"
+                                fontSize="14px" color="#1C2833"
                                 border="none" outline="none" bg="transparent" flex="1" h="100%"
                               />
                               <Combobox.IndicatorGroup>
@@ -901,7 +901,7 @@ export default function NewPolicy() {
                                   if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) loadMoreCustomers()
                                 }}
                               >
-                                <Combobox.Empty px="12px" py="10px" fontSize="15px" color="#64748B">
+                                <Combobox.Empty px="12px" py="10px" fontSize="14px" color="#64748B">
                                   {customerLoading ? "Memuat…" : "Nasabah tidak ditemukan"}
                                 </Combobox.Empty>
                                 {customerCollection.items.map(item => (
@@ -911,9 +911,9 @@ export default function NewPolicy() {
                                     _hover={{ bg: "#F8FAFC" }} _highlighted={{ bg: "#EFF6FF" }}
                                   >
                                     <Flex align="center" justify="space-between" gap="8px">
-                                      <Combobox.ItemText fontSize="15px" color="#1C2833">{item.label}</Combobox.ItemText>
+                                      <Combobox.ItemText fontSize="14px" color="#1C2833">{item.label}</Combobox.ItemText>
                                       <Text
-                                        fontSize="14px" fontWeight="medium" px="6px" py="1px" borderRadius="4px"
+                                        fontSize="13px" fontWeight="medium" px="6px" py="1px" borderRadius="4px"
                                         bg={item.type === "company" ? "#F3E8FF" : "#E5EFF5"}
                                         color={item.type === "company" ? "#7E22CE" : "#006397"}
                                       >
@@ -961,7 +961,7 @@ export default function NewPolicy() {
                             cursor="pointer" onClick={applyPrefixHint} _hover={{ bg: "#FEF3C7" }}
                           >
                             <LuZap size={11} color="#D97706" />
-                            <Text fontSize="14px" color="#92400E">
+                            <Text fontSize="13px" color="#92400E">
                               Prefiks &ldquo;{form.policy_number.slice(0, 2)}&rdquo; → <Text as="strong">{prefixHint.product_name}</Text>{" "}
                               ({parseFloat(prefixHint.commission_rate).toFixed(0)}%) — Klik terapkan
                             </Text>
@@ -1203,7 +1203,7 @@ export default function NewPolicy() {
                           required
                         />
                       </FField>
-                      <Text color="#64748B" fontSize="16px">→</Text>
+                      <Text color="#64748B" fontSize="15px">→</Text>
                       <FField
                         label="Selesai" required
                         
@@ -1217,7 +1217,7 @@ export default function NewPolicy() {
                       </FField>
                       {duration && (
                         <Box px="12px" py="5px" borderRadius="20px" bg="#DBEAFE">
-                          <Text fontSize="14px" fontWeight="semibold" color="#1D4ED8">{duration}</Text>
+                          <Text fontSize="13px" fontWeight="semibold" color="#1D4ED8">{duration}</Text>
                         </Box>
                       )}
                     </Flex>
@@ -1300,8 +1300,8 @@ export default function NewPolicy() {
                           bg="#EFF6FF" border="1px solid" borderColor="#BFDBFE"
                           w={{ base: "100%", sm: "auto" }} minW={{ sm: "240px" }} gap="16px"
                         >
-                          <Text fontSize="15px" color="#1D4ED8" fontWeight="semibold">Tagihan Nasabah</Text>
-                          <Text fontSize="16px" color="#1D4ED8" fontWeight="bold">
+                          <Text fontSize="14px" color="#1D4ED8" fontWeight="semibold">Tagihan Nasabah</Text>
+                          <Text fontSize="15px" color="#1D4ED8" fontWeight="bold">
                             Rp {customerPremiumAmount.toLocaleString("id-ID")}
                           </Text>
                         </Flex>
@@ -1310,30 +1310,30 @@ export default function NewPolicy() {
                       {/* Commission */}
                       <Box bg="#F8FAFC" borderRadius="10px" border="1px solid" borderColor="#E2E8F0" p="14px">
                         <Flex align="center" gap="8px" mb="10px" flexWrap="wrap">
-                          <Text fontSize="15px" fontWeight="semibold" color="#1C2833">Komisi</Text>
+                          <Text fontSize="14px" fontWeight="semibold" color="#1C2833">Komisi</Text>
                           {commissionSource?.kind === "product" && (
                             <Flex align="center" gap="4px" px="8px" py="2px" borderRadius="20px" bg="#DBEAFE">
                               <LuZap size={10} color="#1D4ED8" />
-                              <Text fontSize="14px" color="#1D4ED8" fontWeight="semibold">Auto: {commissionSource.name}</Text>
+                              <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold">Auto: {commissionSource.name}</Text>
                             </Flex>
                           )}
                           {commissionSource?.kind === "manual" && (
                             <Box px="8px" py="2px" borderRadius="20px" bg="#F1F5F9">
-                              <Text fontSize="14px" color="#64748B">Custom</Text>
+                              <Text fontSize="13px" color="#64748B">Custom</Text>
                             </Box>
                           )}
                           {!commissionSource && masterProducts.length > 0 && (
-                            <Text fontSize="14px" color="#64748B">Pilih produk untuk auto-isi</Text>
+                            <Text fontSize="13px" color="#64748B">Pilih produk untuk auto-isi</Text>
                           )}
                         </Flex>
                         <Grid templateColumns="repeat(auto-fit, minmax(min(100%, 150px), 1fr))" gap="16px">
                           {/* Rate inputs */}
                           <Flex flexDir="column" gap="4px">
-                            <Text fontSize="14px" color="#64748B">Rate Komisi</Text>
+                            <Text fontSize="13px" color="#64748B">Rate Komisi</Text>
                             <Flex align="center" gap="6px">
                               <Input
                                 bg="white" border="1px solid" borderColor="#E2E8F0"
-                                borderRadius="8px" fontSize="16px" fontWeight="semibold" color="#1C2833"
+                                borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
                                 h="40px" flex="1" minW="0" type="number" min={0} max={100} step="0.01"
                                 placeholder="0"
                                 value={form.commission_rate}
@@ -1342,15 +1342,15 @@ export default function NewPolicy() {
                                   setCommissionSource({ kind: "manual" })
                                 }}
                               />
-                              <Text fontSize="16px" color="#64748B">%</Text>
+                              <Text fontSize="15px" color="#64748B">%</Text>
                             </Flex>
                           </Flex>
                           <Flex flexDir="column" gap="4px">
-                            <Text fontSize="14px" color="#64748B">PPh / Pajak</Text>
+                            <Text fontSize="13px" color="#64748B">PPh / Pajak</Text>
                             <Flex align="center" gap="6px">
                               <Input
                                 bg="white" border="1px solid" borderColor="#E2E8F0"
-                                borderRadius="8px" fontSize="16px" fontWeight="semibold" color="#1C2833"
+                                borderRadius="8px" fontSize="15px" fontWeight="semibold" color="#1C2833"
                                 h="40px" flex="1" minW="0" type="number" min={0} max={100} step="0.01"
                                 placeholder="2.5"
                                 value={form.commission_tax_rate}
@@ -1358,28 +1358,28 @@ export default function NewPolicy() {
                                   set("commission_tax_rate", e.target.value)
                                 }
                               />
-                              <Text fontSize="16px" color="#64748B">%</Text>
+                              <Text fontSize="15px" color="#64748B">%</Text>
                             </Flex>
                           </Flex>
 
                           {/* Breakdown preview */}
                           {commissionAmount > 0 && (
                             <Box gridColumn="1 / -1" px="14px" py="10px" borderRadius="10px" bg="#F0FDF4" border="1px solid" borderColor="#BBF7D0">
-                              <Text fontSize="14px" color="#64748B" mb="6px" fontWeight="semibold">ESTIMASI KOMISI</Text>
+                              <Text fontSize="13px" color="#64748B" mb="6px" fontWeight="semibold">ESTIMASI KOMISI</Text>
                               <Flex justify="space-between" align="center" mb="2px">
-                                <Text fontSize="14px" color="#64748B">Gross</Text>
-                                <Text fontSize="15px" fontWeight="semibold" color="#16A34A">{fmt(commissionAmount)}</Text>
+                                <Text fontSize="13px" color="#64748B">Gross</Text>
+                                <Text fontSize="14px" fontWeight="semibold" color="#16A34A">{fmt(commissionAmount)}</Text>
                               </Flex>
                               {commissionTaxAmount > 0 && (
                                 <Flex justify="space-between" align="center" mb="2px">
-                                  <Text fontSize="14px" color="#64748B">PPh ({form.commission_tax_rate}%)</Text>
-                                  <Text fontSize="14px" color="#DC2626">−{fmt(commissionTaxAmount)}</Text>
+                                  <Text fontSize="13px" color="#64748B">PPh ({form.commission_tax_rate}%)</Text>
+                                  <Text fontSize="13px" color="#DC2626">−{fmt(commissionTaxAmount)}</Text>
                                 </Flex>
                               )}
                               <Box borderTop="1px solid" borderColor="#BBF7D0" pt="4px" mt="4px">
                                 <Flex justify="space-between" align="center">
-                                  <Text fontSize="14px" color="#15803D" fontWeight="semibold">Net</Text>
-                                  <Text fontSize="16px" fontWeight="bold" color="#15803D">{fmt(netCommissionAmount)}</Text>
+                                  <Text fontSize="13px" color="#15803D" fontWeight="semibold">Net</Text>
+                                  <Text fontSize="15px" fontWeight="bold" color="#15803D">{fmt(netCommissionAmount)}</Text>
                                 </Flex>
                               </Box>
                             </Box>
@@ -1398,10 +1398,10 @@ export default function NewPolicy() {
                         borderBottom="1px solid" borderColor="#E2E8F0"
                       >
                         <Box borderLeft="3px solid #0D1B3E" pl="10px">
-                          <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Item Coverage</Text>
+                          <Text color="#0D1B3E" fontSize="15px" fontWeight="semibold">Item Coverage</Text>
                         </Box>
                         <Button
-                          size="sm" bg="#0D1B3E" color="white" fontSize="14px" gap="4px"
+                          size="sm" bg="#0D1B3E" color="white" fontSize="13px" gap="4px"
                           borderRadius="6px" _hover={{ bg: "#1A2F5C" }} onClick={openAddCov}
                         >
                           <LuPlus size={12} /> Tambah Item
@@ -1410,7 +1410,7 @@ export default function NewPolicy() {
 
                       {localCoverages.length === 0 ? (
                         <Flex px="16px" py="24px" align="center" justify="center">
-                          <Text color="#64748B" fontSize="15px">
+                          <Text color="#64748B" fontSize="14px">
                             Belum ada item. Klik &quot;+ Tambah Item&quot; untuk mulai.
                           </Text>
                         </Flex>
@@ -1426,11 +1426,11 @@ export default function NewPolicy() {
                               {/* Top row: name + action buttons */}
                               <Flex align="center" justify="space-between" gap="8px">
                                 <Flex align="center" gap="6px" minW="0">
-                                  <Text color="#1C2833" fontSize="15px" fontWeight="medium">
+                                  <Text color="#1C2833" fontSize="14px" fontWeight="medium">
                                     {COVERAGE_TYPE_LABELS[cov.coverage_type]}
                                   </Text>
                                   {cov.coverage_label && (
-                                    <Text color="#64748B" fontSize="14px" truncate>— {cov.coverage_label}</Text>
+                                    <Text color="#64748B" fontSize="13px" truncate>— {cov.coverage_label}</Text>
                                   )}
                                 </Flex>
                                 <Flex gap="4px" flexShrink={0}>
@@ -1452,23 +1452,23 @@ export default function NewPolicy() {
                               </Flex>
                               {/* Bottom row: financial details */}
                               <Flex gap="16px" flexWrap="wrap">
-                                <Text color="#64748B" fontSize="14px">
+                                <Text color="#64748B" fontSize="13px">
                                   UP: <Text as="span" color="#1C2833" fontWeight="medium">
                                     Rp {cov.sum_insured.toLocaleString("id-ID")}
                                   </Text>
                                 </Text>
-                                <Text color="#64748B" fontSize="14px">
+                                <Text color="#64748B" fontSize="13px">
                                   Rate: <Text as="span" color="#1C2833" fontWeight="medium">{cov.rate_permille}‰</Text>
                                 </Text>
                                 {!cov.count_in_tsi && (
                                   <Text
-                                    fontSize="14px" fontWeight="semibold" color="#92400E"
+                                    fontSize="13px" fontWeight="semibold" color="#92400E"
                                     bg="#FEF3C7" px="6px" py="2px" borderRadius="4px"
                                   >
                                     UP tidak dihitung
                                   </Text>
                                 )}
-                                <Text color="#64748B" fontSize="14px">
+                                <Text color="#64748B" fontSize="13px">
                                   Premi: <Text as="span" color="#0D1B3E" fontWeight="semibold">
                                     Rp {cov.premium_amount.toLocaleString("id-ID")}
                                   </Text>
@@ -1479,10 +1479,10 @@ export default function NewPolicy() {
 
                           {/* Total row */}
                           <Flex px="16px" py="10px" justify="space-between" align="center" bg="#F1F5F9">
-                            <Text color="#64748B" fontSize="14px" fontWeight="semibold">
+                            <Text color="#64748B" fontSize="13px" fontWeight="semibold">
                               Total UP: Rp {covTotalSI.toLocaleString("id-ID")}
                             </Text>
-                            <Text color="#0D1B3E" fontSize="15px" fontWeight="bold">
+                            <Text color="#0D1B3E" fontSize="14px" fontWeight="bold">
                               Total Premi: Rp {covTotalPremium.toLocaleString("id-ID")}
                             </Text>
                           </Flex>
@@ -1509,9 +1509,9 @@ export default function NewPolicy() {
                     >
                       <Flex flexDir="column" gap="2px">
                         <Box borderLeft="3px solid #0D1B3E" pl="10px">
-                          <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold">Ko-Asuransi</Text>
+                          <Text color="#0D1B3E" fontSize="15px" fontWeight="semibold">Ko-Asuransi</Text>
                         </Box>
-                        <Text fontSize="14px" color="#64748B" pl="13px">Aktifkan jika ada ko-penanggung pada polis ini</Text>
+                        <Text fontSize="13px" color="#64748B" pl="13px">Aktifkan jika ada ko-penanggung pada polis ini</Text>
                       </Flex>
                       <Switch.Root
                         checked={isCoassurance}
@@ -1529,7 +1529,7 @@ export default function NewPolicy() {
                           <Flex gap="8px" align="center">
                             {coassurances.length > 0 && (
                               <Box
-                                px="8px" py="2px" borderRadius="full" fontSize="14px" fontWeight="semibold"
+                                px="8px" py="2px" borderRadius="full" fontSize="13px" fontWeight="semibold"
                                 bg={Math.abs(caTotalPct - 100) < 0.01 ? "#DCFCE7" : "#FEF3C7"}
                                 color={Math.abs(caTotalPct - 100) < 0.01 ? "#16A34A" : "#D97706"}
                               >
@@ -1539,7 +1539,7 @@ export default function NewPolicy() {
                             )}
                           </Flex>
                           <Button
-                            size="sm" bg="#0D1B3E" color="white" fontSize="14px" gap="4px"
+                            size="sm" bg="#0D1B3E" color="white" fontSize="13px" gap="4px"
                             borderRadius="6px" _hover={{ bg: "#1A2F5C" }} onClick={openAddCa}
                           >
                             <LuPlus size={12} /> Tambah Ko-Asuransi
@@ -1552,7 +1552,7 @@ export default function NewPolicy() {
                               <Table.Header>
                                 <Table.Row bg="#F8FAFC">
                                   {["NAMA", "LEADER", "SHARE %", "AKSI"].map(h => (
-                                    <Table.ColumnHeader key={h} px="10px" py="8px" fontSize="14px" color="#64748B" fontWeight="bold" letterSpacing="0.05em">{h}</Table.ColumnHeader>
+                                    <Table.ColumnHeader key={h} px="10px" py="8px" fontSize="13px" color="#64748B" fontWeight="bold" letterSpacing="0.05em">{h}</Table.ColumnHeader>
                                   ))}
                                 </Table.Row>
                               </Table.Header>
@@ -1560,17 +1560,17 @@ export default function NewPolicy() {
                                 {coassurances.map(ca => (
                                   <Table.Row key={ca._id} borderBottom="1px solid" borderColor="#F1F5F9">
                                     <Table.Cell px="10px" py="8px">
-                                      <Text fontSize="14px" color="#1C2833" fontWeight="medium">{ca.co_insurer_name}</Text>
+                                      <Text fontSize="13px" color="#1C2833" fontWeight="medium">{ca.co_insurer_name}</Text>
                                     </Table.Cell>
                                     <Table.Cell px="10px" py="8px">
                                       {ca.is_leader && (
-                                        <Box px="6px" py="1px" borderRadius="4px" bg="#DBEAFE" fontSize="14px" fontWeight="bold" color="#1D4ED8" display="inline-block">
+                                        <Box px="6px" py="1px" borderRadius="4px" bg="#DBEAFE" fontSize="13px" fontWeight="bold" color="#1D4ED8" display="inline-block">
                                           Leader
                                         </Box>
                                       )}
                                     </Table.Cell>
                                     <Table.Cell px="10px" py="8px">
-                                      <Text fontSize="14px" color="#1C2833">{ca.share_percent}%</Text>
+                                      <Text fontSize="13px" color="#1C2833">{ca.share_percent}%</Text>
                                     </Table.Cell>
                                     <Table.Cell px="10px" py="8px">
                                       <Flex gap="4px">
@@ -1591,7 +1591,7 @@ export default function NewPolicy() {
 
                         {coassurances.length === 0 && (
                           <Flex py="16px" align="center" justify="center">
-                            <Text color="#64748B" fontSize="14px">Belum ada ko-insurer. Klik &quot;Tambah Ko-Asuransi&quot;.</Text>
+                            <Text color="#64748B" fontSize="13px">Belum ada ko-insurer. Klik &quot;Tambah Ko-Asuransi&quot;.</Text>
                           </Flex>
                         )}
                       </Box>
@@ -1603,7 +1603,7 @@ export default function NewPolicy() {
                     <Flex flexDir="column" gap="12px">
                       {riskGroup === "travel" && form.coverage_start && form.coverage_start <= localISODate() && (
                         <Box px="12px" py="8px" bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="8px">
-                          <Text fontSize="14px" color="#92400E">Polis perjalanan mulai hari ini atau sebelumnya. Pastikan sertifikat terbit sebelum keberangkatan; penanggung bisa menolak polis yang dibuat setelah perjalanan dimulai.</Text>
+                          <Text fontSize="13px" color="#92400E">Polis perjalanan mulai hari ini atau sebelumnya. Pastikan sertifikat terbit sebelum keberangkatan; penanggung bisa menolak polis yang dibuat setelah perjalanan dimulai.</Text>
                         </Box>
                       )}
                       <Flex gap="12px" flexDir={{ base: "column", md: "row" }}>
@@ -1613,15 +1613,15 @@ export default function NewPolicy() {
                         {form.currency !== "IDR" && (
                           <>
                             <FField label={`Kurs 1 ${form.currency} (Rp)`} hint="Nilai rupiah di atas memakai kurs ini">
-                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="decimal"
+                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" inputMode="decimal"
                                 value={form.exchange_rate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("exchange_rate", e.target.value.replace(/[^\d.,]/g, ""))} />
                             </FField>
                             <FField label={`TSI (${form.currency})`}>
-                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="decimal"
+                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" inputMode="decimal"
                                 value={form.sum_insured_fc} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("sum_insured_fc", e.target.value.replace(/[^\d.]/g, ""))} />
                             </FField>
                             <FField label={`Premi (${form.currency})`}>
-                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="decimal"
+                              <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" inputMode="decimal"
                                 value={form.premium_fc} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("premium_fc", e.target.value.replace(/[^\d.]/g, ""))} />
                             </FField>
                           </>
@@ -1629,19 +1629,19 @@ export default function NewPolicy() {
                       </Flex>
                       <Flex gap="12px" flexDir={{ base: "column", md: "row" }}>
                         <FField label="No. covernote">
-                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" maxLength={60}
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" maxLength={60}
                             value={form.covernote_number} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("covernote_number", e.target.value)} />
                         </FField>
                         <FField label="Tanggal covernote">
-                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" type="date"
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" type="date"
                             value={form.covernote_date} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("covernote_date", e.target.value)} />
                         </FField>
                         <FField label="Covernote berlaku s/d" hint="Diingatkan bila polis asli belum diterima">
-                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" type="date"
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" type="date"
                             value={form.covernote_expiry} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("covernote_expiry", e.target.value)} />
                         </FField>
                         <FField label="Ingatkan perpanjangan (hari)" hint="Kosong = pengaturan umum">
-                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="15px" inputMode="numeric" maxLength={3} placeholder="90"
+                          <Input bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px" inputMode="numeric" maxLength={3} placeholder="90"
                             value={form.renewal_lead_days} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("renewal_lead_days", e.target.value.replace(/\D/g, ""))} />
                         </FField>
                       </Flex>
@@ -1654,7 +1654,7 @@ export default function NewPolicy() {
                       <FField label="Catatan Coverage">
                         <Textarea
                           bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                          fontSize="15px" color="#1C2833" rows={3}
+                          fontSize="14px" color="#1C2833" rows={3}
                           placeholder="Klausul khusus, pengecualian, ekstensi coverage..."
                           value={form.coverage_notes}
                           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => set("coverage_notes", e.target.value)}
@@ -1663,7 +1663,7 @@ export default function NewPolicy() {
                       <FField label="Catatan Internal">
                         <Textarea
                           bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px"
-                          fontSize="15px" color="#1C2833" rows={3}
+                          fontSize="14px" color="#1C2833" rows={3}
                           placeholder="Catatan untuk agen, tidak terlihat oleh nasabah..."
                           value={form.notes}
                           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => set("notes", e.target.value)}
@@ -1678,19 +1678,19 @@ export default function NewPolicy() {
 
               {error && (
                 <Box px="14px" py="10px" borderRadius="8px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA" role="alert">
-                  <Text fontSize="15px" color="#DC2626">{error}</Text>
+                  <Text fontSize="14px" color="#DC2626">{error}</Text>
                 </Box>
               )}
 
               <Flex gap="12px" justify="flex-end" pb="16px">
                 <Button
-                  variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px"
+                  variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px"
                   onClick={() => router.back()} type="button"
                 >
                   Batal
                 </Button>
                 <Button
-                  type="submit" bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold"
+                  type="submit" bg="#0D1B3E" color="white" fontSize="14px" fontWeight="semibold"
                   loading={submitting} _hover={{ bg: "#1A2F5C" }}
                 >
                   Simpan Polis
@@ -1712,7 +1712,7 @@ export default function NewPolicy() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="16px" maxW="420px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+              <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">
                 {editingCov ? "Ubah Item Pertanggungan" : "Tambah Item Pertanggungan"}
               </Dialog.Title>
             </Dialog.Header>
@@ -1740,7 +1740,7 @@ export default function NewPolicy() {
 
                 <FField label="Uang Pertanggungan (IDR)" required>
                   <Input
-                    {...INPUT} h="44px" fontSize="16px"
+                    {...INPUT} h="44px" fontSize="15px"
                     inputMode="numeric"
                     placeholder="0"
                     value={covForm.sum_insured}
@@ -1764,8 +1764,8 @@ export default function NewPolicy() {
                       mt="4px" px="12px" py="6px" borderRadius="8px"
                       bg="#EFF6FF" align="center" justify="space-between"
                     >
-                      <Text fontSize="14px" color="#64748B">Preview Premi</Text>
-                      <Text fontSize="15px" fontWeight="bold" color="#1D4ED8">
+                      <Text fontSize="13px" color="#64748B">Preview Premi</Text>
+                      <Text fontSize="14px" fontWeight="bold" color="#1D4ED8">
                         Rp {covPreviewPremium.toLocaleString("id-ID")}
                       </Text>
                     </Flex>
@@ -1787,8 +1787,8 @@ export default function NewPolicy() {
                     {covForm.count_in_tsi && <Box w="8px" h="8px" borderRadius="2px" bg="white" />}
                   </Box>
                   <Flex flexDir="column">
-                    <Text fontSize="15px" color="#1C2833" fontWeight="medium">Hitung UP dalam Total TSI</Text>
-                    <Text fontSize="14px" color="#64748B">
+                    <Text fontSize="14px" color="#1C2833" fontWeight="medium">Hitung UP dalam Total TSI</Text>
+                    <Text fontSize="13px" color="#64748B">
                       {covForm.count_in_tsi
                         ? "UP item ini menambah total uang pertanggungan polis"
                         : "Premi tetap dihitung, tapi UP tidak dihitung ganda (misal: klausula RSMD, OTHERS)"}
@@ -1796,15 +1796,15 @@ export default function NewPolicy() {
                   </Flex>
                 </Flex>
 
-                {covError && <Text fontSize="14px" color="#DC2626">{covError}</Text>}
+                {covError && <Text fontSize="13px" color="#DC2626">{covError}</Text>}
 
               </Flex>
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" onClick={saveCov}>
+              <Button flex="1" bg="#0D1B3E" color="white" fontSize="15px" onClick={saveCov}>
                 Simpan
               </Button>
             </Dialog.Footer>
@@ -1821,10 +1821,10 @@ export default function NewPolicy() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="16px" maxW="380px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Hapus Item Coverage</Dialog.Title>
+              <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">Hapus Item Coverage</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="16px">
-              <Text color="#64748B" fontSize="16px" lineHeight="1.6">
+              <Text color="#64748B" fontSize="15px" lineHeight="1.6">
                 Hapus{" "}
                 <Text as="strong" color="#1C2833">
                   {deletingCov
@@ -1836,9 +1836,9 @@ export default function NewPolicy() {
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#DC2626" color="white" fontSize="16px"
+              <Button flex="1" bg="#DC2626" color="white" fontSize="15px"
                 onClick={() => deletingCov && deleteCov(deletingCov)}>
                 Ya, Hapus
               </Button>
@@ -1856,7 +1856,7 @@ export default function NewPolicy() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="16px" maxW="440px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+              <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">
                 {editingCa ? "Ubah Ko-Asuransi" : "Tambah Ko-Asuransi"}
               </Dialog.Title>
             </Dialog.Header>
@@ -1930,20 +1930,20 @@ export default function NewPolicy() {
                     <Switch.Control />
                   </Switch.Root>
                   <Flex flexDir="column" gap="1px">
-                    <Text fontSize="15px" color="#1C2833" fontWeight="medium">Leader</Text>
-                    <Text fontSize="14px" color="#64748B">Tandai sebagai insurer leader</Text>
+                    <Text fontSize="14px" color="#1C2833" fontWeight="medium">Leader</Text>
+                    <Text fontSize="13px" color="#64748B">Tandai sebagai insurer leader</Text>
                   </Flex>
                 </Flex>
 
-                {caError && <Text fontSize="14px" color="#DC2626">{caError}</Text>}
+                {caError && <Text fontSize="13px" color="#DC2626">{caError}</Text>}
 
               </Flex>
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Dialog.ActionTrigger asChild>
-                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px">Batal</Button>
+                <Button flex="1" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px">Batal</Button>
               </Dialog.ActionTrigger>
-              <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" onClick={saveCa}>
+              <Button flex="1" bg="#0D1B3E" color="white" fontSize="15px" onClick={saveCa}>
                 Simpan
               </Button>
             </Dialog.Footer>

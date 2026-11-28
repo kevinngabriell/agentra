@@ -28,11 +28,11 @@ export function ErrorAlert({ status, message, requestId }: ErrorAlertProps) {
     <Alert.Root status={status} mb="16px" borderRadius="8px" alignItems="flex-start">
       <Alert.Indicator />
       <Box flex="1" minW={0}>
-        <Alert.Description fontSize="16px">{message}</Alert.Description>
+        <Alert.Description fontSize="15px">{message}</Alert.Description>
         {requestId && (
           <Box display="flex" alignItems="center" gap="8px" mt="6px" flexWrap="wrap">
-            <Text fontSize="16px" opacity={0.8}>ID Error:</Text>
-            <Text fontSize="16px" fontFamily="mono" wordBreak="break-all" userSelect="all">{requestId}</Text>
+            <Text fontSize="15px" opacity={0.8}>ID Error:</Text>
+            <Text fontSize="15px" fontFamily="mono" wordBreak="break-all" userSelect="all">{requestId}</Text>
             <Button size="2xs" variant="outline" onClick={copy} aria-label="Salin ID error">
               {copied ? <FiCheck /> : <FiCopy />}
               {copied ? "Tersalin" : "Salin"}

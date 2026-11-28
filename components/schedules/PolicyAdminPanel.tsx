@@ -31,37 +31,37 @@ export function PolicyAdminPanel({ policy, onChanged }: { policy: ApiPolicyDetai
             <Flex align="center" justify="space-between" mb="16px">
                 <Flex align="center" gap="8px">
                     <LuGlobe size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Mata Uang, Covernote & Pengingat</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Mata Uang, Covernote & Pengingat</Text>
                 </Flex>
-                <Button size="xs" variant="outline" fontSize="14px" onClick={() => setOpen(true)}><LuPencil size={12} /> Ubah</Button>
+                <Button size="xs" variant="outline" fontSize="13px" onClick={() => setOpen(true)}><LuPencil size={12} /> Ubah</Button>
             </Flex>
-            <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap="14px" fontSize="15px">
+            <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap="14px" fontSize="14px">
                 <Box>
-                    <Text fontSize="14px" color="#64748B">MATA UANG POLIS</Text>
+                    <Text fontSize="13px" color="#64748B">MATA UANG POLIS</Text>
                     <Text fontWeight="semibold" color="#1C2833">{currency}{currency !== "IDR" && ` · kurs ${rate.toLocaleString("id-ID")}`}</Text>
                     {currency !== "IDR" && (
-                        <Text color="#64748B" fontSize="14px">
+                        <Text color="#64748B" fontSize="13px">
                             {siFc !== null && `TSI ${fmtMoneyFC(siFc, currency)} `}{premFc !== null && `· premi ${fmtMoneyFC(premFc, currency)}`}
                             <br />Nilai rupiah di aplikasi memakai kurs ini.
                         </Text>
                     )}
                 </Box>
                 <Box>
-                    <Text fontSize="14px" color="#64748B">COVERNOTE</Text>
+                    <Text fontSize="13px" color="#64748B">COVERNOTE</Text>
                     {policy.covernote_number || policy.covernote_expiry ? (
                         <>
                             <Text fontWeight="semibold" color="#1C2833">{policy.covernote_number ?? "—"}</Text>
-                            <Text color="#64748B" fontSize="14px">Berlaku s/d {fmtDate(policy.covernote_expiry)}</Text>
-                            {covernoteOpen && <Badge mt="4px" fontSize="14px" bg={covernoteLate ? "#FEE2E2" : "#FEF3C7"} color={covernoteLate ? "#B91C1C" : "#B45309"}>
+                            <Text color="#64748B" fontSize="13px">Berlaku s/d {fmtDate(policy.covernote_expiry)}</Text>
+                            {covernoteOpen && <Badge mt="4px" fontSize="13px" bg={covernoteLate ? "#FEE2E2" : "#FEF3C7"} color={covernoteLate ? "#B91C1C" : "#B45309"}>
                                 {covernoteLate ? "Covernote habis, polis belum diterima" : "Polis belum diterima"}</Badge>}
                         </>
                     ) : <Text color="#64748B">Tidak ada</Text>}
-                    {policy.policy_doc_received_date && <Text color="#16A34A" fontSize="14px">Polis diterima {fmtDate(policy.policy_doc_received_date)}</Text>}
+                    {policy.policy_doc_received_date && <Text color="#16A34A" fontSize="13px">Polis diterima {fmtDate(policy.policy_doc_received_date)}</Text>}
                 </Box>
                 <Box>
-                    <Text fontSize="14px" color="#64748B">PENGINGAT PERPANJANGAN</Text>
+                    <Text fontSize="13px" color="#64748B">PENGINGAT PERPANJANGAN</Text>
                     <Text fontWeight="semibold" color="#1C2833">{policy.renewal_lead_days ? `${policy.renewal_lead_days} hari sebelum berakhir` : "Ikuti pengaturan umum"}</Text>
-                    <Text color="#64748B" fontSize="14px">Risiko besar perlu minta terms 60–90 hari sebelumnya (survei, reasuransi).</Text>
+                    <Text color="#64748B" fontSize="13px">Risiko besar perlu minta terms 60–90 hari sebelumnya (survei, reasuransi).</Text>
                 </Box>
             </Grid>
             {open && <AdminDialog policy={policy} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); onChanged() }} />}

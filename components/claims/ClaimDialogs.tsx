@@ -26,20 +26,20 @@ function Shell({ title, subtitle, saving, error, submitLabel, onClose, onSubmit,
                 <Dialog.Content bg="white" borderRadius="12px" maxW="480px" w="92vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
                         <Flex flexDir="column" gap="2px">
-                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">{title}</Dialog.Title>
-                            {subtitle && <Text color="#64748B" fontSize="14px">{subtitle}</Text>}
+                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">{title}</Dialog.Title>
+                            {subtitle && <Text color="#64748B" fontSize="13px">{subtitle}</Text>}
                         </Flex>
                     </Dialog.Header>
                     <Dialog.Body px="24px" py="16px">
                         <Flex flexDir="column" gap="14px">
                             {children}
-                            {error && <Text fontSize="14px" color="#DC2626">{error}</Text>}
+                            {error && <Text fontSize="13px" color="#DC2626">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
+                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="15px" borderRadius="8px"
                             _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="15px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                             loading={saving} loadingText="Menyimpan..." onClick={onSubmit}>{submitLabel}</Button>
                     </Dialog.Footer>
                 </Dialog.Content>
@@ -144,7 +144,7 @@ export function ClaimStatusDialog({ claim, missingDocs, onClose, onChanged }: {
             )}
 
             {target === "documents_complete" && missingDocs > 0 && (
-                <Text fontSize="14px" color="#92400E" bg="#FFFBEB" border="1px solid #FDE68A" borderRadius="8px" px="12px" py="8px">
+                <Text fontSize="13px" color="#92400E" bg="#FFFBEB" border="1px solid #FDE68A" borderRadius="8px" px="12px" py="8px">
                     Masih ada {missingDocs} dokumen wajib yang belum diunggah di checklist. Lanjutkan hanya jika dokumen sudah diserahkan ke asuransi.
                 </Text>
             )}
@@ -170,7 +170,7 @@ export function ClaimStatusDialog({ claim, missingDocs, onClose, onChanged }: {
                 <>
                     <Field label="Jumlah Dibayar Asuransi (Rp)" required>
                         <MoneyInput value={settlement} onChange={setSettlement} aria-label="Jumlah dibayar" />
-                        <Text color="#64748B" fontSize="14px">
+                        <Text color="#64748B" fontSize="13px">
                             Disetujui {fmtIDR(claim.approved_amount ?? 0)} − risiko sendiri {fmtIDR(claim.deductible)} = {fmtIDR(Math.max(0, (claim.approved_amount ?? 0) - claim.deductible))}
                         </Text>
                     </Field>
@@ -181,12 +181,12 @@ export function ClaimStatusDialog({ claim, missingDocs, onClose, onChanged }: {
             )}
 
             {claim.status === "paid" && (
-                <Text fontSize="14px" color="#92400E" bg="#FFFBEB" border="1px solid #FDE68A" borderRadius="8px" px="12px" py="8px">
+                <Text fontSize="13px" color="#92400E" bg="#FFFBEB" border="1px solid #FDE68A" borderRadius="8px" px="12px" py="8px">
                     Membuka kembali klaim yang sudah dibayar, mis. ada kerugian tambahan yang baru ditemukan.
                 </Text>
             )}
             {target === "approved" && claim.status === "appeal" && (
-                <Text fontSize="14px" color="#475569">Banding diterima: isi jumlah yang disetujui setelah banding.</Text>
+                <Text fontSize="13px" color="#475569">Banding diterima: isi jumlah yang disetujui setelah banding.</Text>
             )}
 
             <Field label={target === "withdrawn" ? "Alasan pencabutan" : target === "appeal" ? "Dasar banding" : "Catatan"} required={target === "withdrawn" || target === "appeal"}>

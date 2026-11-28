@@ -100,7 +100,7 @@ export function NotificationBell() {
         {unread > 0 && (
           <Flex position="absolute" top="2px" right="2px" minW="16px" h="16px" px="4px" borderRadius="full" bg="#DC2626"
             align="center" justify="center" aria-hidden="true">
-            <Text color="white" fontSize="16px" fontWeight="bold" lineHeight="1">{unread > 99 ? "99+" : unread}</Text>
+            <Text color="white" fontSize="15px" fontWeight="bold" lineHeight="1">{unread > 99 ? "99+" : unread}</Text>
           </Flex>
         )}
       </Flex>
@@ -109,14 +109,14 @@ export function NotificationBell() {
         <Box position="absolute" right={0} top="42px" w="360px" maxW="calc(100vw - 32px)" bg="white" border="1px solid" borderColor="#E2E8F0"
           borderRadius="12px" boxShadow="0 10px 30px rgba(15,23,42,0.12)" zIndex={50} overflow="hidden" role="dialog" aria-label="Notifikasi">
           <Flex px="16px" py="12px" justify="space-between" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
-            <Text fontSize="16px" fontWeight="bold" color="#0F172A">Notifikasi</Text>
+            <Text fontSize="15px" fontWeight="bold" color="#0F172A">Notifikasi</Text>
             {unread > 0 && (
-              <Box as="button" fontSize="16px" color="#1D4ED8" fontWeight="medium" onClick={readAll}>Tandai semua dibaca</Box>
+              <Box as="button" fontSize="15px" color="#1D4ED8" fontWeight="medium" onClick={readAll}>Tandai semua dibaca</Box>
             )}
           </Flex>
           <Box maxH="420px" overflowY="auto">
             {items.length === 0 ? (
-              <Text px="16px" py="28px" textAlign="center" fontSize="16px" color="#64748B">
+              <Text px="16px" py="28px" textAlign="center" fontSize="15px" color="#64748B">
                 {failed ? "Data notifikasi belum bisa dibuka. Periksa sinyal internet, lalu coba lagi." : "Belum ada notifikasi"}
               </Text>
             ) : items.map((n) => {
@@ -127,10 +127,10 @@ export function NotificationBell() {
                   onClick={() => openItem(n)}>
                   <Box mt="5px" w="8px" h="8px" borderRadius="full" flexShrink={0} bg={n.read_at ? "transparent" : style.color} />
                   <Flex flexDir="column" gap="2px" minW={0} flex="1">
-                    <Text fontSize="16px" fontWeight="bold" color={style.color}>{style.label.toUpperCase()}</Text>
-                    <Text fontSize="16px" fontWeight={n.read_at ? "normal" : "semibold"} color="#1C2833">{n.title}</Text>
-                    {n.body && <Text fontSize="16px" color="#64748B">{n.body}</Text>}
-                    <Text fontSize="16px" color="#64748B">{timeAgo(n.created_at)}</Text>
+                    <Text fontSize="15px" fontWeight="bold" color={style.color}>{style.label.toUpperCase()}</Text>
+                    <Text fontSize="15px" fontWeight={n.read_at ? "normal" : "semibold"} color="#1C2833">{n.title}</Text>
+                    {n.body && <Text fontSize="15px" color="#64748B">{n.body}</Text>}
+                    <Text fontSize="15px" color="#64748B">{timeAgo(n.created_at)}</Text>
                   </Flex>
                 </Flex>
               )

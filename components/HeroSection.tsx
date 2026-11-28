@@ -1,6 +1,7 @@
 import { Box, Flex, VStack, HStack, Button, Text, Heading, Badge } from "@chakra-ui/react"
 import { LuCheck, LuMessageCircle } from "react-icons/lu"
 import Link from "next/link"
+import Image from "next/image"
 
 // Feature-based facts (verified against the app), not usage statistics.
 const heroFacts = [
@@ -10,97 +11,17 @@ const heroFacts = [
   { value: "Sub-agen", label: "Pembagian komisi per sub-agen" },
 ]
 
-function DashboardMockup() {
-  const rows = [
-    { name: "Budi Santoso", policy: "PA-2024-001", due: "30 Apr", status: "Jatuh Tempo" },
-    { name: "Rina Wijaya", policy: "PA-2024-002", due: "05 Mei", status: "Aktif" },
-    { name: "Hendra Kusuma", policy: "PA-2024-003", due: "12 Mei", status: "Aktif" },
-    { name: "Siti Rahayu", policy: "PA-2024-004", due: "18 Mei", status: "Aktif" },
-  ]
-
+function DashboardPreview() {
   return (
-    <Box
-      role="img"
-      aria-label="Contoh tampilan dashboard renewal Agentra dengan data ilustrasi: total polis, polis jatuh tempo, dan komisi bulan ini"
-      w="100%"
-      maxW="520px"
-      bg="#1a2f5c"
-      borderRadius="2xl"
-      border="1px solid rgba(255,255,255,0.12)"
-      p={5}
-      boxShadow="0 30px 80px rgba(0,0,0,0.5)"
-    >
-      {/* Dashboard header bar */}
-      <HStack justify="space-between" mb={4}>
-        <Text color="gray.300" fontSize="sm" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide">
-          Dashboard Renewal
-        </Text>
-        <Box bg="#3B82F6" px={3} py={1} borderRadius="md">
-          <Text color="white" fontSize="sm" fontWeight="bold">Contoh</Text>
-        </Box>
-      </HStack>
-
-      {/* Stats row */}
-      <HStack gap={3} mb={4}>
-        {[
-          { label: "Total Polis", value: "1.248" },
-          { label: "Jatuh Tempo", value: "34" },
-          { label: "Komisi Bulan Ini", value: "Rp 18 jt" },
-        ].map((stat) => (
-          <Box key={stat.label} flex={1} bg="#0D1B3E" borderRadius="lg" p={3}>
-            <Text color="gray.400" fontSize="14px" mb={1}>{stat.label}</Text>
-            <Text color="white" fontSize="sm" fontWeight="bold">{stat.value}</Text>
-          </Box>
-        ))}
-      </HStack>
-
-      {/* Table */}
-      <Box bg="#0D1B3E" borderRadius="lg" overflow="hidden">
-        <Box px={3} py={2} borderBottom="1px solid rgba(255,255,255,0.06)">
-          <HStack gap={0}>
-            <Text color="gray.500" fontSize="14px" flex={2}>NASABAH</Text>
-            <Text color="gray.500" fontSize="14px" flex={2}>NO. POLIS</Text>
-            <Text color="gray.500" fontSize="14px" flex={1}>JATUH TEMPO</Text>
-            <Text color="gray.500" fontSize="14px" flex={1} textAlign="right">STATUS</Text>
-          </HStack>
-        </Box>
-        {rows.map((row, i) => (
-          <Box
-            key={row.policy}
-            px={3}
-            py={2}
-            borderBottom={i < rows.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none"}
-          >
-            <HStack gap={0} align="center">
-              <Text color="gray.300" fontSize="14px" flex={2} fontWeight="medium">{row.name}</Text>
-              <Text color="gray.400" fontSize="14px" flex={2}>{row.policy}</Text>
-              <Text color="gray.400" fontSize="14px" flex={1}>{row.due}</Text>
-              <Box flex={1} display="flex" justifyContent="flex-end">
-                <Box
-                  px={2}
-                  py={0.5}
-                  borderRadius="full"
-                  bg={row.status === "Jatuh Tempo" ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.15)"}
-                >
-                  <Text
-                    fontSize="14px"
-                    fontWeight="semibold"
-                    color={row.status === "Jatuh Tempo" ? "#F87171" : "#4ADE80"}
-                  >
-                    {row.status}
-                  </Text>
-                </Box>
-              </Box>
-            </HStack>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Footer note */}
-      <Text color="gray.500" fontSize="14px" textAlign="center" mt={3}>
-        Contoh tampilan · data hanya ilustrasi
-      </Text>
-    </Box>
+    <Image
+      src="/images/agentra-dashboard.png"
+      alt="Tampilan dashboard Agentra di laptop: polis aktif, perpanjangan bulan ini, polis yang habis minggu ini, dan komisi yang menunggu"
+      width={2916}
+      height={1674}
+      sizes="(max-width: 1024px) 100vw, 600px"
+      loading="eager"
+      style={{ width: "100%", maxWidth: "640px", height: "auto" }}
+    />
   )
 }
 
@@ -194,9 +115,10 @@ export function HeroSection() {
         </VStack>
 
         {/* Right: dashboard mockup + WhatsApp reminder card */}
-        <Box flex={1} display={{ base: "none", lg: "flex" }} justifyContent="center" alignItems="center" position="relative" w="100%">
-          <DashboardMockup />
+        <Box flex={1} display="flex" justifyContent="center" alignItems="center" position="relative" w="100%">
+          <DashboardPreview />
           <Box
+            display={{ base: "none", lg: "block" }}
             position="absolute"
             left={{ lg: "-8px", xl: "-32px" }}
             bottom="-64px"

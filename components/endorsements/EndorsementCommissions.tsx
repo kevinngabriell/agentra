@@ -48,20 +48,20 @@ export function EndorsementCommissions({ insurerId }: { insurerId?: string }) {
     return (
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
             <Flex justify="space-between" align="center" mb="10px" gap="8px" flexWrap="wrap">
-                <Flex align="center" gap="8px"><LuReceipt size={16} color="#0D1B3E" /><Text fontSize="16px" fontWeight="semibold" color="#1C2833">Komisi Endorsemen & Pembatalan</Text></Flex>
+                <Flex align="center" gap="8px"><LuReceipt size={16} color="#0D1B3E" /><Text fontSize="15px" fontWeight="semibold" color="#1C2833">Komisi Endorsemen & Pembatalan</Text></Flex>
                 <Flex gap="6px">
                     {(["commission_pending", "all"] as const).map((s) => (
-                        <Button key={s} size="xs" fontSize="14px" variant={status === s ? "solid" : "outline"} bg={status === s ? "#0D1B3E" : undefined} color={status === s ? "white" : undefined}
+                        <Button key={s} size="xs" fontSize="13px" variant={status === s ? "solid" : "outline"} bg={status === s ? "#0D1B3E" : undefined} color={status === s ? "white" : undefined}
                             onClick={() => setStatus(s)}>{s === "all" ? "Semua" : "Belum selesai"}</Button>
                     ))}
                 </Flex>
             </Flex>
-            <Text fontSize="14px" color="#64748B" mb="8px">
+            <Text fontSize="13px" color="#64748B" mb="8px">
                 Tambahan komisi dari premi endorsemen {fmtIDR(toCollect)} · komisi yang akan ditarik penanggung (pembatalan / pengurangan) {fmtIDR(toReturn)}
             </Text>
-            {error && <Text color="#DC2626" fontSize="14px">{error}</Text>}
-            {!data ? <Skeleton h="60px" /> : rows.length === 0 ? <Text fontSize="14px" color="#64748B">Tidak ada komisi endorsemen.</Text> : rows.map((r) => (
-                <Flex key={r.endorsement_id} justify="space-between" align="center" gap="10px" py="7px" borderTop="1px solid #F1F5F9" fontSize="14px" flexWrap="wrap">
+            {error && <Text color="#DC2626" fontSize="13px">{error}</Text>}
+            {!data ? <Skeleton h="60px" /> : rows.length === 0 ? <Text fontSize="13px" color="#64748B">Tidak ada komisi endorsemen.</Text> : rows.map((r) => (
+                <Flex key={r.endorsement_id} justify="space-between" align="center" gap="10px" py="7px" borderTop="1px solid #F1F5F9" fontSize="13px" flexWrap="wrap">
                     <Box minW="0">
                         <Text color="#1C2833">
                             <Link href={`/agentra/policies/${encodeURIComponent(r.policy_id)}#nota`} style={{ color: "#1D4ED8", fontWeight: 600 }}>{r.policy_number}</Link>
@@ -72,8 +72,8 @@ export function EndorsementCommissions({ insurerId }: { insurerId?: string }) {
                     <Flex align="center" gap="8px">
                         <Text fontWeight="semibold" color={r.commission_delta < 0 ? "#B91C1C" : "#15803D"}>{signed(r.commission_delta)}</Text>
                         {r.commission_status === "pending"
-                            ? <Button size="2xs" variant="outline" fontSize="14px" loading={busy === r.endorsement_id} onClick={() => settle(r)}>{r.commission_delta < 0 ? "Sudah ditarik" : "Sudah diterima"}</Button>
-                            : <Badge fontSize="14px" bg="#F1F5F9" color="#475569">{ENDORSEMENT_COMMISSION_LABELS[r.commission_status]}</Badge>}
+                            ? <Button size="2xs" variant="outline" fontSize="13px" loading={busy === r.endorsement_id} onClick={() => settle(r)}>{r.commission_delta < 0 ? "Sudah ditarik" : "Sudah diterima"}</Button>
+                            : <Badge fontSize="13px" bg="#F1F5F9" color="#475569">{ENDORSEMENT_COMMISSION_LABELS[r.commission_status]}</Badge>}
                     </Flex>
                 </Flex>
             ))}

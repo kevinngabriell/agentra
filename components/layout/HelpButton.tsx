@@ -32,7 +32,7 @@ export function HelpButton() {
     >
       <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" aria-label="Butuh bantuan? Hubungi kami">
         <FiHelpCircle size={24} aria-hidden="true" />
-        <Text fontSize="16px" fontWeight="semibold">Butuh Bantuan?</Text>
+        <Text fontSize="15px" fontWeight="semibold">Butuh Bantuan?</Text>
       </a>
     </Flex>
   )

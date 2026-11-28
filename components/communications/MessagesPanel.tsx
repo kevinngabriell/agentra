@@ -15,8 +15,8 @@ function Shell({ id, title, subtitle, actions, children }: { id: string; title: 
                 <Flex gap="10px" align="center">
                     <Box p="8px" bg="#F0FDF4" borderRadius="8px" color="#16A34A"><LuMessageSquare size={18} /></Box>
                     <Flex flexDir="column">
-                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{title}</Text>
-                        <Text color="#5D6D7E" fontSize="16px">{subtitle}</Text>
+                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{title}</Text>
+                        <Text color="#5D6D7E" fontSize="15px">{subtitle}</Text>
                     </Flex>
                 </Flex>
                 <Flex gap="8px" flexWrap="wrap">{actions}</Flex>
@@ -32,7 +32,7 @@ export function CustomerMessagesPanel({ customer }: { customer: { id: string; na
     const [refresh, setRefresh] = useState(0)
     return (
         <Shell id="pesan" title="Pesan WhatsApp" subtitle="Semua pesan yang dikirim ke nasabah ini"
-            actions={<Button size="sm" bg="#25D366" color="white" fontSize="16px" gap="6px" onClick={() => setComposing(true)}><FaWhatsapp size={14} /> Kirim Pesan</Button>}>
+            actions={<Button size="sm" bg="#25D366" color="white" fontSize="15px" gap="6px" onClick={() => setComposing(true)}><FaWhatsapp size={14} /> Kirim Pesan</Button>}>
             <MessageLog filter={{ customer_id: customer.id }} refreshKey={refresh} />
             {composing && <SendMessageDialog customer={customer} templateType="custom" onClose={() => setComposing(false)} onSent={() => { setComposing(false); setRefresh((k) => k + 1) }} />}
         </Shell>
@@ -53,8 +53,8 @@ export function PolicyMessagesPanel({ policy, customer, canSend, onChanged }: {
         <Shell id="pesan" title="Pesan WhatsApp" subtitle={canSend ? "Kirim tagihan atau pengingat, dan lihat pesan yang sudah terkirim" : "Nasabah belum punya nomor WhatsApp"}
             actions={
                 <>
-                    <Button size="sm" variant="outline" fontSize="16px" disabled={!canSend} onClick={() => setComposing("invoice")}>Kirim Invoice</Button>
-                    <Button size="sm" bg="#25D366" color="white" fontSize="16px" gap="6px" disabled={!canSend} onClick={() => setComposing("payment_reminder")}><FaWhatsapp size={14} /> Kirim Pengingat</Button>
+                    <Button size="sm" variant="outline" fontSize="15px" disabled={!canSend} onClick={() => setComposing("invoice")}>Kirim Invoice</Button>
+                    <Button size="sm" bg="#25D366" color="white" fontSize="15px" gap="6px" disabled={!canSend} onClick={() => setComposing("payment_reminder")}><FaWhatsapp size={14} /> Kirim Pengingat</Button>
                 </>
             }>
             <MessageLog filter={{ policy_id: policy.id }} refreshKey={refresh} />

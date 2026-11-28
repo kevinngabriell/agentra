@@ -38,8 +38,8 @@ export function PlanLocked({ title, message, requiredPlan, benefits = [] }: {
       </Box>
 
       <Flex flexDir="column" gap="6px" maxW="460px">
-        <Text color="#1C2833" fontSize="20px" fontWeight="bold">{title}</Text>
-        <Text color="#5D6D7E" fontSize="16px">
+        <Text color="#1C2833" fontSize="18px" fontWeight="bold">{title}</Text>
+        <Text color="#5D6D7E" fontSize="15px">
           {message || `Fitur ini tersedia di ${plan}. Upgrade paket Anda untuk menggunakannya.`}
         </Text>
       </Flex>
@@ -49,17 +49,17 @@ export function PlanLocked({ title, message, requiredPlan, benefits = [] }: {
           {benefits.map((b) => (
             <Flex as="li" key={b} align="flex-start" gap="8px">
               <Box color="#16A34A" mt="2px" flexShrink={0}><LuCheck size={15} /></Box>
-              <Text color="#374151" fontSize="16px">{b}</Text>
+              <Text color="#374151" fontSize="15px">{b}</Text>
             </Flex>
           ))}
         </Flex>
       )}
 
       <Flex gap="10px" flexWrap="wrap" justify="center">
-        <Button bg="#0D1B3E" color="white" gap="6px" h="42px" px="20px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => router.push(SETTINGS_SUBSCRIPTION)}>
+        <Button bg="#0D1B3E" color="white" gap="6px" h="42px" px="20px" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => router.push(SETTINGS_SUBSCRIPTION)}>
           <LuCrown size={15} /> Upgrade ke {plan}
         </Button>
-        <Button variant="outline" borderColor="#E2E8F0" color="#374151" h="42px" px="20px" fontSize="16px" onClick={() => router.push("/agentra/dashboard")}>
+        <Button variant="outline" borderColor="#E2E8F0" color="#374151" h="42px" px="20px" fontSize="15px" onClick={() => router.push("/agentra/dashboard")}>
           Kembali ke Dashboard
         </Button>
       </Flex>

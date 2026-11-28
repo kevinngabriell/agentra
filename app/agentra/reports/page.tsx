@@ -23,7 +23,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })
 }
 
-const colHeader = { color: "#64748B", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px" } as const
+const colHeader = { color: "#64748B", fontSize: "13px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px" } as const
 
 export default function Reports() {
   const router = useRouter()
@@ -74,7 +74,7 @@ export default function Reports() {
           <Flex gap="6px" flexWrap="wrap" role="tablist" aria-label="Jenis laporan" className="no-print">
             {[{ key: PRODUCTION_TAB, label: "Produksi" }, ...REPORT_DEFS].map((t) => (
               <Box key={t.key} as="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-                px="14px" py="7px" borderRadius="full" fontSize="16px" fontWeight="medium" border="1px solid"
+                px="14px" py="7px" borderRadius="full" fontSize="15px" fontWeight="medium" border="1px solid"
                 bg={tab === t.key ? "#0D1B3E" : "white"} color={tab === t.key ? "white" : "#475569"}
                 borderColor={tab === t.key ? "#0D1B3E" : "#E2E8F0"}>
                 {t.label}
@@ -86,8 +86,8 @@ export default function Reports() {
           {tab === PRODUCTION_TAB ? (
           <Flex justify="space-between" align="flex-start" flexWrap="wrap" gap="16px">
             <Flex flexDir="column" gap="4px">
-              <Text color="#1C2833" fontSize="24px" fontWeight="bold">Laporan Produksi</Text>
-              <Text color="#5D6D7E" fontSize="16px">
+              <Text color="#1C2833" fontSize="22px" fontWeight="bold">Laporan Produksi</Text>
+              <Text color="#5D6D7E" fontSize="15px">
                 Total produksi bulanan dan mingguan untuk rekonsiliasi komisi secara manual.
               </Text>
             </Flex>
@@ -98,8 +98,8 @@ export default function Reports() {
             return (
               <>
                 <Flex flexDir="column" gap="4px">
-                  <Text color="#1C2833" fontSize="24px" fontWeight="bold">{def.label}</Text>
-                  <Text color="#5D6D7E" fontSize="16px">{def.description}</Text>
+                  <Text color="#1C2833" fontSize="22px" fontWeight="bold">{def.label}</Text>
+                  <Text color="#5D6D7E" fontSize="15px">{def.description}</Text>
                 </Flex>
                 <ReportView key={def.key} def={def} />
               </>
@@ -108,7 +108,7 @@ export default function Reports() {
 
           {tab === PRODUCTION_TAB && error && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-              <Text color="#DC2626" fontSize="16px">{error}</Text>
+              <Text color="#DC2626" fontSize="15px">{error}</Text>
             </Box>
           )}
 
@@ -130,15 +130,15 @@ export default function Reports() {
                       <Flex w="28px" h="28px" borderRadius="8px" bg={bg} align="center" justify="center">
                         <Icon size={14} color={accent} />
                       </Flex>
-                      <Text fontSize="14px" fontWeight="bold" color="#64748B" letterSpacing="0.03em">{label.toUpperCase()}</Text>
+                      <Text fontSize="13px" fontWeight="bold" color="#64748B" letterSpacing="0.03em">{label.toUpperCase()}</Text>
                     </Flex>
-                    <Text color="#1C2833" fontSize="20px" fontWeight="bold">{value}</Text>
+                    <Text color="#1C2833" fontSize="18px" fontWeight="bold">{value}</Text>
                   </Box>
                 ))}
               </Flex>
 
               <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="16px">
-                <Text color="#5D6D7E" fontSize="14px">
+                <Text color="#5D6D7E" fontSize="13px">
                   Total premi mencerminkan premi bruto yang diterbitkan (produksi), bukan komisi yang sudah diterima dari insurer.
                   Bandingkan komisi di atas dengan pembayaran aktual insurer melalui halaman{" "}
                   <Link href="/agentra/commissions" style={{ color: "#1D4ED8", fontWeight: 500 }}>
@@ -150,11 +150,11 @@ export default function Reports() {
               {/* Weekly breakdown */}
               <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                 <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0">
-                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Rincian Mingguan</Text>
+                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Rincian Mingguan</Text>
                 </Flex>
                 {data.weekly.length === 0 ? (
                   <Flex align="center" justify="center" py="32px">
-                    <Text color="#64748B" fontSize="15px">Tidak ada data untuk bulan ini</Text>
+                    <Text color="#64748B" fontSize="14px">Tidak ada data untuk bulan ini</Text>
                   </Flex>
                 ) : (
                   <Table.Root>
@@ -168,13 +168,13 @@ export default function Reports() {
                     <Table.Body>
                       {data.weekly.map((w) => (
                         <Table.Row key={w.week_start} borderBottom="1px solid" borderColor="#F1F5F9">
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px">
                             {fmtDate(w.week_start)} – {fmtDate(w.week_end)}
                           </Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{w.policies_count}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">{fmt(w.total_premium)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{fmt(w.total_commission_amount)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="15px" fontWeight="medium">{fmt(w.total_net_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="14px">{w.policies_count}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px">{fmt(w.total_premium)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="14px">{fmt(w.total_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="14px" fontWeight="medium">{fmt(w.total_net_commission_amount)}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>
@@ -186,11 +186,11 @@ export default function Reports() {
               <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                 <Flex px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0" align="center" gap="8px">
                   <LuUsers size={15} color="#64748B" />
-                  <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Rincian per Agen</Text>
+                  <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Rincian per Agen</Text>
                 </Flex>
                 {data.by_agent.length === 0 ? (
                   <Flex align="center" justify="center" py="32px">
-                    <Text color="#64748B" fontSize="15px">Tidak ada data untuk bulan ini</Text>
+                    <Text color="#64748B" fontSize="14px">Tidak ada data untuk bulan ini</Text>
                   </Flex>
                 ) : (
                   <Table.Root>
@@ -204,11 +204,11 @@ export default function Reports() {
                     <Table.Body>
                       {data.by_agent.map((a) => (
                         <Table.Row key={a.agent_id ?? "main"} borderBottom="1px solid" borderColor="#F1F5F9">
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" fontWeight="medium">{a.agent_name}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{a.policies_count}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">{fmt(a.total_premium)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{fmt(a.total_commission_amount)}</Table.Cell>
-                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="15px" fontWeight="medium">{fmt(a.total_net_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" fontWeight="medium">{a.agent_name}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="14px">{a.policies_count}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px">{fmt(a.total_premium)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#64748B" fontSize="14px">{fmt(a.total_commission_amount)}</Table.Cell>
+                          <Table.Cell px="16px" py="10px" color="#16A34A" fontSize="14px" fontWeight="medium">{fmt(a.total_net_commission_amount)}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>

@@ -85,23 +85,23 @@ export function DocumentPreviewDialog({ doc, onClose }: { doc: ApiDocument | nul
                     <Dialog.Header px="20px" py="14px" borderBottom="1px solid" borderColor="#E2E8F0">
                         <Flex justify="space-between" align="center" w="100%" gap="12px">
                             <Flex flexDir="column" minW="0">
-                                <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold" truncate>
+                                <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold" truncate>
                                     {doc?.title || doc?.file_name}
                                 </Dialog.Title>
                                 {doc && (
-                                    <Text color="#64748B" fontSize="14px" truncate>
+                                    <Text color="#64748B" fontSize="13px" truncate>
                                         {DOCUMENT_TYPE_LABELS[doc.document_type]} · {doc.customer_name}
                                         {doc.policy_number ? ` · ${doc.policy_number}` : ""}
                                     </Text>
                                 )}
                             </Flex>
                             <Flex gap="6px" flexShrink={0}>
-                                <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="14px"
+                                <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="13px"
                                     loading={downloading} onClick={handleDownload}>
                                     <LuDownload size={14} /> Unduh
                                 </Button>
                                 {current?.url && (
-                                    <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="14px"
+                                    <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="13px"
                                         display={{ base: "none", md: "inline-flex" }}
                                         onClick={() => window.open(current.url!, "_blank", "noopener")}>
                                         <LuExternalLink size={14} /> Tab Baru
@@ -116,7 +116,7 @@ export function DocumentPreviewDialog({ doc, onClose }: { doc: ApiDocument | nul
                     <Dialog.Body p="0" bg="#F1F5F9" borderBottomRadius="12px">
                         <Flex h="min(75vh, 820px)" align="center" justify="center">
                             {!current && <Spinner color="#0D1B3E" />}
-                            {current?.error && <Text color="#DC2626" fontSize="15px" px="24px" textAlign="center">{current.error}</Text>}
+                            {current?.error && <Text color="#DC2626" fontSize="14px" px="24px" textAlign="center">{current.error}</Text>}
                             {current?.url && isPdf && (
                                 <iframe src={current.url} title={doc?.file_name}
                                     style={{ width: "100%", height: "100%", border: 0, borderRadius: "0 0 12px 12px" }} />

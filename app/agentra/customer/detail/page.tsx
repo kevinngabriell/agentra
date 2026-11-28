@@ -4,7 +4,8 @@ import { Sidebar, MobileHeader, MobileBottomNav, TopBar } from "@/components/lay
 import { getAccessToken } from "@/lib/auth/session";
 import { getCustomerDetail, createCustomer, updateCustomer, getCustomerPolicies, type ApiCustomerPolicy } from "@/lib/api/customers";
 import { errorMessage, errorStatus } from "@/lib/api/client";
-import { fmtIDR, fmtFileSize } from "@/lib/format";
+import { fmtIDR, fmtFileSize, formatLocalPhone, localPhoneDigits } from "@/lib/format";
+import { PhoneInput as SharedPhoneInput } from "@/components/ui/phone-input";
 import {
     Badge, Box, Button, Card, Checkbox, Field, Flex, Icon, Image,
     Input, List, SimpleGrid, Skeleton, Table, Tabs, Text, Textarea,
@@ -28,8 +29,8 @@ import { DOCUMENT_ACCEPT, DOCUMENT_MAX_BYTES, uploadDocument, type ApiDocumentTy
 
 // ─── Style constants ────────────────────────────────────────────────────────
 
-const lbl  = { color: "#5D6D7E", fontSize: "14px", fontWeight: "semibold" } as const;
-const clbl = { color: "#1C2833", fontSize: "16px", fontWeight: "medium"   } as const;
+const lbl  = { color: "#5D6D7E", fontSize: "13px", fontWeight: "semibold" } as const;
+const clbl = { color: "#1C2833", fontSize: "15px", fontWeight: "medium"   } as const;
 
 const STATUS_OPTIONS = [
     { value: "active",   label: "Aktif" },
@@ -44,10 +45,8 @@ const BUSINESS_TYPE_OPTIONS = ["PT", "CV", "Firma", "Koperasi"].map(v => ({ valu
 
 // ─── Phone helpers ───────────────────────────────────────────────────────────
 
-function toDisplay(raw?: string | null) {
-    return raw ? (raw.startsWith("0") ? raw.slice(1) : raw) : ""
-}
-function toApi(v: string) { return v ? "0" + v : "" }
+function toDisplay(raw?: string | null) { return formatLocalPhone(raw) }
+function toApi(v: string) { const d = localPhoneDigits(v); return d ? "0" + d : "" }
 
 // ─── Friendly API error parser ───────────────────────────────────────────────
 
@@ -91,30 +90,8 @@ interface PhoneProps {
     disabled?: boolean
     invalid?: boolean
 }
-function PhoneInput({ value, onChange, placeholder = "81234567890", disabled, invalid }: PhoneProps) {
-    return (
-        <Flex
-            border="1px solid"
-            borderColor={invalid ? "#E53E3E" : "#E2E8F0"}
-            borderRadius="md" overflow="hidden"
-        >
-            <Box
-                px="3" display="flex" alignItems="center"
-                bg="#F8FAFC" color="#64748B" fontSize="16px"
-                borderRight="1px solid" borderRightColor={invalid ? "#E53E3E" : "#E2E8F0"}
-                whiteSpace="nowrap"
-            >
-                +62
-            </Box>
-            <Input
-                border="0" borderRadius="0"
-                placeholder={placeholder}
-                value={value}
-                disabled={disabled}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-            />
-        </Flex>
-    )
+function PhoneInput({ value, onChange, placeholder, disabled, invalid }: PhoneProps) {
+    return <SharedPhoneInput value={value} onChange={onChange} placeholder={placeholder} disabled={disabled} invalid={invalid} />
 }
 
 // ─── Form initial states ─────────────────────────────────────────────────────
@@ -137,7 +114,7 @@ const initCorp = () => ({
 
 function ErrText({ msg }: { msg?: string }) {
     if (!msg) return null
-    return <Field.ErrorText fontSize="14px">{msg}</Field.ErrorText>
+    return <Field.ErrorText fontSize="13px">{msg}</Field.ErrorText>
 }
 
 // ─── Customer policies section (list 5.10) ───────────────────────────────────
@@ -193,15 +170,15 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                     <Flex gap="10px" align="center">
                         <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#0D1B3E"><LuFileText size={18} /></Box>
                         <Flex flexDir="column">
-                            <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Polis Dimiliki</Text>
-                            <Text color="#5D6D7E" fontSize="14px">{total} polis terdaftar atas nama nasabah ini</Text>
+                            <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Polis Dimiliki</Text>
+                            <Text color="#5D6D7E" fontSize="13px">{total} polis terdaftar atas nama nasabah ini</Text>
                         </Flex>
                     </Flex>
                 </Flex>
 
                 {error && (
                     <Box px="32px" pb="20px">
-                        <Text fontSize="15px" color="#DC2626">{error}</Text>
+                        <Text fontSize="14px" color="#DC2626">{error}</Text>
                     </Box>
                 )}
 
@@ -213,7 +190,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
 
                 {!error && !loading && policies.length === 0 && (
                     <Box px="32px" pb="24px">
-                        <Text color="#64748B" fontSize="15px">Nasabah ini belum memiliki polis.</Text>
+                        <Text color="#64748B" fontSize="14px">Nasabah ini belum memiliki polis.</Text>
                     </Box>
                 )}
 
@@ -223,7 +200,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                             <Table.Header>
                                 <Table.Row bg="#F8FAFC">
                                     {["NO. POLIS", "PRODUK", "PERIODE", "PREMI", "STATUS", ""].map((h) => (
-                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="10px">
+                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="20px" py="10px">
                                             {h}
                                         </Table.ColumnHeader>
                                     ))}
@@ -232,26 +209,26 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
                             <Table.Body>
                                 {policies.map((p) => (
                                     <Table.Row key={p.policy_id} borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
-                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="14px" fontFamily="mono">{p.policy_number}</Table.Cell>
-                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="15px">
+                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="13px" fontFamily="mono">{p.policy_number}</Table.Cell>
+                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px">
                                             {productCatalog.label(p.product_type)}
                                             {p.insurer_short_name ? ` · ${p.insurer_short_name}` : ""}
                                         </Table.Cell>
-                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px">
+                                        <Table.Cell px="20px" py="12px" color="#64748B" fontSize="13px">
                                             {fmtDate(p.coverage_start)} – {fmtDate(p.coverage_end)}
                                         </Table.Cell>
-                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="15px" fontWeight="medium">
+                                        <Table.Cell px="20px" py="12px" color="#1C2833" fontSize="14px" fontWeight="medium">
                                             {fmtIDR(p.premium_amount)}
                                         </Table.Cell>
                                         <Table.Cell px="20px" py="12px">
-                                            <Badge px="8px" py="2px" borderRadius="full" fontSize="14px" fontWeight="medium"
+                                            <Badge px="8px" py="2px" borderRadius="full" fontSize="13px" fontWeight="medium"
                                                 bg={RENEWAL_STATUS_CONFIG[p.renewal_status]?.bg ?? "#F1F5F9"}
                                                 color={RENEWAL_STATUS_CONFIG[p.renewal_status]?.color ?? "#64748B"}>
                                                 {RENEWAL_STATUS_CONFIG[p.renewal_status]?.label ?? p.renewal_status}
                                             </Badge>
                                         </Table.Cell>
                                         <Table.Cell px="20px" py="12px" textAlign="end">
-                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="14px"
+                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="13px"
                                                 onClick={() => router.push(`/agentra/policies/${encodeURIComponent(p.policy_id)}`)}>
                                                 <FaEye size={12} /> Lihat
                                             </Button>
@@ -263,7 +240,7 @@ function CustomerPoliciesSection({ customerId }: { customerId: string }) {
 
                         {totalPages > 1 && (
                             <Flex justify="space-between" align="center" px="32px" py="14px" borderTop="1px solid" borderColor="#F1F5F9">
-                                <Text color="#64748B" fontSize="14px">Halaman {page} dari {totalPages}</Text>
+                                <Text color="#64748B" fontSize="13px">Halaman {page} dari {totalPages}</Text>
                                 <Flex gap="6px">
                                     <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151"
                                         disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
@@ -535,13 +512,13 @@ function CustomerDetailForm() {
                 {chosen ? (
                     <Flex w="100%" align="center" gap="8px" px="10px" py="8px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" bg="white">
                         <Flex flexDir="column" minW="0" flex="1">
-                            <Text color="#1C2833" fontSize="14px" fontWeight="medium" truncate>{chosen.file.name}</Text>
+                            <Text color="#1C2833" fontSize="13px" fontWeight="medium" truncate>{chosen.file.name}</Text>
                             <Text color="#64748B" fontSize="13px">{fmtFileSize(chosen.file.size)} · diunggah saat disimpan</Text>
                         </Flex>
                         <Button size="xs" variant="ghost" color="#64748B" disabled={saving} onClick={() => setPendingDoc(null)}>Hapus</Button>
                     </Flex>
                 ) : (
-                    <Button w="100%" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="8px" fontSize="15px" disabled={saving}
+                    <Button w="100%" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="8px" fontSize="14px" disabled={saving}
                         onClick={() => { pendingTypeRef.current = type; pendingInputRef.current?.click() }}>
                         <FaRegFileImage size={15} aria-hidden="true" /> {label}
                     </Button>
@@ -591,7 +568,7 @@ function CustomerDetailForm() {
             <Box ml={{ base: 0, md: "250px" }} pt={{ base: "56px", md: 0 }} pb={{ base: "150px", md: "96px" }}>
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Detail Nasabah" /></Box>
                 <Flex p={{ base: "16px", md: "32px" }} flexDir="column" gap="16px">
-                    <Text color="#DC2626" fontSize="16px">{fetchError}</Text>
+                    <Text color="#DC2626" fontSize="15px">{fetchError}</Text>
                     <Button w="max-content" variant="outline" gap="8px" onClick={() => router.push("/agentra/customer")}>
                         <FaArrowLeft size={12} /> Kembali ke Daftar Nasabah
                     </Button>
@@ -613,7 +590,7 @@ function CustomerDetailForm() {
                     borderColor={dark ? "rgba(254,202,202,0.4)" : "#FECACA"}
                     borderRadius="8px" px="12px" py="10px" gap="8px"
                 >
-                    <Text fontSize="14px" color={dark ? "#FCA5A5" : "#DC2626"} lineHeight="1.5">
+                    <Text fontSize="13px" color={dark ? "#FCA5A5" : "#DC2626"} lineHeight="1.5">
                         {saveError}
                     </Text>
                 </Flex>
@@ -622,7 +599,7 @@ function CustomerDetailForm() {
                 <Flex bg={dark ? "rgba(134,239,172,0.15)" : "#F0FDF4"} border="1px solid"
                     borderColor={dark ? "rgba(134,239,172,0.4)" : "#BBF7D0"}
                     borderRadius="8px" px="12px" py="10px">
-                    <Text fontSize="14px" color={dark ? "#86EFAC" : "#16A34A"}>
+                    <Text fontSize="13px" color={dark ? "#86EFAC" : "#16A34A"}>
                         Data berhasil {isEdit ? "diperbarui" : "disimpan"}! Mengalihkan...
                     </Text>
                 </Flex>
@@ -630,7 +607,7 @@ function CustomerDetailForm() {
             <Button
                 bg={dark ? "white" : "#0D1B3E"}
                 color={dark ? "#0D1B3E" : "white"}
-                fontSize="16px" fontWeight="bold" py="16px" borderRadius="10px" gap="8px"
+                fontSize="15px" fontWeight="bold" py="16px" borderRadius="10px" gap="8px"
                 onClick={handleSave} loading={saving} disabled={saving || saveSuccess}
             >
                 {isEdit ? "Perbarui Data" : "Simpan Data Nasabah"} <FaArrowRight />
@@ -638,7 +615,7 @@ function CustomerDetailForm() {
             <Button
                 bg={dark ? "transparent" : "white"}
                 color={dark ? "#DBEAFE" : "#5D6D7E"}
-                fontSize="16px" border="1px solid"
+                fontSize="15px" border="1px solid"
                 borderColor={dark ? "#2F5788" : "#DDE1E7"}
                 py="16px" borderRadius="10px"
                 onClick={() => router.push("/agentra/customer")} disabled={saving}
@@ -663,7 +640,7 @@ function CustomerDetailForm() {
                         onClick={() => router.push("/agentra/customer")}>
                         <FaArrowLeft size={12} /> Kembali
                     </Button>
-                    <Text color="#1C2833" fontSize="20px" fontWeight="bold">{pageTitle}</Text>
+                    <Text color="#1C2833" fontSize="18px" fontWeight="bold">{pageTitle}</Text>
                 </Flex>
 
                 <Tabs.Root
@@ -676,7 +653,7 @@ function CustomerDetailForm() {
                         <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w={{ base: "100%", md: "max-content" }}>
                             {(["individual", "corporate"] as const).map((v, i) => (
                                 <Tabs.Trigger key={v} value={v}
-                                    flex={{ base: 1, md: "initial" }} justifyContent="center" px="20px" py="8px" borderRadius="8px" fontSize="16px"
+                                    flex={{ base: 1, md: "initial" }} justifyContent="center" px="20px" py="8px" borderRadius="8px" fontSize="15px"
                                     fontWeight="medium" color="#64748B"
                                     _selected={{ bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" }}>
                                     {["Perorangan", "Perusahaan"][i]}
@@ -685,7 +662,7 @@ function CustomerDetailForm() {
                         </Tabs.List>
                     ) : (
                         <Box px="12px" py="5px" borderRadius="8px" w="max-content"
-                            fontSize="15px" fontWeight="semibold"
+                            fontSize="14px" fontWeight="semibold"
                             bg={activeTab === "individual" ? "#E5EFF5" : "#F3E8FF"}
                             color={activeTab === "individual" ? "#006397" : "#7E22CE"}>
                             {activeTab === "individual" ? "Nasabah Perorangan" : "Nasabah Perusahaan"}
@@ -700,7 +677,7 @@ function CustomerDetailForm() {
                                 <Card.Root w="100%" border="1px solid" borderColor="#F1F5F9" borderRadius="12px">
                                     <Card.Body gap="24px" p={{ base: "16px", md: "32px" }}>
                                         <Flex borderLeft="4px solid" borderColor="#0D1B3E" pl="12px">
-                                            <Text color="#0D1B3E" fontSize="18px" fontWeight="semibold">Data Identitas</Text>
+                                            <Text color="#0D1B3E" fontSize="17px" fontWeight="semibold">Data Identitas</Text>
                                         </Flex>
 
                                         <SimpleGrid columns={{ md: 2 }} gap="24px">
@@ -757,7 +734,7 @@ function CustomerDetailForm() {
                                                         onCheckedChange={(e) => toggleSameWaInd(!!e.checked)} colorPalette="green">
                                                         <Checkbox.HiddenInput />
                                                         <Checkbox.Control />
-                                                        <Checkbox.Label fontSize="14px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
+                                                        <Checkbox.Label fontSize="13px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
                                                     </Checkbox.Root>
                                                 </Flex>
                                                 <ErrText msg={indErr.personal_whatsapp} />
@@ -794,7 +771,7 @@ function CustomerDetailForm() {
                             <Flex w={{ base: "100%", md: "30%" }} gap="24px" flexDir="column">
                                 <Card.Root bgColor="#0D1B3E" color="white" borderRadius="12px">
                                     <Card.Body gap="16px">
-                                        <Flex gap="8px" align="center" fontWeight="semibold" fontSize="16px">
+                                        <Flex gap="8px" align="center" fontWeight="semibold" fontSize="15px">
                                             <FaInfoCircle color="#7DD3FC" /> Petunjuk Pengisian
                                         </Flex>
                                         <List.Root gap="12px" ps="4" listStyleType="disc">
@@ -802,7 +779,7 @@ function CustomerDetailForm() {
                                                 "Kolom bertanda * wajib diisi sebelum menyimpan.",
                                                 "NIK harus 16 digit sesuai E-KTP.",
                                                 "Nomor WhatsApp aktif diperlukan untuk pengiriman e-Polis otomatis.",
-                                            ].map((t, i) => <List.Item key={i} fontSize="14px" color="white">{t}</List.Item>)}
+                                            ].map((t, i) => <List.Item key={i} fontSize="13px" color="white">{t}</List.Item>)}
                                         </List.Root>
                                     </Card.Body>
                                 </Card.Root>
@@ -812,15 +789,15 @@ function CustomerDetailForm() {
                                         <Flex flexDir="column" align="center" gap="12px"
                                             border="2px dashed" borderColor="#CBD5E1" borderRadius="10px" p="16px">
                                             <Image src={verifiedImg.src} alt="" w="72px" />
-                                            <Text color="#0D1B3E" fontSize="16px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
-                                            <Text color="#64748B" fontSize="14px" textAlign="center">
+                                            <Text color="#0D1B3E" fontSize="15px" fontWeight="semibold" textAlign="center">Verifikasi Dokumen</Text>
+                                            <Text color="#64748B" fontSize="13px" textAlign="center">
                                                 {isEdit
                                                     ? "Unggah KTP untuk melengkapi dokumen KYC (APU-PPT)"
                                                     : "Pilih foto KTP, akan diunggah otomatis saat data nasabah disimpan"}
                                             </Text>
                                             {!isEdit && renderPendingUpload("ktp", "Pilih Foto KTP")}
                                             {isEdit && (
-                                                <Button w="100%" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="8px" fontSize="15px"
+                                                <Button w="100%" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="8px" fontSize="14px"
                                                     onClick={() => setKycUpload("ktp")}>
                                                     <FaRegFileImage size={15} aria-hidden="true" /> Unggah Foto KTP
                                                 </Button>
@@ -843,8 +820,8 @@ function CustomerDetailForm() {
                                     <Flex gap="12px" align="center">
                                         <Image src={companyImg.src} alt="" w="40px" h="40px" />
                                         <Flex flexDir="column">
-                                            <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi Perusahaan</Text>
-                                            <Text color="#5D6D7E" fontSize="14px">Lengkapi detail legalitas dan operasional perusahaan nasabah</Text>
+                                            <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Informasi Perusahaan</Text>
+                                            <Text color="#5D6D7E" fontSize="13px">Lengkapi detail legalitas dan operasional perusahaan nasabah</Text>
                                         </Flex>
                                     </Flex>
 
@@ -906,7 +883,7 @@ function CustomerDetailForm() {
                                     <Field.Root>
                                         <Flex justify="space-between" align="center">
                                             <Field.Label {...clbl} mb="0">Alamat Legal (Sesuai Domisili/NPWP)</Field.Label>
-                                            <Text color="#3B82F6" fontSize="14px" cursor="pointer"
+                                            <Text color="#3B82F6" fontSize="13px" cursor="pointer"
                                                 onClick={() => updCorp("legal_address")(corp.operational_address)}>
                                                 ⟳ Samakan dengan Operasional
                                             </Text>
@@ -942,8 +919,8 @@ function CustomerDetailForm() {
                                             <Flex gap="12px" align="center">
                                                 <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#0D1B3E"><LuUser size={20} /></Box>
                                                 <Flex flexDir="column">
-                                                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Informasi PIC</Text>
-                                                    <Text color="#5D6D7E" fontSize="14px">Detail orang yang bertanggung jawab (Person In Charge).</Text>
+                                                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Informasi PIC</Text>
+                                                    <Text color="#5D6D7E" fontSize="13px">Detail orang yang bertanggung jawab (Person In Charge).</Text>
                                                 </Flex>
                                             </Flex>
 
@@ -980,7 +957,7 @@ function CustomerDetailForm() {
                                                             onCheckedChange={(e) => toggleSameWaCorp(!!e.checked)} colorPalette="green">
                                                             <Checkbox.HiddenInput />
                                                             <Checkbox.Control />
-                                                            <Checkbox.Label fontSize="14px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
+                                                            <Checkbox.Label fontSize="13px" color="#5D6D7E" whiteSpace="nowrap">Sama</Checkbox.Label>
                                                         </Checkbox.Root>
                                                     </Flex>
                                                     <ErrText msg={corpErr.pic_whatsapp} />
@@ -994,8 +971,8 @@ function CustomerDetailForm() {
                                 <Flex w={{ base: "100%", md: "30%" }} gap="24px" flexDir="column">
                                     <Card.Root bgColor="#0D1B3E" color="white" borderRadius="12px">
                                         <Card.Body gap="12px">
-                                            <Text fontSize="16px" fontWeight="semibold">Verifikasi Data</Text>
-                                            <Text fontSize="14px" color="#BFDBFE">
+                                            <Text fontSize="15px" fontWeight="semibold">Verifikasi Data</Text>
+                                            <Text fontSize="13px" color="#BFDBFE">
                                                 Pastikan seluruh informasi perusahaan dan PIC sesuai dengan dokumen legal asli.
                                             </Text>
                                             <Flex flexDir="column" gap="8px" my="4px">
@@ -1009,7 +986,7 @@ function CustomerDetailForm() {
                                                         <Box w="10px" h="10px" borderRadius="full" flexShrink={0}
                                                             bg={item.done ? "#4ADE80" : "transparent"}
                                                             border={item.done ? "none" : "2px solid #94A3B8"} />
-                                                        <Text fontSize="14px" color={item.done ? "white" : "#94A3B8"}>{item.label}</Text>
+                                                        <Text fontSize="13px" color={item.done ? "white" : "#94A3B8"}>{item.label}</Text>
                                                     </Flex>
                                                 ))}
                                             </Flex>
@@ -1020,10 +997,10 @@ function CustomerDetailForm() {
                                     <Flex flexDir="column" align="center" gap="8px" textAlign="center"
                                         border="2px dashed" borderColor="#CBD5E1" borderRadius="12px" p="20px">
                                         <Icon size="md" color="fg.muted"><LuUpload /></Icon>
-                                        <Box fontWeight="bold" fontSize="16px" color="#1C2833">Dokumen Legal</Box>
-                                        <Box color="#64748B" fontSize="14px">Akta Pendirian, NIB, NPWP, KTP Direktur — PDF, JPG, PNG (Maks. 10MB)</Box>
+                                        <Box fontWeight="bold" fontSize="15px" color="#1C2833">Dokumen Legal</Box>
+                                        <Box color="#64748B" fontSize="13px">Akta Pendirian, NIB, NPWP, KTP Direktur — PDF, JPG, PNG (Maks. 10MB)</Box>
                                         {isEdit ? (
-                                            <Button size="sm" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="6px" fontSize="15px"
+                                            <Button size="sm" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" gap="6px" fontSize="14px"
                                                 onClick={() => setKycUpload("akta_pendirian")}>
                                                 <LuUpload size={13} /> Unggah Dokumen Legal
                                             </Button>

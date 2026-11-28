@@ -50,14 +50,14 @@ const PRODUCT_LABELS: Record<string, string> = {
 function DaysLeftBadge({ days }: { days: number }) {
   const urgent = days <= 7
   return (
-    <Badge px="8px" py="2px" borderRadius="full" fontSize="14px" fontWeight="semibold"
+    <Badge px="8px" py="2px" borderRadius="full" fontSize="13px" fontWeight="semibold"
       bg={urgent ? "#FED7AA" : "#FEF3C7"} color={urgent ? "#EA580C" : "#D97706"}>
       {days > 0 ? `${days} Hari Lagi` : days === 0 ? "Hari Ini" : `Lewat ${Math.abs(days)} Hari`}
     </Badge>
   )
 }
 
-const colHeader = { color: "#64748B", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.05em", px: "20px", py: "10px" }
+const colHeader = { color: "#64748B", fontSize: "13px", fontWeight: "bold", letterSpacing: "0.05em", px: "20px", py: "10px" }
 
 export default function Renewals() {
   const productCatalog = useProductOptions()
@@ -232,8 +232,8 @@ export default function Renewals() {
           {/* Heading */}
           <Flex justify="space-between" align="flex-start" flexWrap="wrap" gap="16px">
             <Flex flexDir="column" gap="4px">
-              <Text color="#1C2833" fontSize="24px" fontWeight="bold">Manajemen Perpanjangan</Text>
-              <Text color="#5D6D7E" fontSize="16px">
+              <Text color="#1C2833" fontSize="22px" fontWeight="bold">Manajemen Perpanjangan</Text>
+              <Text color="#5D6D7E" fontSize="15px">
                 Pantau dan kelola polis yang mendekati masa jatuh tempo untuk memastikan retensi nasabah yang optimal.
               </Text>
             </Flex>
@@ -250,16 +250,16 @@ export default function Renewals() {
               ].map(({ label, value, accent, bg }) => (
                 <Box key={label} minW="0" bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="16px">
                   <Box px="8px" py="3px" borderRadius="6px" bg={bg} w="max-content" mb="8px">
-                    <Text fontSize="14px" fontWeight="bold" color={accent}>{label.toUpperCase()}</Text>
+                    <Text fontSize="13px" fontWeight="bold" color={accent}>{label.toUpperCase()}</Text>
                   </Box>
-                  <Text color="#1C2833" fontSize="20px" fontWeight="bold">{value}</Text>
+                  <Text color="#1C2833" fontSize="18px" fontWeight="bold">{value}</Text>
                 </Box>
               ))}
             </Grid>
           )}
 
           {stats && Object.keys(stats.lost_reasons ?? {}).length > 0 && (
-            <Text color="#64748B" fontSize="16px">
+            <Text color="#64748B" fontSize="15px">
               Perpanjangan hilang bulan ini:{" "}
               {(Object.entries(stats.lost_reasons) as [keyof typeof RENEWAL_LOST_REASON_LABELS, number][])
                 .map(([reason, n]) => `${RENEWAL_LOST_REASON_LABELS[reason] ?? reason} (${n})`).join(" · ")}
@@ -270,7 +270,7 @@ export default function Renewals() {
           <Flex gap="12px" align={{ base: "stretch", md: "center" }} flexDir={{ base: "column", md: "row" }} flexWrap="wrap">
             <Flex flex="1" minW={{ base: "0", md: "200px" }} align="center" gap="10px" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" px="14px" py="10px">
               <LuSearch size={15} color="#64748B" />
-              <Input flex="1" outline="none" border="none" fontSize="16px" color="#1C2833"
+              <Input flex="1" outline="none" border="none" fontSize="15px" color="#1C2833"
                 placeholder="Cari nama atau nomor polis..."
                 aria-label="Cari perpanjangan"
                 value={query}
@@ -281,7 +281,7 @@ export default function Renewals() {
             <MonthPickerButton month={month} onChange={setMonth} />
             <Flex bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" overflow="hidden" w={{ base: "100%", md: "auto" }}>
               {([["list", "List", LuList], ["calendar", "Kalender", LuCalendarDays]] as const).map(([key, label, Icon]) => (
-                <Button key={key} size="sm" flex={{ base: 1, md: "initial" }} borderRadius="0" fontSize="16px" gap="6px" px="14px" aria-pressed={view === key}
+                <Button key={key} size="sm" flex={{ base: 1, md: "initial" }} borderRadius="0" fontSize="15px" gap="6px" px="14px" aria-pressed={view === key}
                   bg={view === key ? "#0D1B3E" : "white"} color={view === key ? "white" : "#475569"} onClick={() => setView(key)}>
                   <Icon size={13} /> {label}
                 </Button>
@@ -293,7 +293,7 @@ export default function Renewals() {
           <Flex gap="12px" align={{ base: "stretch", md: "center" }} flexDir={{ base: "column", md: "row" }} flexWrap="wrap">
             <NativeSelect.Root w={{ base: "100%", md: "180px" }} size="sm">
               <NativeSelect.Field aria-label="Filter perusahaan asuransi" value={filters.insurer_id ?? ""} onChange={(e) => setFilter("insurer_id", e.target.value)}
-                bg="white" borderColor="#E2E8F0" fontSize="16px" color="#374151">
+                bg="white" borderColor="#E2E8F0" fontSize="15px" color="#374151">
                 <option value="">Semua insurer</option>
                 {insurers.map((i) => <option key={i.insurer_id} value={i.insurer_id}>{i.short_name}</option>)}
               </NativeSelect.Field>
@@ -301,7 +301,7 @@ export default function Renewals() {
             </NativeSelect.Root>
             <NativeSelect.Root w={{ base: "100%", md: "180px" }} size="sm">
               <NativeSelect.Field aria-label="Filter jenis produk" value={filters.product_type ?? ""} onChange={(e) => setFilter("product_type", e.target.value)}
-                bg="white" borderColor="#E2E8F0" fontSize="16px" color="#374151">
+                bg="white" borderColor="#E2E8F0" fontSize="15px" color="#374151">
                 <option value="">Semua produk</option>
                 {Object.entries(PRODUCT_LABELS).filter(([k]) => !["kecelakaan", "aep"].includes(k)).map(([k, label]) => <option key={k} value={k}>{label.replace("Asuransi ", "")}</option>)}
               </NativeSelect.Field>
@@ -309,7 +309,7 @@ export default function Renewals() {
             </NativeSelect.Root>
             <NativeSelect.Root w={{ base: "100%", md: "180px" }} size="sm">
               <NativeSelect.Field aria-label="Filter sub-agen" value={filters.sub_agent_id ?? ""} onChange={(e) => setFilter("sub_agent_id", e.target.value)}
-                bg="white" borderColor="#E2E8F0" fontSize="16px" color="#374151">
+                bg="white" borderColor="#E2E8F0" fontSize="15px" color="#374151">
                 <option value="">Semua agen</option>
                 <option value="main">Agen utama</option>
                 {subAgents.map((a) => <option key={a.sub_agent_id} value={a.sub_agent_id}>{a.full_name}</option>)}
@@ -317,10 +317,10 @@ export default function Renewals() {
               <NativeSelect.Indicator />
             </NativeSelect.Root>
             {Object.keys(filters).some((k) => filters[k as keyof RenewalFilters]) && (
-              <Button size="sm" variant="ghost" fontSize="16px" onClick={() => setFilters({})}>Reset filter</Button>
+              <Button size="sm" variant="ghost" fontSize="15px" onClick={() => setFilters({})}>Reset filter</Button>
             )}
             {view === "calendar" && (
-              <Button size="sm" variant="outline" borderColor="#E2E8F0" fontSize="16px" aria-pressed={showNext}
+              <Button size="sm" variant="outline" borderColor="#E2E8F0" fontSize="15px" aria-pressed={showNext}
                 bg={showNext ? "#EFF6FF" : "white"} color="#374151" onClick={() => setShowNext((v) => !v)}>
                 Tampilkan bulan berikutnya
               </Button>
@@ -340,7 +340,7 @@ export default function Renewals() {
           {/* Error */}
           {error && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-              <Text color="#DC2626" fontSize="16px">{error}</Text>
+              <Text color="#DC2626" fontSize="15px">{error}</Text>
             </Box>
           )}
 
@@ -362,8 +362,8 @@ export default function Renewals() {
                       px="20px" py="14px" align="center" gap="10px" cursor="pointer" onClick={() => toggle(key)}
                       borderBottom={isOpen && rows.length > 0 ? "1px solid" : "none"} borderColor="#E2E8F0">
                       <Icon size={16} color={accent} aria-hidden="true" />
-                      <Text fontSize="15px" fontWeight="bold" color={accent} flex="1">{label}</Text>
-                      <Badge px="8px" py="2px" borderRadius="full" fontSize="14px" bg={badgeBg} color={badgeColor}>
+                      <Text fontSize="14px" fontWeight="bold" color={accent} flex="1">{label}</Text>
+                      <Badge px="8px" py="2px" borderRadius="full" fontSize="13px" bg={badgeBg} color={badgeColor}>
                         {rows.length} Polis
                       </Badge>
                       {isOpen ? <LuChevronUp size={16} color="#64748B" /> : <LuChevronDown size={16} color="#64748B" />}
@@ -385,15 +385,15 @@ export default function Renewals() {
                               <Table.Cell px="20px" py="12px">
                                 <Flex align="center" gap="10px">
                                   <Avatar.Root w="32px" h="32px" bg={getAvatarColor(r.customer_name)} borderRadius="full">
-                                    <Avatar.Fallback color="white" fontSize="14px" fontWeight="bold">
+                                    <Avatar.Fallback color="white" fontSize="13px" fontWeight="bold">
                                       {getInitials(r.customer_name)}
                                     </Avatar.Fallback>
                                   </Avatar.Root>
                                   <Flex flexDir="column" gap="1px">
-                                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{r.customer_name}</Text>
-                                    <Text color="#64748B" fontSize="14px">{r.insurer_name}</Text>
+                                    <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{r.customer_name}</Text>
+                                    <Text color="#64748B" fontSize="13px">{r.insurer_name}</Text>
                                     {r.claim_count > 0 && (
-                                      <Text color="#DC2626" fontSize="14px" fontWeight="medium"
+                                      <Text color="#DC2626" fontSize="13px" fontWeight="medium"
                                         title="Jumlah klaim pada polis ini dan rasio klaim terhadap premi">
                                         {r.claim_count} klaim{r.premium_amount > 0 && r.claims_incurred > 0 ? ` · rasio ${Math.round((r.claims_incurred / r.premium_amount) * 100)}%` : ""}
                                       </Text>
@@ -401,13 +401,13 @@ export default function Renewals() {
                                   </Flex>
                                 </Flex>
                               </Table.Cell>
-                              <Table.Cell px="20px" py="12px" color="#64748B" fontSize="15px">
+                              <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px">
                                 {productCatalog.label(r.product_type)}
                               </Table.Cell>
-                              <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px" fontFamily="mono">
+                              <Table.Cell px="20px" py="12px" color="#64748B" fontSize="13px" fontFamily="mono">
                                 {r.policy_number}
                               </Table.Cell>
-                              <Table.Cell px="20px" py="12px" color="#64748B" fontSize="15px">
+                              <Table.Cell px="20px" py="12px" color="#64748B" fontSize="14px">
                                 {formatDate(r.coverage_end)}
                               </Table.Cell>
                               <Table.Cell px="20px" py="12px">
@@ -417,40 +417,40 @@ export default function Renewals() {
                                 <Flex flexDir="column" gap="2px" align="flex-start">
                                   <RenewalStageBadge stage={r.workflow_stage ?? "not_started"} />
                                   {r.workflow_stage === "declined" && r.lost_reason && (
-                                    <Text color="#64748B" fontSize="16px">{RENEWAL_LOST_REASON_LABELS[r.lost_reason]}</Text>
+                                    <Text color="#64748B" fontSize="15px">{RENEWAL_LOST_REASON_LABELS[r.lost_reason]}</Text>
                                   )}
                                 </Flex>
                               </Table.Cell>
                               <Table.Cell px="20px" py="12px">
                                 {r.last_follow_up_status ? (
-                                  <Badge px="8px" py="2px" borderRadius="full" fontSize="14px"
+                                  <Badge px="8px" py="2px" borderRadius="full" fontSize="13px"
                                     bg="#EFF6FF" color="#1D4ED8">
                                     {r.last_follow_up_status}
                                   </Badge>
                                 ) : (
-                                  <Text color="#64748B" fontSize="14px">—</Text>
+                                  <Text color="#64748B" fontSize="13px">—</Text>
                                 )}
                               </Table.Cell>
                               <Table.Cell px="20px" py="12px">
                                 <Flex gap="6px" flexWrap="wrap">
                                   {key !== "done" && (
-                                    <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px" px="14px"
+                                    <Button size="sm" bg="#0D1B3E" color="white" fontSize="13px" fontWeight="semibold" borderRadius="8px" px="14px"
                                       onClick={() => router.push(`/agentra/policies/${encodeURIComponent(r.policy_id)}`)}>
                                       Follow Up
                                     </Button>
                                   )}
-                                  <Button size="sm" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" fontSize="16px" borderRadius="8px" px="14px"
+                                  <Button size="sm" variant="outline" borderColor="#0D1B3E" color="#0D1B3E" fontSize="15px" borderRadius="8px" px="14px"
                                     onClick={() => setWorkflowId(r.policy_id)}>
                                     Alur Renewal
                                   </Button>
                                   {r.renewal_status === "pending" && (
-                                    <Button size="sm" variant="outline" borderColor="#16A34A" color="#16A34A" fontSize="14px" borderRadius="8px" px="14px" gap="6px"
+                                    <Button size="sm" variant="outline" borderColor="#16A34A" color="#16A34A" fontSize="13px" borderRadius="8px" px="14px" gap="6px"
                                       onClick={() => openRenewDialog(r)}>
                                       <LuRefreshCw size={12} /> Perpanjang
                                     </Button>
                                   )}
                                   {r.customer_whatsapp && (
-                                    <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px" borderRadius="8px" px="14px" gap="6px"
+                                    <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="13px" borderRadius="8px" px="14px" gap="6px"
                                       onClick={() => openWaDialog(r)}>
                                       <FaWhatsapp color="#25D366" size={13} /> WhatsApp
                                     </Button>
@@ -465,7 +465,7 @@ export default function Renewals() {
 
                     {isOpen && rows.length === 0 && (
                       <Flex align="center" justify="center" py="24px">
-                        <Text color="#64748B" fontSize="15px">Belum ada data untuk ditampilkan</Text>
+                        <Text color="#64748B" fontSize="14px">Belum ada data untuk ditampilkan</Text>
                       </Flex>
                     )}
                   </Box>
@@ -491,40 +491,40 @@ export default function Renewals() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="12px" p="0" maxW="460px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+              <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">
                 Kirim WhatsApp Perpanjangan
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="16px">
-              <Text color="#5D6D7E" fontSize="15px" mb="12px">
+              <Text color="#5D6D7E" fontSize="14px" mb="12px">
                 Kepada <Text as="span" fontWeight="semibold" color="#1C2833">{waTarget?.customer_name}</Text> — polis {waTarget?.policy_number}
               </Text>
-              <Text fontSize="14px" color="#64748B" fontWeight="medium" mb="6px">
+              <Text fontSize="13px" color="#64748B" fontWeight="medium" mb="6px">
                 Pesan (opsional — kosongkan untuk memakai template default)
               </Text>
               <Textarea
-                rows={4} fontSize="15px"
+                rows={4} fontSize="14px"
                 placeholder="Halo {customer_name}, polis Anda {policy_number} akan berakhir {days_until_expiry} hari lagi..."
                 value={waMessage}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setWaMessage(e.target.value)}
               />
               {waError && (
-                <Text mt="10px" fontSize="14px" color="#DC2626">{waError}</Text>
+                <Text mt="10px" fontSize="13px" color="#DC2626">{waError}</Text>
               )}
               {waSuccess && (
-                <Text mt="10px" fontSize="14px" color="#16A34A">{waSuccess}</Text>
+                <Text mt="10px" fontSize="13px" color="#16A34A">{waSuccess}</Text>
               )}
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Button
                 flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
-                fontSize="16px" borderRadius="8px" disabled={waSending}
+                fontSize="15px" borderRadius="8px" disabled={waSending}
                 onClick={() => setWaTarget(null)}
               >
                 Tutup
               </Button>
               <Button
-                flex="1" bg="#25D366" color="white" fontSize="16px" borderRadius="8px" gap="6px"
+                flex="1" bg="#25D366" color="white" fontSize="15px" borderRadius="8px" gap="6px"
                 loading={waSending} loadingText="Mengirim..."
                 onClick={handleSendWhatsapp}
               >
@@ -544,63 +544,63 @@ export default function Renewals() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="12px" p="0" maxW="460px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+              <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">
                 Perpanjang Polis
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="16px">
-              <Text color="#5D6D7E" fontSize="15px" mb="16px">
+              <Text color="#5D6D7E" fontSize="14px" mb="16px">
                 {renewTarget?.customer_name} — polis lama {renewTarget?.policy_number}
               </Text>
 
               <Flex flexDir="column" gap="12px">
                 <Flex flexDir="column" gap="4px">
-                  <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">
+                  <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">
                     Nomor Polis Baru <Text as="span" color="#DC2626">*</Text>
                   </Text>
                   <Input
-                    fontSize="15px" placeholder="01.08.2027.001"
+                    fontSize="14px" placeholder="01.08.2027.001"
                     value={renewForm.policy_number}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewForm((f) => ({ ...f, policy_number: e.target.value }))}
                   />
                 </Flex>
                 <Flex gap="12px">
                   <Flex flexDir="column" gap="4px" flex="1">
-                    <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Mulai Periode</Text>
+                    <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">Mulai Periode</Text>
                     <Input
-                      type="date" fontSize="15px"
+                      type="date" fontSize="14px"
                       value={renewForm.coverage_start}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewForm((f) => ({ ...f, coverage_start: e.target.value }))}
                     />
                   </Flex>
                   <Flex flexDir="column" gap="4px" flex="1">
-                    <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Akhir Periode</Text>
+                    <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">Akhir Periode</Text>
                     <Input
-                      type="date" fontSize="15px"
+                      type="date" fontSize="14px"
                       value={renewForm.coverage_end}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewForm((f) => ({ ...f, coverage_end: e.target.value }))}
                     />
                   </Flex>
                 </Flex>
-                <Text fontSize="14px" color="#64748B">
+                <Text fontSize="13px" color="#64748B">
                   Kosongkan tanggal untuk otomatis melanjutkan dari polis lama (akhir periode = mulai + 365 hari). Rate komisi, item pertanggungan, dan data lain akan disalin dari polis lama dan bisa diubah lagi di halaman detail polis.
                 </Text>
               </Flex>
 
               {renewError && (
-                <Text mt="12px" fontSize="14px" color="#DC2626">{renewError}</Text>
+                <Text mt="12px" fontSize="13px" color="#DC2626">{renewError}</Text>
               )}
             </Dialog.Body>
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Button
                 flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151"
-                fontSize="16px" borderRadius="8px" disabled={renewSaving}
+                fontSize="15px" borderRadius="8px" disabled={renewSaving}
                 onClick={() => setRenewTarget(null)}
               >
                 Batal
               </Button>
               <Button
-                flex="1" bg="#16A34A" color="white" fontSize="16px" borderRadius="8px"
+                flex="1" bg="#16A34A" color="white" fontSize="15px" borderRadius="8px"
                 loading={renewSaving} loadingText="Memproses..."
                 onClick={handleRenew}
               >

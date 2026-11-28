@@ -39,8 +39,8 @@ export function MessageLog({ filter, refreshKey = 0, showCustomer = false }: { f
     const totalPages = Math.max(1, Math.ceil((state?.total ?? 0) / PAGE_SIZE))
 
     if (loading && !state) return <Skeleton h="80px" borderRadius="8px" />
-    if (state?.error) return <Text color="#DC2626" fontSize="16px">{state.error}</Text>
-    if (!loading && rows.length === 0) return <Text color="#64748B" fontSize="16px">Belum ada pesan yang dikirim.</Text>
+    if (state?.error) return <Text color="#DC2626" fontSize="15px">{state.error}</Text>
+    if (!loading && rows.length === 0) return <Text color="#64748B" fontSize="15px">Belum ada pesan yang dikirim.</Text>
 
     return (
         <Flex flexDir="column" gap="8px" opacity={loading ? 0.5 : 1}>
@@ -49,32 +49,32 @@ export function MessageLog({ filter, refreshKey = 0, showCustomer = false }: { f
                     <Flex as="button" w="100%" textAlign="left" justify="space-between" align="center" gap="8px" flexWrap="wrap" aria-expanded={open === m.log_id}
                         onClick={() => setOpen(open === m.log_id ? null : m.log_id)}>
                         <Flex gap="8px" align="center" flexWrap="wrap">
-                            <Badge px="8px" borderRadius="full" bg={m.status === "sent" ? "#DCFCE7" : "#FEE2E2"} color={m.status === "sent" ? "#15803D" : "#DC2626"} fontSize="16px">
+                            <Badge px="8px" borderRadius="full" bg={m.status === "sent" ? "#DCFCE7" : "#FEE2E2"} color={m.status === "sent" ? "#15803D" : "#DC2626"} fontSize="15px">
                                 {m.status === "sent" ? "Terkirim" : "Gagal"}
                             </Badge>
-                            <Text fontSize="16px" fontWeight="semibold" color="#1C2833">{MESSAGE_TYPE_LABELS[m.message_type]}</Text>
-                            {showCustomer && m.customer_name && <Text fontSize="16px" color="#475569">· {m.customer_name}</Text>}
-                            {m.policy_number && <Text fontSize="16px" color="#64748B" fontFamily="mono">{m.policy_number}</Text>}
-                            <Text fontSize="16px" color="#64748B">{SOURCE_LABELS[m.trigger_source]}</Text>
+                            <Text fontSize="15px" fontWeight="semibold" color="#1C2833">{MESSAGE_TYPE_LABELS[m.message_type]}</Text>
+                            {showCustomer && m.customer_name && <Text fontSize="15px" color="#475569">· {m.customer_name}</Text>}
+                            {m.policy_number && <Text fontSize="15px" color="#64748B" fontFamily="mono">{m.policy_number}</Text>}
+                            <Text fontSize="15px" color="#64748B">{SOURCE_LABELS[m.trigger_source]}</Text>
                         </Flex>
-                        <Text fontSize="16px" color="#64748B">{fmtDateTime(m.created_at)}</Text>
+                        <Text fontSize="15px" color="#64748B">{fmtDateTime(m.created_at)}</Text>
                     </Flex>
                     {open === m.log_id ? (
                         <>
-                            <Text mt="6px" fontSize="16px" color="#475569" whiteSpace="pre-wrap">{m.body}</Text>
-                            {m.error && <Text mt="4px" fontSize="16px" color="#DC2626">Kesalahan: {m.error}</Text>}
+                            <Text mt="6px" fontSize="15px" color="#475569" whiteSpace="pre-wrap">{m.body}</Text>
+                            {m.error && <Text mt="4px" fontSize="15px" color="#DC2626">Kesalahan: {m.error}</Text>}
                         </>
                     ) : (
-                        <Text mt="2px" fontSize="16px" color="#64748B" lineClamp={1}>{m.body}</Text>
+                        <Text mt="2px" fontSize="15px" color="#64748B" lineClamp={1}>{m.body}</Text>
                     )}
                 </Box>
             ))}
             {totalPages > 1 && (
                 <Flex justify="space-between" align="center">
-                    <Text fontSize="16px" color="#64748B">{state?.total} pesan</Text>
+                    <Text fontSize="15px" color="#64748B">{state?.total} pesan</Text>
                     <Flex gap="6px" align="center">
                         <Button size="xs" variant="outline" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>Sebelumnya</Button>
-                        <Text fontSize="16px" color="#64748B">{page} / {totalPages}</Text>
+                        <Text fontSize="15px" color="#64748B">{page} / {totalPages}</Text>
                         <Button size="xs" variant="outline" disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}>Berikutnya</Button>
                     </Flex>
                 </Flex>

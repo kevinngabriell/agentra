@@ -56,10 +56,10 @@ function PartyDialog({ policyId, editing, onClose, onSaved }: { policyId: string
                     options={[{ value: "yes", label: "Ya, rekanan" }, { value: "no", label: "Tidak / belum rekanan" }]} /></FormField>
             </FormRow>
             <Switch.Root checked={f.qq} onCheckedChange={(e) => set({ qq: e.checked })} colorPalette="blue" size="sm">
-                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">Cetak di nama tertanggung (&ldquo;{f.name || "Bank"} QQ Tertanggung&rdquo;)</Switch.Label>
+                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">Cetak di nama tertanggung (&ldquo;{f.name || "Bank"} QQ Tertanggung&rdquo;)</Switch.Label>
             </Switch.Root>
             <Switch.Root checked={f.notify} onCheckedChange={(e) => set({ notify: e.checked })} colorPalette="blue" size="sm">
-                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">Ingatkan kirim bukti perpanjangan sebelum polis berakhir</Switch.Label>
+                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">Ingatkan kirim bukti perpanjangan sebelum polis berakhir</Switch.Label>
             </Switch.Root>
             <FormField label="Bukti polis terakhir dikirim"><Input {...CLAIM_INPUT} type="date" value={f.proof} onChange={(e) => set({ proof: e.target.value })} /></FormField>
         </FormDialog>
@@ -100,11 +100,11 @@ function YearsSection({ policyId, cancelled }: { policyId: string; cancelled: bo
 
     return (
         <Box mt="18px" pt="16px" borderTop="1px solid" borderColor="#E2E8F0">
-            <Flex align="center" gap="8px" mb="8px"><LuCalendarRange size={15} color="#0D1B3E" /><Text fontSize="15px" fontWeight="semibold" color="#1C2833">Jadwal Multi-Tahun</Text></Flex>
-            {error && <Text color="#DC2626" fontSize="14px" role="alert">{error}</Text>}
+            <Flex align="center" gap="8px" mb="8px"><LuCalendarRange size={15} color="#0D1B3E" /><Text fontSize="14px" fontWeight="semibold" color="#1C2833">Jadwal Multi-Tahun</Text></Flex>
+            {error && <Text color="#DC2626" fontSize="13px" role="alert">{error}</Text>}
             {!data ? <Skeleton h="40px" /> : data.items.length === 0 ? (
                 <Flex flexDir="column" gap="8px">
-                    <Text fontSize="14px" color="#64748B">Untuk polis jangka panjang (KPR / leasing 2–5 tahun): premi per tahun dengan nilai pertanggungan yang menyusut.</Text>
+                    <Text fontSize="13px" color="#64748B">Untuk polis jangka panjang (KPR / leasing 2–5 tahun): premi per tahun dengan nilai pertanggungan yang menyusut.</Text>
                     {!cancelled && (
                         <Flex gap="8px" align="flex-end" flexWrap="wrap">
                             <FormField label="Jumlah tahun"><Input {...CLAIM_INPUT} w="110px" inputMode="numeric" maxLength={2} value={years} onChange={(e) => setYears(e.target.value.replace(/\D/g, ""))} /></FormField>
@@ -116,20 +116,20 @@ function YearsSection({ policyId, cancelled }: { policyId: string; cancelled: bo
             ) : (
                 <>
                     {data.items.map((y) => (
-                        <Flex key={y.year_id} justify="space-between" align="center" gap="8px" py="6px" borderTop="1px dashed #E2E8F0" fontSize="14px" flexWrap="wrap">
+                        <Flex key={y.year_id} justify="space-between" align="center" gap="8px" py="6px" borderTop="1px dashed #E2E8F0" fontSize="13px" flexWrap="wrap">
                             <Text color="#1C2833"><Text as="span" fontWeight="semibold">Tahun {y.year_no}</Text> · {fmtDate(y.period_start)} – {fmtDate(y.period_end)}</Text>
                             <Flex gap="10px" align="center">
                                 <Text color="#64748B">TSI {fmtIDR(y.sum_insured)} · premi {fmtIDR(y.premium_amount)}</Text>
                                 {y.year_no === 1
-                                    ? <Badge fontSize="14px" bg="#F1F5F9" color="#475569">Nota polis</Badge>
-                                    : <Button size="2xs" variant={y.is_paid ? "subtle" : "outline"} fontSize="14px" disabled={cancelled} onClick={() => pay(y)}>
+                                    ? <Badge fontSize="13px" bg="#F1F5F9" color="#475569">Nota polis</Badge>
+                                    : <Button size="2xs" variant={y.is_paid ? "subtle" : "outline"} fontSize="13px" disabled={cancelled} onClick={() => pay(y)}>
                                         {y.is_paid ? <><LuCheck size={12} /> Dibayar {fmtDate(y.paid_date)}</> : "Tandai dibayar"}</Button>}
                             </Flex>
                         </Flex>
                     ))}
-                    <Flex justify="space-between" mt="6px" fontSize="14px">
+                    <Flex justify="space-between" mt="6px" fontSize="13px">
                         <Text color="#0D1B3E" fontWeight="semibold">Total {fmtIDR(data.total_premium)} · belum dibayar {fmtIDR(data.unpaid_premium)}</Text>
-                        {!cancelled && <Button size="2xs" variant="ghost" color="#DC2626" fontSize="14px" onClick={clear}>Hapus jadwal</Button>}
+                        {!cancelled && <Button size="2xs" variant="ghost" color="#DC2626" fontSize="13px" onClick={clear}>Hapus jadwal</Button>}
                     </Flex>
                 </>
             )}
@@ -166,25 +166,25 @@ export function PartiesPanel({ policyId, cancelled, onChanged }: { policyId: str
     return (
         <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
             <Flex align="center" justify="space-between" mb="12px" gap="8px">
-                <Flex align="center" gap="8px"><LuBuilding2 size={16} color="#0D1B3E" /><Text color="#1C2833" fontSize="16px" fontWeight="semibold">Bank, Leasing & Multi-Tahun</Text></Flex>
-                {!cancelled && <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog({ editing: null })}><LuPlus size={12} /> Tambah Pihak</Button>}
+                <Flex align="center" gap="8px"><LuBuilding2 size={16} color="#0D1B3E" /><Text color="#1C2833" fontSize="15px" fontWeight="semibold">Bank, Leasing & Multi-Tahun</Text></Flex>
+                {!cancelled && <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog({ editing: null })}><LuPlus size={12} /> Tambah Pihak</Button>}
             </Flex>
-            {error && <Text color="#DC2626" fontSize="14px" mb="8px" role="alert">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" mb="8px" role="alert">{error}</Text>}
             {!data ? <Skeleton h="40px" /> : (
                 <>
                     {data.items.length === 0
-                        ? <Text color="#64748B" fontSize="15px">Tidak ada bank / leasing. Polis KPR dan kendaraan kredit perlu dicatat agar bukti perpanjangan terkirim sebelum bank menutup asuransi sendiri.</Text>
-                        : <Text fontSize="14px" color="#64748B" mb="6px">Nama di polis / invoice: <Text as="span" color="#1C2833" fontWeight="semibold">{data.qq_name}</Text></Text>}
+                        ? <Text color="#64748B" fontSize="14px">Tidak ada bank / leasing. Polis KPR dan kendaraan kredit perlu dicatat agar bukti perpanjangan terkirim sebelum bank menutup asuransi sendiri.</Text>
+                        : <Text fontSize="13px" color="#64748B" mb="6px">Nama di polis / invoice: <Text as="span" color="#1C2833" fontWeight="semibold">{data.qq_name}</Text></Text>}
                     {data.items.map((p) => (
                         <Flex key={p.party_id} justify="space-between" gap="10px" py="8px" borderTop="1px solid #E2E8F0">
                             <Box minW="0">
                                 <Flex gap="6px" align="center" flexWrap="wrap">
-                                    <Text fontWeight="semibold" fontSize="15px" color="#1C2833">{p.name}</Text>
-                                    <Badge fontSize="14px" bg="#EDE9FE" color="#6D28D9">{p.party_type_label}</Badge>
-                                    {p.on_insurer_panel === false && <Badge fontSize="14px" bg="#FEE2E2" color="#B91C1C">Penanggung bukan rekanan</Badge>}
+                                    <Text fontWeight="semibold" fontSize="14px" color="#1C2833">{p.name}</Text>
+                                    <Badge fontSize="13px" bg="#EDE9FE" color="#6D28D9">{p.party_type_label}</Badge>
+                                    {p.on_insurer_panel === false && <Badge fontSize="13px" bg="#FEE2E2" color="#B91C1C">Penanggung bukan rekanan</Badge>}
                                 </Flex>
-                                <Text fontSize="14px" color="#64748B">{[p.branch, p.reference_number && `No. ${p.reference_number}`, p.tenor_end && `tenor s/d ${fmtDate(p.tenor_end)}`].filter(Boolean).join(" · ")}</Text>
-                                <Text fontSize="14px" color={p.proof_sent_date ? "#16A34A" : "#B45309"}>{p.proof_sent_date ? `Bukti polis dikirim ${fmtDate(p.proof_sent_date)}` : "Bukti polis belum dikirim"}</Text>
+                                <Text fontSize="13px" color="#64748B">{[p.branch, p.reference_number && `No. ${p.reference_number}`, p.tenor_end && `tenor s/d ${fmtDate(p.tenor_end)}`].filter(Boolean).join(" · ")}</Text>
+                                <Text fontSize="13px" color={p.proof_sent_date ? "#16A34A" : "#B45309"}>{p.proof_sent_date ? `Bukti polis dikirim ${fmtDate(p.proof_sent_date)}` : "Bukti polis belum dikirim"}</Text>
                             </Box>
                             {!cancelled && (
                                 <Flex flexShrink={0}>

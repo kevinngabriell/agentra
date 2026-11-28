@@ -38,11 +38,11 @@ function fmtDate(iso: string) {
 }
 
 function Delta({ before, after, rate = false }: { before: number; after: number | null; rate?: boolean }) {
-    if (after === null || after === before) return <Text color="#64748B" fontSize="16px">—</Text>
+    if (after === null || after === before) return <Text color="#64748B" fontSize="15px">—</Text>
     const diff = after - before
     const pct = before > 0 && !rate ? ` (${diff > 0 ? "+" : ""}${((diff / before) * 100).toFixed(1)}%)` : ""
     const text = rate ? `${diff > 0 ? "+" : ""}${diff.toFixed(2)} poin` : `${diff > 0 ? "+" : "−"}${fmtIDR(Math.abs(diff))}${pct}`
-    return <Text fontSize="16px" fontWeight="semibold" color={diff > 0 ? "#B45309" : "#15803D"}>{text}</Text>
+    return <Text fontSize="15px" fontWeight="semibold" color={diff > 0 ? "#B45309" : "#15803D"}>{text}</Text>
 }
 
 interface Form { reference: string; sum: string; premium: string; rate: string; notes: string; reviewed: boolean; reviewNote: string }
@@ -170,9 +170,9 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                 <Dialog.Positioner>
                     <Dialog.Content bg="white" borderRadius="12px" maxW="760px" w="95vw" shadow="xl">
                         <Dialog.Header px="24px" pt="24px" pb="0" flexDir="column" alignItems="flex-start" gap="4px">
-                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Alur Perpanjangan</Dialog.Title>
+                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">Alur Perpanjangan</Dialog.Title>
                             {p && (
-                                <Text fontSize="16px" color="#64748B">
+                                <Text fontSize="15px" color="#64748B">
                                     {p.customer_name} · {p.policy_number} · {p.insurer_name ?? "—"} · berakhir {fmtDate(p.coverage_end)}
                                     {p.days_until_expiry >= 0 ? ` (${p.days_until_expiry} hari lagi)` : ` (lewat ${Math.abs(p.days_until_expiry)} hari)`}
                                 </Text>
@@ -180,7 +180,7 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                         </Dialog.Header>
 
                         <Dialog.Body px="24px" py="16px">
-                            {loadError && <Text color="#DC2626" fontSize="16px">{loadError}</Text>}
+                            {loadError && <Text color="#DC2626" fontSize="15px">{loadError}</Text>}
                             {!data && !loadError && <Flex flexDir="column" gap="10px"><Skeleton h="32px" /><Skeleton h="160px" /></Flex>}
 
                             {data && form && p && (
@@ -194,11 +194,11 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                             const current = flowStage === s
                                             return (
                                                 <Flex key={s} align="center" gap="6px">
-                                                    <Flex align="center" gap="5px" px="10px" py="4px" borderRadius="full" fontSize="16px" fontWeight="semibold"
+                                                    <Flex align="center" gap="5px" px="10px" py="4px" borderRadius="full" fontSize="15px" fontWeight="semibold"
                                                         bg={current ? "#0D1B3E" : reached ? "#DCFCE7" : "#F1F5F9"} color={current ? "white" : reached ? "#15803D" : "#94A3B8"}>
                                                         {reached && !current && <LuCheck size={11} />}{RENEWAL_STAGE_LABELS[s]}
                                                     </Flex>
-                                                    {i < RENEWAL_STAGE_FLOW.length - 1 && <Text color="#CBD5E1" fontSize="16px">›</Text>}
+                                                    {i < RENEWAL_STAGE_FLOW.length - 1 && <Text color="#CBD5E1" fontSize="15px">›</Text>}
                                                 </Flex>
                                             )
                                         })}
@@ -207,30 +207,30 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
 
                                     {stage === "declined" && data.workflow.lost_reason && (
                                         <Box bg="#FEF2F2" border="1px solid #FECACA" borderRadius="8px" p="12px">
-                                            <Text fontSize="16px" color="#B91C1C" fontWeight="semibold">Perpanjangan hilang: {RENEWAL_LOST_REASON_LABELS[data.workflow.lost_reason]}</Text>
-                                            {data.workflow.lost_note && <Text fontSize="16px" color="#7F1D1D" mt="2px">{data.workflow.lost_note}</Text>}
+                                            <Text fontSize="15px" color="#B91C1C" fontWeight="semibold">Perpanjangan hilang: {RENEWAL_LOST_REASON_LABELS[data.workflow.lost_reason]}</Text>
+                                            {data.workflow.lost_note && <Text fontSize="15px" color="#7F1D1D" mt="2px">{data.workflow.lost_note}</Text>}
                                         </Box>
                                     )}
 
                                     {stage === "issued" && data.workflow.renewed_policy_id && (
                                         <Flex bg="#F0FDF4" border="1px solid #BBF7D0" borderRadius="8px" p="12px" align="center" justify="space-between" gap="8px" flexWrap="wrap">
-                                            <Text fontSize="16px" color="#15803D" fontWeight="semibold">Perpanjangan sudah terbit.</Text>
+                                            <Text fontSize="15px" color="#15803D" fontWeight="semibold">Perpanjangan sudah terbit.</Text>
                                             <Button size="xs" variant="outline" onClick={() => router.push(`/agentra/policies/${encodeURIComponent(data.workflow.renewed_policy_id!)}`)}>Buka polis baru</Button>
                                         </Flex>
                                     )}
 
                                     {stage === "awaiting_ri" && (
                                         <Box bg="#F5F3FF" border="1px solid" borderColor="#DDD6FE" borderRadius="8px" p="12px">
-                                            <Text fontSize="16px" color="#5B21B6">Menunggu dukungan reasuransi fakultatif dari penanggung. Beri tahu nasabah bahwa terms risiko besar perlu waktu lebih lama.</Text>
+                                            <Text fontSize="15px" color="#5B21B6">Menunggu dukungan reasuransi fakultatif dari penanggung. Beri tahu nasabah bahwa terms risiko besar perlu waktu lebih lama.</Text>
                                         </Box>
                                     )}
 
                                     {claimHist && editable && (
                                         <Box bg={claimHist.claim_count === 0 ? "#F0FDF4" : "#FFF7ED"} border="1px solid" borderColor={claimHist.claim_count === 0 ? "#BBF7D0" : "#FED7AA"} borderRadius="8px" p="12px">
-                                            <Text fontSize="16px" fontWeight="semibold" color={claimHist.claim_count === 0 ? "#166534" : "#9A3412"}>
+                                            <Text fontSize="15px" fontWeight="semibold" color={claimHist.claim_count === 0 ? "#166534" : "#9A3412"}>
                                                 {claimHist.claim_count === 0 ? "Tanpa klaim periode ini" : `${claimHist.claim_count} klaim · rasio klaim ${claimHist.claim_ratio ?? 0}%`}
                                             </Text>
-                                            <Text fontSize="16px" color="#64748B">
+                                            <Text fontSize="15px" color="#64748B">
                                                 {claimHist.claim_count === 0
                                                     ? "Minta diskon no-claim (NCD) / rate lebih baik ke penanggung saat meminta terms."
                                                     : (claimHist.claim_ratio ?? 0) >= 60
@@ -243,12 +243,12 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                     {/* Sum insured review prompt */}
                                     {data.review_kind && editable && (
                                         <Box bg={needsReview ? "#FFFBEB" : "#F8FAFC"} border="1px solid" borderColor={needsReview ? "#FDE68A" : "#E2E8F0"} borderRadius="8px" p="12px">
-                                            <Text fontSize="16px" fontWeight="semibold" color={needsReview ? "#92400E" : "#475569"}>Tinjau nilai pertanggungan</Text>
-                                            <Text fontSize="16px" color="#64748B" mt="2px">{REVIEW_HINT[data.review_kind]}</Text>
+                                            <Text fontSize="15px" fontWeight="semibold" color={needsReview ? "#92400E" : "#475569"}>Tinjau nilai pertanggungan</Text>
+                                            <Text fontSize="15px" color="#64748B" mt="2px">{REVIEW_HINT[data.review_kind]}</Text>
                                             <Checkbox.Root mt="8px" checked={form.reviewed} onCheckedChange={(d) => setForm({ ...form, reviewed: d.checked === true })}>
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control />
-                                                <Checkbox.Label fontSize="16px" color="#334155">Sudah ditinjau bersama nasabah</Checkbox.Label>
+                                                <Checkbox.Label fontSize="15px" color="#334155">Sudah ditinjau bersama nasabah</Checkbox.Label>
                                             </Checkbox.Root>
                                             <Input {...CLAIM_INPUT} mt="8px" placeholder="Catatan tinjauan (opsional)" maxLength={500} value={form.reviewNote} onChange={(e) => setForm({ ...form, reviewNote: e.target.value })} />
                                         </Box>
@@ -260,30 +260,30 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                             <Table.Header>
                                                 <Table.Row bg="#F8FAFC">
                                                     {["", "POLIS LAMA", "PENAWARAN BARU", "SELISIH"].map((h) => (
-                                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="16px" fontWeight="bold" px="12px" py="8px">{h}</Table.ColumnHeader>
+                                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="15px" fontWeight="bold" px="12px" py="8px">{h}</Table.ColumnHeader>
                                                     ))}
                                                 </Table.Row>
                                             </Table.Header>
                                             <Table.Body>
                                                 <Table.Row>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px" color="#64748B">Nilai pertanggungan</Table.Cell>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px">{fmtIDR(p.sum_insured)}</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px" color="#64748B">Nilai pertanggungan</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px">{fmtIDR(p.sum_insured)}</Table.Cell>
                                                     <Table.Cell px="12px" py="8px">
                                                         <MoneyInput value={form.sum} disabled={!editable} onChange={(v) => setForm({ ...form, sum: v })} />
                                                     </Table.Cell>
                                                     <Table.Cell px="12px" py="8px"><Delta before={p.sum_insured} after={newSum} /></Table.Cell>
                                                 </Table.Row>
                                                 <Table.Row>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px" color="#64748B">Premi</Table.Cell>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px">{fmtIDR(p.premium_amount)}</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px" color="#64748B">Premi</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px">{fmtIDR(p.premium_amount)}</Table.Cell>
                                                     <Table.Cell px="12px" py="8px">
                                                         <MoneyInput value={form.premium} disabled={!editable} onChange={(v) => setForm({ ...form, premium: v })} />
                                                     </Table.Cell>
                                                     <Table.Cell px="12px" py="8px"><Delta before={p.premium_amount} after={newPremium} /></Table.Cell>
                                                 </Table.Row>
                                                 <Table.Row>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px" color="#64748B">Komisi (%)</Table.Cell>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px">{p.commission_rate}%</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px" color="#64748B">Komisi (%)</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px">{p.commission_rate}%</Table.Cell>
                                                     <Table.Cell px="12px" py="8px">
                                                         <Input {...CLAIM_INPUT} inputMode="decimal" placeholder={String(p.commission_rate)} disabled={!editable} value={form.rate}
                                                             onChange={(e) => setForm({ ...form, rate: e.target.value.replace(/[^\d.,]/g, "").slice(0, 6) })} />
@@ -291,8 +291,8 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                                     <Table.Cell px="12px" py="8px"><Delta before={p.commission_rate} after={newRate} rate /></Table.Cell>
                                                 </Table.Row>
                                                 <Table.Row>
-                                                    <Table.Cell px="12px" py="8px" fontSize="16px" color="#64748B" verticalAlign="top">Ketentuan saat ini</Table.Cell>
-                                                    <Table.Cell px="12px" py="8px" colSpan={3} fontSize="16px" color="#475569">
+                                                    <Table.Cell px="12px" py="8px" fontSize="15px" color="#64748B" verticalAlign="top">Ketentuan saat ini</Table.Cell>
+                                                    <Table.Cell px="12px" py="8px" colSpan={3} fontSize="15px" color="#475569">
                                                         {p.terms.length === 0 ? "Belum ada risiko sendiri, klausula atau perluasan tercatat." : p.terms.map((t) => t.title).join(" · ")}
                                                     </Table.Cell>
                                                 </Table.Row>
@@ -300,49 +300,49 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                                         </Table.Root>
                                     </Box>
                                     {p.coverage_items > 0 && (
-                                        <Text fontSize="16px" color="#64748B" mt="-8px">
+                                        <Text fontSize="15px" color="#64748B" mt="-8px">
                                             Polis ini punya {p.coverage_items} item pertanggungan. Saat terbit, item disalin dan premi dihitung dari item; sesuaikan item di polis baru bila ketentuan berubah.
                                         </Text>
                                     )}
 
                                     <Flex gap="12px" flexWrap="wrap">
                                         <Flex flexDir="column" gap="4px" flex="1" minW="200px">
-                                            <Text fontSize="16px" color="#5D6D7E" fontWeight="medium">No. penawaran asuransi</Text>
+                                            <Text fontSize="15px" color="#5D6D7E" fontWeight="medium">No. penawaran asuransi</Text>
                                             <Input {...CLAIM_INPUT} maxLength={100} disabled={!editable} value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
                                         </Flex>
                                     </Flex>
                                     <Flex flexDir="column" gap="4px">
-                                        <Text fontSize="16px" color="#5D6D7E" fontWeight="medium">Perubahan ketentuan dari asuransi</Text>
-                                        <Textarea fontSize="16px" rows={3} maxLength={4000} disabled={!editable}
+                                        <Text fontSize="15px" color="#5D6D7E" fontWeight="medium">Perubahan ketentuan dari asuransi</Text>
+                                        <Textarea fontSize="15px" rows={3} maxLength={4000} disabled={!editable}
                                             placeholder="Mis. risiko sendiri naik jadi 5%, klausula banjir ditambahkan..."
                                             value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                                     </Flex>
 
-                                    {error && <Text color="#DC2626" fontSize="16px" role="alert">{error}</Text>}
+                                    {error && <Text color="#DC2626" fontSize="15px" role="alert">{error}</Text>}
 
                                     {/* Actions */}
                                     {(editable || reopenable) && (
                                         <Flex gap="8px" flexWrap="wrap" align="center">
-                                            {editable && <Button size="sm" variant="outline" fontSize="16px" disabled={!dirty || busy} loading={busy && dirty} onClick={() => void save()}>Simpan ketentuan</Button>}
+                                            {editable && <Button size="sm" variant="outline" fontSize="15px" disabled={!dirty || busy} loading={busy && dirty} onClick={() => void save()}>Simpan ketentuan</Button>}
                                             {nextSteps.map((s) => (
-                                                <Button key={s} size="sm" bg="#0D1B3E" color="white" fontSize="16px" disabled={busy} onClick={() => void moveTo(s)}>
+                                                <Button key={s} size="sm" bg="#0D1B3E" color="white" fontSize="15px" disabled={busy} onClick={() => void moveTo(s)}>
                                                     {NEXT_LABELS[s] ?? RENEWAL_STAGE_LABELS[s]}
                                                 </Button>
                                             ))}
                                             {stage === "accepted" && (
-                                                <Button size="sm" bg="#16A34A" color="white" fontSize="16px" disabled={busy} onClick={() => setIssuing(true)}>Terbitkan polis baru</Button>
+                                                <Button size="sm" bg="#16A34A" color="white" fontSize="15px" disabled={busy} onClick={() => setIssuing(true)}>Terbitkan polis baru</Button>
                                             )}
-                                            {reopenable && <Button size="sm" bg="#0D1B3E" color="white" fontSize="16px" disabled={busy} onClick={() => void moveTo("terms_requested")}>Buka kembali</Button>}
-                                            {canDecline && <Button size="sm" variant="outline" borderColor="#FCA5A5" color="#DC2626" fontSize="16px" disabled={busy} onClick={() => setDeclining(true)}>Perpanjangan hilang</Button>}
+                                            {reopenable && <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" disabled={busy} onClick={() => void moveTo("terms_requested")}>Buka kembali</Button>}
+                                            {canDecline && <Button size="sm" variant="outline" borderColor="#FCA5A5" color="#DC2626" fontSize="15px" disabled={busy} onClick={() => setDeclining(true)}>Perpanjangan hilang</Button>}
                                         </Flex>
                                     )}
 
                                     {/* Timeline */}
                                     {data.events.length > 0 && (
                                         <Flex flexDir="column" gap="6px">
-                                            <Text fontSize="16px" fontWeight="bold" color="#64748B" letterSpacing="0.05em">RIWAYAT</Text>
+                                            <Text fontSize="15px" fontWeight="bold" color="#64748B" letterSpacing="0.05em">RIWAYAT</Text>
                                             {data.events.map((e, i) => (
-                                                <Flex key={i} gap="8px" align="baseline" fontSize="16px" color="#475569" flexWrap="wrap">
+                                                <Flex key={i} gap="8px" align="baseline" fontSize="15px" color="#475569" flexWrap="wrap">
                                                     <Text color="#64748B" minW="96px">{fmtDate(e.created_at)}</Text>
                                                     <Text>{RENEWAL_STAGE_LABELS[e.from_stage]} → <b>{RENEWAL_STAGE_LABELS[e.to_stage]}</b>{e.note ? ` — ${e.note}` : ""}</Text>
                                                 </Flex>
@@ -354,7 +354,7 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                         </Dialog.Body>
 
                         <Dialog.Footer px="24px" pb="24px" pt="8px">
-                            <Button variant="outline" size="sm" fontSize="16px" onClick={onClose}>Tutup</Button>
+                            <Button variant="outline" size="sm" fontSize="15px" onClick={onClose}>Tutup</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
@@ -377,15 +377,15 @@ export function RenewalWorkflowDialog({ policyId, onClose, onChanged }: {
                     <Dialog.Backdrop bg="rgba(0,0,0,0.25)" zIndex={1500} />
                     <Dialog.Positioner zIndex={1501}>
                         <Dialog.Content bg="white" borderRadius="12px" maxW="440px" w="94vw" shadow="xl" p="24px">
-                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Perpanjangan terbit</Dialog.Title>
-                            <Text mt="8px" fontSize="16px" color="#475569">
+                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">Perpanjangan terbit</Dialog.Title>
+                            <Text mt="8px" fontSize="15px" color="#475569">
                                 Polis <b>{issued.policy_number}</b> berlaku {fmtDate(issued.coverage_start)} – {fmtDate(issued.coverage_end)}. Tanggal jatuh tempo berikutnya: <b>{fmtDate(issued.coverage_end)}</b>.
                             </Text>
-                            <Text mt="8px" fontSize="16px" color="#64748B">Unggah dokumen polis baru dari asuransi agar tersimpan bersama polisnya.</Text>
+                            <Text mt="8px" fontSize="15px" color="#64748B">Unggah dokumen polis baru dari asuransi agar tersimpan bersama polisnya.</Text>
                             <Flex mt="16px" gap="8px" flexWrap="wrap" justify="flex-end">
-                                <Button size="sm" variant="outline" fontSize="16px" onClick={onClose}>Nanti</Button>
-                                <Button size="sm" variant="outline" fontSize="16px" onClick={() => router.push(`/agentra/policies/${encodeURIComponent(issued.policy_id)}`)}>Buka polis</Button>
-                                <Button size="sm" bg="#0D1B3E" color="white" fontSize="16px" gap="6px" onClick={() => setUploading(true)}><LuFileUp size={13} /> Unggah dokumen</Button>
+                                <Button size="sm" variant="outline" fontSize="15px" onClick={onClose}>Nanti</Button>
+                                <Button size="sm" variant="outline" fontSize="15px" onClick={() => router.push(`/agentra/policies/${encodeURIComponent(issued.policy_id)}`)}>Buka polis</Button>
+                                <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" gap="6px" onClick={() => setUploading(true)}><LuFileUp size={13} /> Unggah dokumen</Button>
                             </Flex>
                         </Dialog.Content>
                     </Dialog.Positioner>

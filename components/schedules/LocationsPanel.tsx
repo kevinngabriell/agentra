@@ -62,7 +62,7 @@ function payloadFrom(f: Form): Partial<LocationFields> {
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
         <Flex flexDir="column" gap="10px" pt="4px">
-            <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()}</Text>
+            <Text color="#0D1B3E" fontSize="13px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()}</Text>
             {children}
         </Flex>
     )
@@ -127,7 +127,7 @@ function LocationDialog({ policyId, editing, onClose, onSaved }: { policyId: str
                 <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr" }} gap="8px">
                     {PROTECTION_FIELDS.map(([k, label]) => (
                         <Switch.Root key={k} checked={Boolean(f[k as ProtectionKey])} onCheckedChange={(e) => set({ [k]: e.checked })} colorPalette="blue" size="sm">
-                            <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">{label}</Switch.Label>
+                            <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">{label}</Switch.Label>
                         </Switch.Root>
                     ))}
                 </Grid>
@@ -147,7 +147,7 @@ function LocationDialog({ policyId, editing, onClose, onSaved }: { policyId: str
             <Section title="Stok & hunian">
                 <FormRow>{sel("stock_ownership", "Kepemilikan stok", opts(STOCK_OWNERSHIP_LABELS))}{txt("third_party_stock_note", "Pemilik stok titipan", 300)}</FormRow>
                 <Switch.Root checked={Boolean(f.bailee_liability_covered)} onCheckedChange={(e) => set({ bailee_liability_covered: e.checked })} colorPalette="blue" size="sm">
-                    <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">Tanggung jawab atas barang titipan (bailee / warehouse keeper) dijamin</Switch.Label>
+                    <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">Tanggung jawab atas barang titipan (bailee / warehouse keeper) dijamin</Switch.Label>
                 </Switch.Root>
                 <FormRow>{sel("occupancy_status", "Status hunian", opts(OCCUPANCY_LABELS))}
                     <FormField label="Kosong sejak"><Input {...CLAIM_INPUT} type="date" value={String(f.unoccupied_since)} onChange={(e) => set({ unoccupied_since: e.target.value })} /></FormField>
@@ -175,12 +175,12 @@ function NearbyDialog({ policyId, loc, onClose }: { policyId: string; loc: Polic
             </FormField>
             {!data ? <Skeleton h="60px" /> : (
                 <>
-                    <Box p="12px" bg="#F8FAFC" borderRadius="8px" fontSize="15px">
+                    <Box p="12px" bg="#F8FAFC" borderRadius="8px" fontSize="14px">
                         <Text fontWeight="semibold">Lokasi ini {fmtIDR(loc.total_sum_insured)} + sekitar {fmtIDR(data.total_sum_insured)} = {fmtIDR(loc.total_sum_insured + data.total_sum_insured)}</Text>
-                        <Text color="#64748B" fontSize="14px">Total nilai di satu area bencana (banjir / gempa / kebakaran merambat). Bandingkan dengan kapasitas penanggung sebelum menambah risiko.</Text>
+                        <Text color="#64748B" fontSize="13px">Total nilai di satu area bencana (banjir / gempa / kebakaran merambat). Bandingkan dengan kapasitas penanggung sebelum menambah risiko.</Text>
                     </Box>
-                    {data.items.length === 0 ? <Text color="#64748B" fontSize="15px">Tidak ada lokasi lain yang diasuransikan di sekitar.</Text> : data.items.map((n, i) => (
-                        <Flex key={i} justify="space-between" gap="8px" p="8px 0" borderTop="1px solid #E2E8F0" fontSize="14px">
+                    {data.items.length === 0 ? <Text color="#64748B" fontSize="14px">Tidak ada lokasi lain yang diasuransikan di sekitar.</Text> : data.items.map((n, i) => (
+                        <Flex key={i} justify="space-between" gap="8px" p="8px 0" borderTop="1px solid #E2E8F0" fontSize="13px">
                             <Box minW="0">
                                 <Text fontWeight="semibold" color="#1C2833">{n.customer_name} · {n.policy_number}</Text>
                                 <Text color="#64748B">{n.label ?? "—"}{n.area_name ? ` · ${n.area_name}` : ""}</Text>
@@ -239,21 +239,21 @@ export function LocationsPanel({ policyId, coverages, cancelled, onChanged }: Lo
             <Flex align="center" justify="space-between" mb="16px" gap="8px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
                     <LuMapPin size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Lokasi Risiko</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Lokasi Risiko</Text>
                 </Flex>
-                {!cancelled && <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog({ editing: null })}><LuPlus size={12} /> Tambah Lokasi</Button>}
+                {!cancelled && <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog({ editing: null })}><LuPlus size={12} /> Tambah Lokasi</Button>}
             </Flex>
-            {error && <Text color="#DC2626" fontSize="14px" mb="8px" role="alert">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" mb="8px" role="alert">{error}</Text>}
             {!data ? <Skeleton h="80px" /> : (
                 <Flex flexDir="column" gap="14px">
                     {data.items.length > 0 && (
-                        <Text fontSize="14px" color="#64748B">
+                        <Text fontSize="13px" color="#64748B">
                             {data.summary.location_count} lokasi · TSI {fmtIDR(data.summary.total_sum_insured)} · lokasi terbesar {fmtIDR(data.summary.max_location_sum_insured)}
                             {data.summary.total_pml > 0 && ` · PML ${fmtIDR(data.summary.total_pml)}`}
                         </Text>
                     )}
                     {data.items.length === 0 && (
-                        <Text color="#64748B" fontSize="15px">Belum ada lokasi. Untuk gudang / pabrik dengan beberapa lokasi, tambahkan tiap lokasi lalu tautkan item pertanggungannya.</Text>
+                        <Text color="#64748B" fontSize="14px">Belum ada lokasi. Untuk gudang / pabrik dengan beberapa lokasi, tambahkan tiap lokasi lalu tautkan item pertanggungannya.</Text>
                     )}
                     {data.items.map((l) => {
                         const protections = PROTECTION_FIELDS.filter(([k]) => l[k])
@@ -261,17 +261,17 @@ export function LocationsPanel({ policyId, coverages, cancelled, onChanged }: Lo
                             <Box key={l.location_id} p="14px" border="1px solid" borderColor={l.underinsured ? "#FDE68A" : "#E2E8F0"} borderRadius="10px">
                                 <Flex justify="space-between" gap="8px" align="flex-start">
                                     <Box minW="0">
-                                        <Text fontWeight="semibold" color="#1C2833" fontSize="15px">{l.label ?? `Lokasi ${l.seq}`}</Text>
-                                        <Text fontSize="14px" color="#64748B">{[l.address, l.city, l.area_name].filter(Boolean).join(" · ") || "Alamat belum diisi"}</Text>
+                                        <Text fontWeight="semibold" color="#1C2833" fontSize="14px">{l.label ?? `Lokasi ${l.seq}`}</Text>
+                                        <Text fontSize="13px" color="#64748B">{[l.address, l.city, l.area_name].filter(Boolean).join(" · ") || "Alamat belum diisi"}</Text>
                                         <Flex gap="6px" mt="6px" flexWrap="wrap">
-                                            {l.occupation_code && <Badge fontSize="14px" bg="#E0F2FE" color="#0369A1">Okupasi {l.occupation_code}</Badge>}
-                                            {l.construction_class && <Badge fontSize="14px" bg="#F1F5F9" color="#334155">Kelas {l.construction_class}</Badge>}
-                                            {l.eq_zone && <Badge fontSize="14px" bg="#FEF3C7" color="#B45309">Zona gempa {l.eq_zone}</Badge>}
-                                            {l.flood_zone && <Badge fontSize="14px" bg={l.flood_zone === "high" ? "#FEE2E2" : "#E0F2FE"} color={l.flood_zone === "high" ? "#B91C1C" : "#0369A1"}>Banjir {FLOOD_ZONE_LABELS[l.flood_zone].toLowerCase()}</Badge>}
-                                            {protections.length > 0 && <Badge fontSize="14px" bg="#DCFCE7" color="#15803D">{protections.map(([, label]) => label).join(", ")}</Badge>}
-                                            {l.stock_ownership && l.stock_ownership !== "own" && <Badge fontSize="14px" bg={l.bailee_liability_covered ? "#DCFCE7" : "#FEE2E2"} color={l.bailee_liability_covered ? "#15803D" : "#B91C1C"}>
+                                            {l.occupation_code && <Badge fontSize="13px" bg="#E0F2FE" color="#0369A1">Okupasi {l.occupation_code}</Badge>}
+                                            {l.construction_class && <Badge fontSize="13px" bg="#F1F5F9" color="#334155">Kelas {l.construction_class}</Badge>}
+                                            {l.eq_zone && <Badge fontSize="13px" bg="#FEF3C7" color="#B45309">Zona gempa {l.eq_zone}</Badge>}
+                                            {l.flood_zone && <Badge fontSize="13px" bg={l.flood_zone === "high" ? "#FEE2E2" : "#E0F2FE"} color={l.flood_zone === "high" ? "#B91C1C" : "#0369A1"}>Banjir {FLOOD_ZONE_LABELS[l.flood_zone].toLowerCase()}</Badge>}
+                                            {protections.length > 0 && <Badge fontSize="13px" bg="#DCFCE7" color="#15803D">{protections.map(([, label]) => label).join(", ")}</Badge>}
+                                            {l.stock_ownership && l.stock_ownership !== "own" && <Badge fontSize="13px" bg={l.bailee_liability_covered ? "#DCFCE7" : "#FEE2E2"} color={l.bailee_liability_covered ? "#15803D" : "#B91C1C"}>
                                                 Stok titipan {l.bailee_liability_covered ? "· bailee dijamin" : "· bailee belum dijamin"}</Badge>}
-                                            {l.occupancy_status && l.occupancy_status !== "occupied" && <Badge fontSize="14px" bg="#FEF3C7" color="#B45309">{OCCUPANCY_LABELS[l.occupancy_status]}</Badge>}
+                                            {l.occupancy_status && l.occupancy_status !== "occupied" && <Badge fontSize="13px" bg="#FEF3C7" color="#B45309">{OCCUPANCY_LABELS[l.occupancy_status]}</Badge>}
                                         </Flex>
                                     </Box>
                                     <Flex flexShrink={0}>
@@ -282,7 +282,7 @@ export function LocationsPanel({ policyId, coverages, cancelled, onChanged }: Lo
                                 </Flex>
 
                                 {l.underinsured && l.rebuild_value && (
-                                    <Flex mt="8px" gap="6px" p="8px 10px" bg="#FFFBEB" borderRadius="8px" fontSize="14px" color="#92400E">
+                                    <Flex mt="8px" gap="6px" p="8px 10px" bg="#FFFBEB" borderRadius="8px" fontSize="13px" color="#92400E">
                                         <Box mt="2px"><LuTriangleAlert size={13} /></Box>
                                         <Text>Bangunan diasuransikan {fmtIDR(l.building_sum_insured)}, nilai bangun ulang ≈ {fmtIDR(l.rebuild_value)} ({Math.round((l.insured_ratio ?? 0) * 100)}%).
                                             Bila terjadi klaim, klausula average memotong ganti rugi secara proporsional. Tawarkan penyesuaian nilai.</Text>
@@ -290,9 +290,9 @@ export function LocationsPanel({ policyId, coverages, cancelled, onChanged }: Lo
                                 )}
 
                                 <Flex flexDir="column" mt="10px" gap="4px">
-                                    {l.items.length === 0 && <Text fontSize="14px" color="#64748B">Belum ada item pertanggungan di lokasi ini.</Text>}
+                                    {l.items.length === 0 && <Text fontSize="13px" color="#64748B">Belum ada item pertanggungan di lokasi ini.</Text>}
                                     {l.items.map((it) => (
-                                        <Flex key={it.coverage_id} justify="space-between" align="center" gap="8px" fontSize="14px" py="4px" borderTop="1px dashed #E2E8F0" flexWrap="wrap">
+                                        <Flex key={it.coverage_id} justify="space-between" align="center" gap="8px" fontSize="13px" py="4px" borderTop="1px dashed #E2E8F0" flexWrap="wrap">
                                             <Flex gap="6px" align="center" flexWrap="wrap" minW="0">
                                                 <Text color="#1C2833">{covName(it.coverage_type, it.coverage_label)}</Text>
                                                 <TariffBadge params={l.occupation_code && l.construction_class && it.coverage_type === "bangunan"
@@ -302,13 +302,13 @@ export function LocationsPanel({ policyId, coverages, cancelled, onChanged }: Lo
                                                 <Text color="#64748B">{fmtIDRCompact(it.sum_insured)} × {it.rate_permille}‰ = {fmtIDR(it.premium_amount)}</Text>
                                                 {!cancelled && data.items.length > 1 && (
                                                     <Box w="150px"><SearchSelect value={l.location_id} onChange={(v) => v !== l.location_id && moveItem(it.coverage_id, v)}
-                                                        options={locOptions} fontSize="14px" disabled={moving === it.coverage_id} /></Box>
+                                                        options={locOptions} fontSize="13px" disabled={moving === it.coverage_id} /></Box>
                                                 )}
                                             </Flex>
                                         </Flex>
                                     ))}
                                 </Flex>
-                                <Text mt="6px" fontSize="14px" fontWeight="semibold" color="#0D1B3E">
+                                <Text mt="6px" fontSize="13px" fontWeight="semibold" color="#0D1B3E">
                                     TSI lokasi {fmtIDR(l.total_sum_insured)} · premi {fmtIDR(l.total_premium)}{l.pml_amount !== null && ` · PML ${fmtIDR(l.pml_amount)}`}
                                 </Text>
                             </Box>
@@ -317,11 +317,11 @@ export function LocationsPanel({ policyId, coverages, cancelled, onChanged }: Lo
 
                     {data.items.length > 0 && unassigned.length > 0 && (
                         <Box p="12px" bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="10px">
-                            <Text fontSize="14px" fontWeight="semibold" color="#92400E" mb="6px">Item belum ditautkan ke lokasi ({unassigned.length})</Text>
+                            <Text fontSize="13px" fontWeight="semibold" color="#92400E" mb="6px">Item belum ditautkan ke lokasi ({unassigned.length})</Text>
                             {unassigned.map((c) => (
-                                <Flex key={c.coverage_id} justify="space-between" align="center" gap="8px" py="4px" fontSize="14px" flexWrap="wrap">
+                                <Flex key={c.coverage_id} justify="space-between" align="center" gap="8px" py="4px" fontSize="13px" flexWrap="wrap">
                                     <Text>{covName(c.coverage_type, c.coverage_label)} · {fmtIDRCompact(c.sum_insured)}</Text>
-                                    {!cancelled && <Box w="170px"><SearchSelect value="" onChange={(v) => v && moveItem(c.coverage_id, v)} options={locOptions.slice(1)} placeholder="Tautkan ke..." fontSize="14px" disabled={moving === c.coverage_id} /></Box>}
+                                    {!cancelled && <Box w="170px"><SearchSelect value="" onChange={(v) => v && moveItem(c.coverage_id, v)} options={locOptions.slice(1)} placeholder="Tautkan ke..." fontSize="13px" disabled={moving === c.coverage_id} /></Box>}
                                 </Flex>
                             ))}
                         </Box>

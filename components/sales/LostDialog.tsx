@@ -31,7 +31,7 @@ export function LostDialog({ prospect, onClose, onSaved }: { prospect: ApiProspe
 
     return (
         <FormDialog title="Tandai Batal" saving={saving} error={error} submitLabel="Tandai Batal" onClose={onClose} onSubmit={submit}>
-            <Text fontSize="15px" color="#64748B">Mengapa {prospect.name} tidak jadi? Alasan ini dipakai untuk melihat pola kehilangan prospek.</Text>
+            <Text fontSize="14px" color="#64748B">Mengapa {prospect.name} tidak jadi? Alasan ini dipakai untuk melihat pola kehilangan prospek.</Text>
             <FormField label="Alasan *">
                 <SearchSelect value={reason} onChange={(v) => setReason(v as LostReason)} placeholder="Pilih alasan"
                     options={(Object.entries(LOST_REASON_LABELS) as [LostReason, string][]).map(([value, label]) => ({ value, label }))} />
