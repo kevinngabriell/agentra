@@ -48,19 +48,19 @@ function StatCard({ icon, label, value, sub, tone, onClick }: {
             onClick={onClick}>
             <Box p="10px" borderRadius="10px" bg={tone.bg} color={tone.color}>{icon}</Box>
             <Flex flexDir="column" flex="1" minW="0">
-                <Text color="#64748B" fontSize="14px">{label}</Text>
-                {value === null ? <Skeleton h="24px" w="60px" mt="2px" /> : <Text color="#1C2833" fontSize="22px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
-                {sub && <Text color="#64748B" fontSize="14px">{sub}</Text>}
+                <Text color="#64748B" fontSize="13px">{label}</Text>
+                {value === null ? <Skeleton h="24px" w="60px" mt="2px" /> : <Text color="#1C2833" fontSize="20px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
+                {sub && <Text color="#64748B" fontSize="13px">{sub}</Text>}
             </Flex>
         </Flex>
     )
 }
 
 function DocsProgress({ claim }: { claim: ApiClaim }) {
-    if (claim.docs_required === 0) return <Text color="#CBD5E1" fontSize="14px">—</Text>
+    if (claim.docs_required === 0) return <Text color="#CBD5E1" fontSize="13px">—</Text>
     const done = claim.docs_provided >= claim.docs_required
     return (
-        <Text fontSize="14px" fontWeight="medium" color={done ? "#16A34A" : "#B45309"}>
+        <Text fontSize="13px" fontWeight="medium" color={done ? "#16A34A" : "#B45309"}>
             {claim.docs_provided}/{claim.docs_required}
         </Text>
     )
@@ -152,10 +152,10 @@ export default function ClaimsPage() {
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column">
                     <Flex justify="space-between" align="flex-start" gap="12px" flexWrap="wrap">
                         <Flex gap="4px" flexDir="column">
-                            <Text color="#1C2833" fontSize="24px" fontWeight="bold">Klaim</Text>
-                            <Text color="#5D6D7E" fontSize="16px">Pantau klaim nasabah dari pelaporan sampai pembayaran</Text>
+                            <Text color="#1C2833" fontSize="22px" fontWeight="bold">Klaim</Text>
+                            <Text color="#5D6D7E" fontSize="15px">Pantau klaim nasabah dari pelaporan sampai pembayaran</Text>
                         </Flex>
-                        <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setRegisterOpen(true)}>
+                        <Button bg="#0D1B3E" color="white" gap="6px" fontSize="14px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setRegisterOpen(true)}>
                             <LuPlus size={14} /> Daftarkan Klaim
                         </Button>
                     </Flex>
@@ -173,13 +173,13 @@ export default function ClaimsPage() {
                             sub={summary ? `${summary.by_status.paid} klaim` : undefined}
                             tone={{ bg: "#E0E7FF", color: "#4338CA" }} onClick={() => { setStatus("paid"); setPage(1) }} />
                     </Flex>
-                    {summaryError && <Text fontSize="15px" color="#DC2626">{summaryError}</Text>}
+                    {summaryError && <Text fontSize="14px" color="#DC2626">{summaryError}</Text>}
 
                     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                         <Flex px="20px" py="14px" gap="10px" flexWrap="wrap" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
                             <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="12px" h="40px" flex="1" minW="200px">
                                 <LuSearch size={15} color="#64748B" />
-                                <Input border="none" outline="none" fontSize="15px" color="#1C2833" aria-label="Cari klaim"
+                                <Input border="none" outline="none" fontSize="14px" color="#1C2833" aria-label="Cari klaim"
                                     placeholder="Cari no. klaim, nasabah, no. polis, atau penyebab..."
                                     value={query} onChange={(e) => set(setQuery)(e.target.value)} style={{ background: "transparent" }} />
                                 {query && (
@@ -199,7 +199,7 @@ export default function ClaimsPage() {
                             </Box>
                         </Flex>
 
-                        {error && <Text px="20px" py="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+                        {error && <Text px="20px" py="20px" fontSize="14px" color="#DC2626">{error}</Text>}
 
                         {!error && loading && (
                             <Flex flexDir="column" gap="8px" p="20px">
@@ -210,7 +210,7 @@ export default function ClaimsPage() {
                         {!error && !loading && claims.length === 0 && (
                             <Flex flexDir="column" align="center" gap="8px" py="48px" px="20px" textAlign="center">
                                 <LuShieldAlert size={40} color="#CBD5E1" />
-                                <Text color="#64748B" fontSize="16px">
+                                <Text color="#64748B" fontSize="15px">
                                     {filtered ? "Tidak ada klaim yang cocok dengan filter." : "Belum ada klaim berjalan. Daftarkan klaim saat nasabah melaporkan kerugian."}
                                 </Text>
                             </Flex>
@@ -223,7 +223,7 @@ export default function ClaimsPage() {
                                         <Table.Header>
                                             <Table.Row bg="#F8FAFC">
                                                 {["NO. KLAIM", "NASABAH", "POLIS", "KEJADIAN", "NILAI", "DOKUMEN", "STATUS"].map((h) => (
-                                                    <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">
+                                                    <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">
                                                         {h}
                                                     </Table.ColumnHeader>
                                                 ))}
@@ -234,23 +234,23 @@ export default function ClaimsPage() {
                                                 <Table.Row key={c.claim_id} borderBottom="1px solid" borderColor="#F1F5F9" cursor="pointer" _hover={{ bg: "#F8FAFC" }}
                                                     onClick={() => router.push(`/agentra/claims/${encodeURIComponent(c.claim_id)}`)}>
                                                     <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                        <Text color="#1D4ED8" fontSize="15px" fontWeight="semibold">{c.claim_number}</Text>
-                                                        {c.insurer_claim_number && <Text color="#64748B" fontSize="14px">{c.insurer_claim_number}</Text>}
+                                                        <Text color="#1D4ED8" fontSize="14px" fontWeight="semibold">{c.claim_number}</Text>
+                                                        {c.insurer_claim_number && <Text color="#64748B" fontSize="13px">{c.insurer_claim_number}</Text>}
                                                     </Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{c.customer_name}</Table.Cell>
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{c.customer_name}</Table.Cell>
                                                     <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                        <Text color="#1C2833" fontSize="14px" fontFamily="mono">{c.policy_number}</Text>
-                                                        <Text color="#64748B" fontSize="14px">{c.insurer_short_name ?? ""}</Text>
-                                                    </Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                        <Text color="#1C2833" fontSize="15px">{c.cause}</Text>
-                                                        <Text color="#64748B" fontSize="14px">{fmtDate(c.date_of_loss)}</Text>
+                                                        <Text color="#1C2833" fontSize="13px" fontFamily="mono">{c.policy_number}</Text>
+                                                        <Text color="#64748B" fontSize="13px">{c.insurer_short_name ?? ""}</Text>
                                                     </Table.Cell>
                                                     <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                        <Text color="#1C2833" fontSize="15px" fontWeight="medium">
+                                                        <Text color="#1C2833" fontSize="14px">{c.cause}</Text>
+                                                        <Text color="#64748B" fontSize="13px">{fmtDate(c.date_of_loss)}</Text>
+                                                    </Table.Cell>
+                                                    <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
+                                                        <Text color="#1C2833" fontSize="14px" fontWeight="medium">
                                                             {fmtIDR(c.settlement_amount ?? c.approved_amount ?? c.estimated_loss)}
                                                         </Text>
-                                                        <Text color="#64748B" fontSize="14px">
+                                                        <Text color="#64748B" fontSize="13px">
                                                             {c.settlement_amount !== null ? "dibayar" : c.approved_amount !== null ? "disetujui" : "estimasi"}
                                                         </Text>
                                                     </Table.Cell>
@@ -262,7 +262,7 @@ export default function ClaimsPage() {
                                     </Table.Root>
                                 </Table.ScrollArea>
                                 <Flex justify="space-between" align="center" px="20px" py="12px" borderTop="1px solid" borderColor="#F1F5F9">
-                                    <Text color="#64748B" fontSize="14px">{start}–{end} dari {total}</Text>
+                                    <Text color="#64748B" fontSize="13px">{start}–{end} dari {total}</Text>
                                     <Flex gap="6px">
                                         <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151" aria-label="Halaman sebelumnya"
                                             disabled={page <= 1} onClick={() => setPage(page - 1)}>

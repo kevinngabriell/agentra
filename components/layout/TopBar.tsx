@@ -39,8 +39,8 @@ export function TopBar({ title, userName: userNameProp, userRole = "Agen" }: Top
   return (
     <Flex align="center" justify="space-between" paddingX="24px" paddingY="12px" borderBottom="1px solid" borderColor="#E2E8F0" bgColor="#FFFFFF">
       <Box minW={0}>
-        <Text as="h1" color="#0F172A" fontSize="24px" fontWeight="bold" lineHeight="1.2">{info?.title ?? title}</Text>
-        {info && <Text color="#475569" fontSize="16px" mt="2px">{info.hint}</Text>}
+        <Text as="h1" color="#0F172A" fontSize="22px" fontWeight="bold" lineHeight="1.2">{info?.title ?? title}</Text>
+        {info && <Text color="#475569" fontSize="15px" mt="2px">{info.hint}</Text>}
       </Box>
       <Flex align="center" gap="12px">
         <NotificationBell />
@@ -59,11 +59,11 @@ export function TopBar({ title, userName: userNameProp, userRole = "Agen" }: Top
         </IconButton>
         <Separator orientation="vertical" h="24px" />
         <Box display={{ base: "none", md: "block" }}>
-          <Text color="#0F172A" fontSize="16px" fontWeight="semibold" lineHeight="1.2">{displayName}</Text>
-          <Text color="#475569" fontSize="16px">{userRole}</Text>
+          <Text color="#0F172A" fontSize="15px" fontWeight="semibold" lineHeight="1.2">{displayName}</Text>
+          <Text color="#475569" fontSize="15px">{userRole}</Text>
         </Box>
         <Flex w="36px" h="36px" borderRadius="full" bg="#1D4ED8" align="center" justify="center" aria-hidden="true">
-          <Text color="white" fontSize="16px" fontWeight="bold">{initials}</Text>
+          <Text color="white" fontSize="15px" fontWeight="bold">{initials}</Text>
         </Flex>
       </Flex>
     </Flex>

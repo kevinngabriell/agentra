@@ -81,7 +81,7 @@ export function DocumentsTable({ documents, onChanged, showCustomer = true, show
         <>
             {rowError && !pending && (
                 <Box px="20px" py="10px" bg="#FEF2F2" borderBottom="1px solid" borderColor="#FECACA">
-                    <Text color="#DC2626" fontSize="14px">{rowError}</Text>
+                    <Text color="#DC2626" fontSize="13px">{rowError}</Text>
                 </Box>
             )}
             <Table.ScrollArea>
@@ -89,7 +89,7 @@ export function DocumentsTable({ documents, onChanged, showCustomer = true, show
                     <Table.Header>
                         <Table.Row bg="#F8FAFC">
                             {headers.map((h) => (
-                                <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">
+                                <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">
                                     {h}
                                 </Table.ColumnHeader>
                             ))}
@@ -111,45 +111,45 @@ export function DocumentsTable({ documents, onChanged, showCustomer = true, show
                                                 {d.mime_type === "application/pdf" ? <LuFileText size={18} /> : <LuImage size={18} />}
                                             </Box>
                                             <Flex flexDir="column" gap="3px" minW="0">
-                                                <Text as="button" textAlign="left" color="#1C2833" fontSize="15px" fontWeight="medium"
+                                                <Text as="button" textAlign="left" color="#1C2833" fontSize="14px" fontWeight="medium"
                                                     _hover={{ color: "#1D4ED8", textDecoration: "underline" }} truncate maxW="280px"
                                                     onClick={() => setPreview(d)}>
                                                     {d.title || d.file_name}
                                                 </Text>
                                                 <Flex gap="6px" align="center" flexWrap="wrap">
-                                                    <Badge px="6px" py="0" borderRadius="full" fontSize="14px" bg={typeCfg.bg} color={typeCfg.color}>
+                                                    <Badge px="6px" py="0" borderRadius="full" fontSize="13px" bg={typeCfg.bg} color={typeCfg.color}>
                                                         {DOCUMENT_TYPE_LABELS[d.document_type] ?? d.document_type}
                                                     </Badge>
                                                     {archived && (
-                                                        <Badge px="6px" py="0" borderRadius="full" fontSize="14px" bg="#F1F5F9" color="#64748B"
+                                                        <Badge px="6px" py="0" borderRadius="full" fontSize="13px" bg="#F1F5F9" color="#64748B"
                                                             title={d.archive_reason ?? undefined}>
                                                             Arsip
                                                         </Badge>
                                                     )}
-                                                    <Text color="#64748B" fontSize="14px">{fmtFileSize(d.file_size)}</Text>
+                                                    <Text color="#64748B" fontSize="13px">{fmtFileSize(d.file_size)}</Text>
                                                 </Flex>
                                             </Flex>
                                         </Flex>
                                     </Table.Cell>
                                     {showCustomer && (
-                                        <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{d.customer_name}</Table.Cell>
+                                        <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{d.customer_name}</Table.Cell>
                                     )}
                                     {showPolicy && (
                                         <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
                                             {d.policy_number ? (
                                                 <Flex flexDir="column">
-                                                    <Text color="#1C2833" fontSize="14px" fontFamily="mono">{d.policy_number}</Text>
-                                                    <Text color={d.policy_expired ? "#DC2626" : "#94A3B8"} fontSize="14px">
+                                                    <Text color="#1C2833" fontSize="13px" fontFamily="mono">{d.policy_number}</Text>
+                                                    <Text color={d.policy_expired ? "#DC2626" : "#94A3B8"} fontSize="13px">
                                                         {d.insurer_short_name ?? ""}{d.policy_expired ? " · berakhir" : ""}
                                                     </Text>
                                                 </Flex>
-                                            ) : <Text color="#CBD5E1" fontSize="14px">—</Text>}
+                                            ) : <Text color="#CBD5E1" fontSize="13px">—</Text>}
                                         </Table.Cell>
                                     )}
-                                    <Table.Cell px="16px" py="10px" color="#64748B" fontSize="15px">{d.document_year}</Table.Cell>
+                                    <Table.Cell px="16px" py="10px" color="#64748B" fontSize="14px">{d.document_year}</Table.Cell>
                                     <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                        <Text color="#64748B" fontSize="14px">{fmtDate(d.uploaded_at)}</Text>
-                                        {d.uploaded_by_name && <Text color="#64748B" fontSize="14px">{d.uploaded_by_name}</Text>}
+                                        <Text color="#64748B" fontSize="13px">{fmtDate(d.uploaded_at)}</Text>
+                                        {d.uploaded_by_name && <Text color="#64748B" fontSize="13px">{d.uploaded_by_name}</Text>}
                                     </Table.Cell>
                                     <Table.Cell px="12px" py="10px" textAlign="end" whiteSpace="nowrap">
                                         <IconButton size="xs" variant="ghost" color="#3B82F6" aria-label="Lihat dokumen" title="Lihat" onClick={() => setPreview(d)}>
@@ -190,30 +190,30 @@ export function DocumentsTable({ documents, onChanged, showCustomer = true, show
                 <Dialog.Positioner zIndex={1501}>
                     <Dialog.Content bg="white" borderRadius="12px" maxW="420px" w="90vw" shadow="xl">
                         <Dialog.Header px="24px" pt="24px" pb="0">
-                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">
                                 {pending?.kind === "archive" ? "Arsipkan Dokumen" : "Hapus Dokumen"}
                             </Dialog.Title>
                         </Dialog.Header>
                         <Dialog.Body px="24px" py="16px">
                             <Flex flexDir="column" gap="12px">
-                                <Text color="#475569" fontSize="15px" lineHeight="1.6">
+                                <Text color="#475569" fontSize="14px" lineHeight="1.6">
                                     {pending?.kind === "archive"
                                         ? <>Dokumen <b>{pending.doc.title || pending.doc.file_name}</b> akan dipindahkan ke arsip. Dokumen arsip tetap dapat dilihat dan tidak dapat dihapus.</>
                                         : <>Hapus dokumen <b>{pending?.doc.title || pending?.doc.file_name}</b>? Dokumen tidak lagi tampil, tetapi tetap tersimpan untuk jejak audit.</>}
                                 </Text>
                                 {pending?.kind === "archive" && (
-                                    <Input fontSize="15px" borderColor="#E2E8F0" borderRadius="8px" placeholder="Alasan (opsional)"
+                                    <Input fontSize="14px" borderColor="#E2E8F0" borderRadius="8px" placeholder="Alasan (opsional)"
                                         maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
                                 )}
-                                {rowError && <Text color="#DC2626" fontSize="14px">{rowError}</Text>}
+                                {rowError && <Text color="#DC2626" fontSize="13px">{rowError}</Text>}
                             </Flex>
                         </Dialog.Body>
                         <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                            <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
+                            <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="15px" borderRadius="8px"
                                 disabled={busy} onClick={() => setPending(null)}>
                                 Batal
                             </Button>
-                            <Button flex="1" bg={pending?.kind === "delete" ? "#DC2626" : "#0D1B3E"} color="white" fontSize="16px" borderRadius="8px"
+                            <Button flex="1" bg={pending?.kind === "delete" ? "#DC2626" : "#0D1B3E"} color="white" fontSize="15px" borderRadius="8px"
                                 loading={busy} onClick={confirm}>
                                 {pending?.kind === "archive" ? "Arsipkan" : "Hapus"}
                             </Button>

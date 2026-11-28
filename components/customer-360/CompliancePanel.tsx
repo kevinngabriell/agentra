@@ -39,7 +39,7 @@ function ScreeningDialog({ customerId, data, onClose, onSaved }: { customerId: s
     }
     return (
         <FormDialog title="Profil risiko & screening APU-PPT" saving={saving} error={error} onClose={onClose} onSubmit={submit}>
-            <Text fontSize="14px" color="#64748B">Catat hasil pengecekan nama nasabah dan pemilik manfaat terhadap daftar terduga teroris (DTTOT) dan PEP. Aplikasi tidak mengecek daftar tersebut secara otomatis.</Text>
+            <Text fontSize="13px" color="#64748B">Catat hasil pengecekan nama nasabah dan pemilik manfaat terhadap daftar terduga teroris (DTTOT) dan PEP. Aplikasi tidak mengecek daftar tersebut secara otomatis.</Text>
             <FormRow>
                 <FormField label="Profil risiko nasabah"><SearchSelect value={f.rating} onChange={(v) => set({ rating: v })} clearable placeholder="Belum dinilai"
                     options={(Object.entries(RISK_RATING_LABELS) as [RiskRating, string][]).map(([value, label]) => ({ value, label }))} /></FormField>
@@ -51,7 +51,7 @@ function ScreeningDialog({ customerId, data, onClose, onSaved }: { customerId: s
                 <FormField label="Daftar yang dicek"><Input {...CLAIM_INPUT} maxLength={200} value={f.lists} onChange={(e) => set({ lists: e.target.value })} /></FormField>
             </FormRow>
             <Switch.Root checked={f.pep} onCheckedChange={(e) => set({ pep: e.checked })} colorPalette="red" size="sm">
-                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">Nasabah adalah PEP (pejabat publik / keluarga / rekan dekat)</Switch.Label>
+                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">Nasabah adalah PEP (pejabat publik / keluarga / rekan dekat)</Switch.Label>
             </Switch.Root>
             <FormField label="Catatan"><Input {...CLAIM_INPUT} maxLength={500} value={f.note} onChange={(e) => set({ note: e.target.value })} /></FormField>
         </FormDialog>
@@ -90,7 +90,7 @@ function OwnerDialog({ customerId, editing, onClose, onSaved }: { customerId: st
             </FormRow>
             <FormField label="Kewarganegaraan"><Input {...CLAIM_INPUT} maxLength={60} value={f.nat} onChange={(e) => set({ nat: e.target.value })} /></FormField>
             <Switch.Root checked={f.pep} onCheckedChange={(e) => set({ pep: e.checked })} colorPalette="red" size="sm">
-                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="15px">PEP</Switch.Label>
+                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">PEP</Switch.Label>
             </Switch.Root>
         </FormDialog>
     )
@@ -121,42 +121,42 @@ export function CompliancePanel({ customerId, isCompany }: { customerId: string;
             <Flex align="center" justify="space-between" mb="12px" gap="8px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
                     {data?.edd_required ? <LuShieldAlert size={16} color="#B91C1C" /> : <LuShieldCheck size={16} color="#0D1B3E" />}
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Kepatuhan APU-PPT</Text>
-                    {data?.edd_required && <Badge fontSize="14px" bg="#FEE2E2" color="#B91C1C">Perlu EDD</Badge>}
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Kepatuhan APU-PPT</Text>
+                    {data?.edd_required && <Badge fontSize="13px" bg="#FEE2E2" color="#B91C1C">Perlu EDD</Badge>}
                 </Flex>
-                <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog("screening")}><LuPencil size={12} /> Screening & profil risiko</Button>
+                <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog("screening")}><LuPencil size={12} /> Screening & profil risiko</Button>
             </Flex>
-            {error && <Text color="#DC2626" fontSize="14px" role="alert">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" role="alert">{error}</Text>}
             {!data ? <Skeleton h="60px" /> : (
                 <Flex flexDir="column" gap="10px">
-                    <Flex gap="8px" flexWrap="wrap" fontSize="14px">
+                    <Flex gap="8px" flexWrap="wrap" fontSize="13px">
                         {data.risk_rating
-                            ? <Badge fontSize="14px" bg={RATING_COLOR[data.risk_rating][0]} color={RATING_COLOR[data.risk_rating][1]}>Risiko {RISK_RATING_LABELS[data.risk_rating].toLowerCase()}</Badge>
-                            : <Badge fontSize="14px" bg="#F1F5F9" color="#64748B">Profil risiko belum dinilai</Badge>}
-                        <Badge fontSize="14px" bg={data.screening_status === "clear" ? "#DCFCE7" : data.screening_status === "not_screened" ? "#F1F5F9" : "#FEE2E2"}
+                            ? <Badge fontSize="13px" bg={RATING_COLOR[data.risk_rating][0]} color={RATING_COLOR[data.risk_rating][1]}>Risiko {RISK_RATING_LABELS[data.risk_rating].toLowerCase()}</Badge>
+                            : <Badge fontSize="13px" bg="#F1F5F9" color="#64748B">Profil risiko belum dinilai</Badge>}
+                        <Badge fontSize="13px" bg={data.screening_status === "clear" ? "#DCFCE7" : data.screening_status === "not_screened" ? "#F1F5F9" : "#FEE2E2"}
                             color={data.screening_status === "clear" ? "#15803D" : data.screening_status === "not_screened" ? "#64748B" : "#B91C1C"}>
                             {SCREENING_STATUS_LABELS[data.screening_status]}{data.screened_at ? ` · ${fmtDate(data.screened_at)}` : ""}
                         </Badge>
-                        {data.is_pep && <Badge fontSize="14px" bg="#FEE2E2" color="#B91C1C">PEP</Badge>}
-                        {data.screening_stale && <Badge fontSize="14px" bg="#FEF3C7" color="#B45309">Screening lebih dari 12 bulan</Badge>}
+                        {data.is_pep && <Badge fontSize="13px" bg="#FEE2E2" color="#B91C1C">PEP</Badge>}
+                        {data.screening_stale && <Badge fontSize="13px" bg="#FEF3C7" color="#B45309">Screening lebih dari 12 bulan</Badge>}
                         <Text color="#64748B">Premi aktif {fmtIDR(data.in_force_premium)}</Text>
                     </Flex>
                     {data.edd_reasons.length > 0 && (
-                        <Box p="10px 12px" bg={data.edd_required ? "#FEF2F2" : "#F8FAFC"} borderRadius="8px" fontSize="14px">
+                        <Box p="10px 12px" bg={data.edd_required ? "#FEF2F2" : "#F8FAFC"} borderRadius="8px" fontSize="13px">
                             {data.edd_reasons.map((r) => <Text key={r} color={data.edd_required ? "#991B1B" : "#475569"}>• {r}</Text>)}
                         </Box>
                     )}
                     {isCompany && (
                         <Box>
                             <Flex justify="space-between" align="center" mb="4px">
-                                <Text fontSize="14px" fontWeight="semibold" color="#0D1B3E">PEMILIK MANFAAT ({data.beneficial_owners.length})</Text>
-                                <Button size="2xs" variant="outline" fontSize="14px" onClick={() => setDialog({ owner: null })}><LuPlus size={11} /> Tambah</Button>
+                                <Text fontSize="13px" fontWeight="semibold" color="#0D1B3E">PEMILIK MANFAAT ({data.beneficial_owners.length})</Text>
+                                <Button size="2xs" variant="outline" fontSize="13px" onClick={() => setDialog({ owner: null })}><LuPlus size={11} /> Tambah</Button>
                             </Flex>
                             {data.beneficial_owners.length === 0
-                                ? <Text fontSize="14px" color="#64748B">Belum dicatat. Untuk badan usaha, catat pemilik manfaat (≥ 25% atau pengendali).</Text>
+                                ? <Text fontSize="13px" color="#64748B">Belum dicatat. Untuk badan usaha, catat pemilik manfaat (≥ 25% atau pengendali).</Text>
                                 : data.beneficial_owners.map((o) => (
-                                    <Flex key={o.owner_id} justify="space-between" align="center" py="5px" borderTop="1px solid #F1F5F9" fontSize="14px" gap="8px">
-                                        <Box><Text color="#1C2833" fontWeight="semibold">{o.full_name}{o.is_pep && <Badge ml="6px" fontSize="14px" bg="#FEE2E2" color="#B91C1C">PEP</Badge>}</Text>
+                                    <Flex key={o.owner_id} justify="space-between" align="center" py="5px" borderTop="1px solid #F1F5F9" fontSize="13px" gap="8px">
+                                        <Box><Text color="#1C2833" fontWeight="semibold">{o.full_name}{o.is_pep && <Badge ml="6px" fontSize="13px" bg="#FEE2E2" color="#B91C1C">PEP</Badge>}</Text>
                                             <Text color="#64748B">{[o.ownership_percent != null && `${o.ownership_percent}%`, o.role, o.nationality].filter(Boolean).join(" · ")}</Text></Box>
                                         <Flex>
                                             <IconButton size="2xs" variant="ghost" aria-label="Ubah" onClick={() => setDialog({ owner: o })}><LuPencil size={12} /></IconButton>

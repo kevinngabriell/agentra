@@ -29,7 +29,7 @@ function Field({ label, hint, span, children }: { label: string; hint?: string; 
         <Flex flexDir="column" gap="4px" gridColumn={span ? { base: "auto", md: `span ${span}` } : undefined}>
             <Text {...CLAIM_LABEL}>{label}</Text>
             {children}
-            {hint && <Text fontSize="14px" color="#64748B">{hint}</Text>}
+            {hint && <Text fontSize="13px" color="#64748B">{hint}</Text>}
         </Flex>
     )
 }
@@ -39,7 +39,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
         <Switch.Root checked={checked} onCheckedChange={(e) => onChange(e.checked)} colorPalette="blue" size="sm">
             <Switch.HiddenInput />
             <Switch.Control />
-            <Switch.Label fontSize="15px" color="#1C2833">{label}</Switch.Label>
+            <Switch.Label fontSize="14px" color="#1C2833">{label}</Switch.Label>
         </Switch.Root>
     )
 }
@@ -47,7 +47,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 function Group({ title, children }: { title: string; children: ReactNode }) {
     return (
         <Flex flexDir="column" gap="12px">
-            <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()}</Text>
+            <Text color="#0D1B3E" fontSize="13px" fontWeight="semibold" letterSpacing="0.04em">{title.toUpperCase()}</Text>
             {children}
         </Flex>
     )
@@ -87,7 +87,7 @@ function MotorFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "
                     <Field label="Tahun"><Input {...CLAIM_INPUT} inputMode="numeric" placeholder="2022" maxLength={4} value={form.vehicle_year} onChange={(e) => onChange({ vehicle_year: e.target.value.replace(/\D/g, "") })} /></Field>
                     <Field label="Warna"><Input {...CLAIM_INPUT} maxLength={30} value={form.vehicle_color} onChange={(e) => onChange({ vehicle_color: e.target.value })} /></Field>
                     <Field label="Penggunaan">
-                        <SearchSelect value={form.vehicle_usage} onChange={(v) => onChange({ vehicle_usage: v as RiskForm["vehicle_usage"] })} options={USAGE_OPTIONS} placeholder="Pilih penggunaan" fontSize="15px" clearable />
+                        <SearchSelect value={form.vehicle_usage} onChange={(v) => onChange({ vehicle_usage: v as RiskForm["vehicle_usage"] })} options={USAGE_OPTIONS} placeholder="Pilih penggunaan" fontSize="14px" clearable />
                     </Field>
                 </Grid>
             </Group>
@@ -95,11 +95,11 @@ function MotorFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "
             <Group title="Pertanggungan">
                 <Grid {...GRID}>
                     <Field label="Jenis Pertanggungan">
-                        <SearchSelect value={form.motor_coverage_type} onChange={(v) => onChange({ motor_coverage_type: v as RiskForm["motor_coverage_type"] })} options={MOTOR_COVERAGE_OPTIONS} placeholder="Comprehensive / TLO" fontSize="15px" clearable />
+                        <SearchSelect value={form.motor_coverage_type} onChange={(v) => onChange({ motor_coverage_type: v as RiskForm["motor_coverage_type"] })} options={MOTOR_COVERAGE_OPTIONS} placeholder="Comprehensive / TLO" fontSize="14px" clearable />
                     </Field>
                     <Field label="Nilai Kendaraan (Rp)"><MoneyInput value={form.vehicle_value} onChange={(v) => onChange({ vehicle_value: v })} /></Field>
                     <Field label="Wilayah Tarif OJK" span={2}>
-                        <SearchSelect value={form.tariff_region} onChange={(v) => onChange({ tariff_region: v })} options={TARIFF_REGION_OPTIONS} placeholder="Pilih wilayah" fontSize="15px" clearable />
+                        <SearchSelect value={form.tariff_region} onChange={(v) => onChange({ tariff_region: v })} options={TARIFF_REGION_OPTIONS} placeholder="Pilih wilayah" fontSize="14px" clearable />
                     </Field>
                 </Grid>
             </Group>
@@ -119,7 +119,7 @@ function MotorFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "
             <Group title="Inspeksi Sebelum Penutupan">
                 <Grid {...GRID}>
                     <Field label="Status Inspeksi" hint="Kendaraan bekas umumnya wajib diinspeksi (foto) sebelum jaminan berlaku">
-                        <SearchSelect value={form.inspection_status} onChange={(v) => onChange({ inspection_status: v as RiskForm["inspection_status"] })} options={INSPECTION_OPTIONS} placeholder="Pilih status" fontSize="15px" clearable />
+                        <SearchSelect value={form.inspection_status} onChange={(v) => onChange({ inspection_status: v as RiskForm["inspection_status"] })} options={INSPECTION_OPTIONS} placeholder="Pilih status" fontSize="14px" clearable />
                     </Field>
                     <Field label="Tanggal Inspeksi"><Input {...CLAIM_INPUT} type="date" value={form.inspection_date} onChange={(e) => onChange({ inspection_date: e.target.value })} /></Field>
                 </Grid>
@@ -141,7 +141,7 @@ function CargoFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "
                     <Field label="Pelabuhan / Kota Tujuan"><Input {...CLAIM_INPUT} maxLength={120} value={form.voyage_to} onChange={(e) => onChange({ voyage_to: e.target.value })} /></Field>
                     <Field label="Tanggal Keberangkatan"><Input {...CLAIM_INPUT} type="date" value={form.departure_date} onChange={(e) => onChange({ departure_date: e.target.value })} /></Field>
                     <Field label="Klausul ICC">
-                        <SearchSelect value={form.icc_clause} onChange={(v) => onChange({ icc_clause: v as RiskForm["icc_clause"] })} options={ICC_OPTIONS} placeholder="Pilih klausul" fontSize="15px" clearable />
+                        <SearchSelect value={form.icc_clause} onChange={(v) => onChange({ icc_clause: v as RiskForm["icc_clause"] })} options={ICC_OPTIONS} placeholder="Pilih klausul" fontSize="14px" clearable />
                     </Field>
                     <Field label="Deskripsi Barang" span={2}>
                         <Textarea {...CLAIM_INPUT} rows={3} maxLength={2000} value={form.goods_description} onChange={(e) => onChange({ goods_description: e.target.value })} />
@@ -172,18 +172,18 @@ function TravelFields({ form, onChange, coverage }: Pick<RiskDetailsFieldsProps,
             </Grid>
             <Group title="Plan">
                 <Grid {...GRID}>
-                    <Field label="Jenis Plan"><SearchSelect value={form.travel_plan_type} onChange={(v) => onChange({ travel_plan_type: v as RiskForm["travel_plan_type"] })} options={TRAVEL_PLAN_OPTIONS} placeholder="Single / annual" fontSize="15px" clearable /></Field>
+                    <Field label="Jenis Plan"><SearchSelect value={form.travel_plan_type} onChange={(v) => onChange({ travel_plan_type: v as RiskForm["travel_plan_type"] })} options={TRAVEL_PLAN_OPTIONS} placeholder="Single / annual" fontSize="14px" clearable /></Field>
                     <Field label="Maks. hari per perjalanan" hint="Annual multi-trip umumnya 90 hari"><Input {...CLAIM_INPUT} inputMode="numeric" maxLength={3} value={form.max_trip_days} onChange={(e) => onChange({ max_trip_days: e.target.value.replace(/\D/g, "") })} /></Field>
-                    <Field label="Area"><SearchSelect value={form.travel_area} onChange={(v) => onChange({ travel_area: v as RiskForm["travel_area"] })} options={TRAVEL_AREA_OPTIONS} placeholder="Pilih area" fontSize="15px" clearable /></Field>
+                    <Field label="Area"><SearchSelect value={form.travel_area} onChange={(v) => onChange({ travel_area: v as RiskForm["travel_area"] })} options={TRAVEL_AREA_OPTIONS} placeholder="Pilih area" fontSize="14px" clearable /></Field>
                     <Field label="Tingkatan Plan"><Input {...CLAIM_INPUT} placeholder="Mis: Gold" maxLength={60} value={form.plan_tier} onChange={(e) => onChange({ plan_tier: e.target.value })} /></Field>
-                    <Field label="Tipe Peserta"><SearchSelect value={form.family_type} onChange={(v) => onChange({ family_type: v as RiskForm["family_type"] })} options={FAMILY_TYPE_OPTIONS} placeholder="Individu / keluarga / grup" fontSize="15px" clearable /></Field>
+                    <Field label="Tipe Peserta"><SearchSelect value={form.family_type} onChange={(v) => onChange({ family_type: v as RiskForm["family_type"] })} options={FAMILY_TYPE_OPTIONS} placeholder="Individu / keluarga / grup" fontSize="14px" clearable /></Field>
                     <Field label="Batas Usia (tahun)"><Input {...CLAIM_INPUT} inputMode="numeric" maxLength={3} value={form.max_age} onChange={(e) => onChange({ max_age: e.target.value.replace(/\D/g, "") })} /></Field>
                 </Grid>
             </Group>
             <Group title="Limit Manfaat">
                 <Grid {...GRID}>
                     <Field label="Mata Uang Manfaat">
-                        <SearchSelect value={form.benefit_currency} onChange={(v) => onChange({ benefit_currency: v })} fontSize="15px" clearable placeholder="USD / EUR"
+                        <SearchSelect value={form.benefit_currency} onChange={(v) => onChange({ benefit_currency: v })} fontSize="14px" clearable placeholder="USD / EUR"
                             options={["USD", "EUR", "SGD", "IDR"].map(c => ({ value: c, label: c }))} />
                     </Field>
                     {limit("medical_limit", "Biaya medis")}
@@ -215,7 +215,7 @@ function FireFields({ form, onChange }: Pick<RiskDetailsFieldsProps, "form" | "o
             <Group title="Survei">
                 <Grid {...GRID}>
                     <Field label="Status Survei">
-                        <SearchSelect value={form.survey_status} onChange={(v) => onChange({ survey_status: v as RiskForm["survey_status"] })} options={SURVEY_OPTIONS} placeholder="Pilih status" fontSize="15px" clearable />
+                        <SearchSelect value={form.survey_status} onChange={(v) => onChange({ survey_status: v as RiskForm["survey_status"] })} options={SURVEY_OPTIONS} placeholder="Pilih status" fontSize="14px" clearable />
                     </Field>
                     <Field label="Tanggal Survei"><Input {...CLAIM_INPUT} type="date" value={form.survey_date} onChange={(e) => onChange({ survey_date: e.target.value })} /></Field>
                 </Grid>
@@ -257,7 +257,7 @@ function MembersEditor({ roles, members, onChange }: { roles: MemberRole[]; memb
                         {rows.map((m, i) => (
                             <Box key={m._id} p="12px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" bg="#F8FAFC">
                                 <Flex justify="space-between" align="center" mb="8px">
-                                    <Text fontSize="14px" fontWeight="semibold" color="#64748B">#{i + 1}</Text>
+                                    <Text fontSize="13px" fontWeight="semibold" color="#64748B">#{i + 1}</Text>
                                     <IconButton size="2xs" variant="ghost" color="#DC2626" aria-label={`Hapus ${ROLE_TITLE[role]} ${i + 1}`} onClick={() => onChange(members.filter(x => x._id !== m._id))}>
                                         <LuTrash2 size={13} />
                                     </IconButton>
@@ -289,7 +289,7 @@ function MembersEditor({ roles, members, onChange }: { roles: MemberRole[]; memb
                             </Box>
                         ))}
                         <Flex gap="8px" flexWrap="wrap">
-                            <Button size="xs" variant="outline" fontSize="14px" onClick={() => onChange([...members, emptyMember(role)])}>
+                            <Button size="xs" variant="outline" fontSize="13px" onClick={() => onChange([...members, emptyMember(role)])}>
                                 <LuPlus size={12} /> {ROLE_ADD[role]}
                             </Button>
                             {role === "traveller" && <RosterImport onRows={(rows) => onChange([...members, ...rows])} />}
@@ -320,7 +320,7 @@ function RosterImport({ onRows }: { onRows: (rows: MemberForm[]) => void }) {
         })))
     }
     return (
-        <Button as="label" size="xs" variant="outline" fontSize="14px" cursor="pointer">
+        <Button as="label" size="xs" variant="outline" fontSize="13px" cursor="pointer">
             <LuUpload size={12} /> Impor CSV peserta
             <input type="file" accept=".csv,text/csv" hidden onChange={(e) => { pick(e.target.files?.[0]); e.target.value = "" }} />
         </Button>
@@ -332,7 +332,7 @@ function Warnings({ items }: { items: string[] }) {
     return (
         <Flex flexDir="column" gap="4px" p="10px 12px" bg="#FFFBEB" border="1px solid" borderColor="#FDE68A" borderRadius="8px">
             {items.map((w) => (
-                <Flex key={w} gap="6px" align="flex-start"><Box mt="3px" color="#B45309"><LuTriangleAlert size={13} /></Box><Text fontSize="14px" color="#92400E">{w}</Text></Flex>
+                <Flex key={w} gap="6px" align="flex-start"><Box mt="3px" color="#B45309"><LuTriangleAlert size={13} /></Box><Text fontSize="13px" color="#92400E">{w}</Text></Flex>
             ))}
         </Flex>
     )

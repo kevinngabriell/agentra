@@ -9,6 +9,8 @@ import { errorMessage } from "@/lib/api/client"
 import { getInsurers, type ApiInsurer } from "@/lib/api/insurers"
 import { createSubAgent, updateSubAgent, type ApiSubAgentDetail, type SubAgentStatus } from "@/lib/api/sub-agents"
 import { CLAIM_INPUT, CLAIM_LABEL, Required } from "@/components/claims/fields"
+import { PhoneInput } from "@/components/ui/phone-input"
+import { formatLocalPhone, toApiPhone } from "@/lib/format"
 import { useOpenOnMount } from "@/components/ui/use-open-on-mount"
 
 interface RateRow { insurer_id: string; split_rate: string }
@@ -45,8 +47,8 @@ function validRate(s: string): boolean {
 function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
     const [fullName, setFullName]   = useState(agent?.full_name ?? "")
     const [code, setCode]           = useState(agent?.agent_code ?? "")
-    const [phone, setPhone]         = useState(agent?.phone_number ?? "")
-    const [whatsapp, setWhatsapp]   = useState(agent?.whatsapp_number ?? "")
+    const [phone, setPhone]         = useState(formatLocalPhone(agent?.phone_number))
+    const [whatsapp, setWhatsapp]   = useState(formatLocalPhone(agent?.whatsapp_number))
     const [email, setEmail]         = useState(agent?.email ?? "")
     const [joined, setJoined]       = useState(agent?.joined_date ?? "")
     const [status, setStatus]       = useState<SubAgentStatus>(agent?.status ?? "active")
@@ -88,8 +90,8 @@ function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
             const payload = {
                 full_name: fullName.trim(),
                 agent_code: code.trim(),
-                phone_number: phone.trim(),
-                whatsapp_number: whatsapp.trim(),
+                phone_number: toApiPhone(phone),
+                whatsapp_number: toApiPhone(whatsapp),
                 email: email.trim(),
                 joined_date: joined,
                 status,
@@ -114,7 +116,7 @@ function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
             <Dialog.Positioner zIndex={1501}>
                 <Dialog.Content bg="white" borderRadius="12px" maxW="560px" w="92vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
-                        <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">{agent ? "Ubah Sub-Agen" : "Tambah Sub-Agen"}</Dialog.Title>
+                        <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">{agent ? "Ubah Sub-Agen" : "Tambah Sub-Agen"}</Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body px="24px" py="16px">
                         <Flex flexDir="column" gap="14px">
@@ -131,11 +133,11 @@ function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
                             <Flex gap="12px" flexWrap="wrap">
                                 <Flex flexDir="column" gap="4px" flex="1" minW="160px">
                                     <Text {...CLAIM_LABEL}>No. telepon</Text>
-                                    <Input {...CLAIM_INPUT} inputMode="tel" value={phone} maxLength={30} onChange={(e) => setPhone(e.target.value)} />
+                                    <PhoneInput {...CLAIM_INPUT} value={phone} onChange={setPhone} />
                                 </Flex>
                                 <Flex flexDir="column" gap="4px" flex="1" minW="160px">
                                     <Text {...CLAIM_LABEL}>WhatsApp</Text>
-                                    <Input {...CLAIM_INPUT} inputMode="tel" value={whatsapp} maxLength={30} onChange={(e) => setWhatsapp(e.target.value)} />
+                                    <PhoneInput {...CLAIM_INPUT} value={whatsapp} onChange={setWhatsapp} />
                                 </Flex>
                             </Flex>
                             <Flex gap="12px" flexWrap="wrap">
@@ -158,7 +160,7 @@ function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
                                     <Input {...CLAIM_INPUT} inputMode="decimal" placeholder="0" value={split} onChange={(e) => setSplit(cleanRate(e.target.value))} />
                                 </Flex>
                             </Flex>
-                            <Text color="#64748B" fontSize="14px" mt="-6px">
+                            <Text color="#64748B" fontSize="13px" mt="-6px">
                                 Bagian dari komisi kotor yang diteruskan ke sub-agen. Berlaku untuk polis baru; komisi yang sudah tercatat tidak berubah.
                             </Text>
 
@@ -170,7 +172,7 @@ function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
                                         <LuPlus size={12} /> Tambah
                                     </Button>
                                 </Flex>
-                                {rates.length === 0 && <Text color="#64748B" fontSize="14px">Tidak ada. Semua asuransi memakai bagi hasil default.</Text>}
+                                {rates.length === 0 && <Text color="#64748B" fontSize="13px">Tidak ada. Semua asuransi memakai bagi hasil default.</Text>}
                                 {rates.map((r, idx) => (
                                     <Flex key={idx} gap="8px" align="center">
                                         <Flex flex="1" minW="0">
@@ -189,20 +191,20 @@ function SubAgentForm({ onClose, onSaved, agent }: SubAgentFormDialogProps) {
 
                             <Flex as="label" align="center" gap="8px" cursor="pointer">
                                 <input type="checkbox" checked={waDigest} onChange={(e) => setWaDigest(e.target.checked)} />
-                                <Text color="#374151" fontSize="15px">Kirim pengingat perpanjangan polis ke WhatsApp sub-agen</Text>
+                                <Text color="#374151" fontSize="14px">Kirim pengingat perpanjangan polis ke WhatsApp sub-agen</Text>
                             </Flex>
 
                             <Flex flexDir="column" gap="4px">
                                 <Text {...CLAIM_LABEL}>Catatan</Text>
                                 <Textarea {...CLAIM_INPUT} rows={2} value={notes} maxLength={5000} onChange={(e) => setNotes(e.target.value)} />
                             </Flex>
-                            {error && <Text fontSize="14px" color="#DC2626">{error}</Text>}
+                            {error && <Text fontSize="13px" color="#DC2626">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
+                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="15px" borderRadius="8px"
                             _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={onClose}>Batal</Button>
-                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="15px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                             loading={saving} loadingText="Menyimpan..." onClick={submit}>Simpan</Button>
                     </Dialog.Footer>
                 </Dialog.Content>

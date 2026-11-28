@@ -37,14 +37,14 @@ export function WelcomeGuide() {
   return (
     <Flex position="fixed" inset={0} zIndex={50} bg="rgba(15,23,42,0.55)" align="center" justify="center" p="16px" role="dialog" aria-modal="true" aria-label="Panduan singkat">
       <Box bg="white" borderRadius="16px" p="24px" maxW="480px" w="100%">
-        <Text fontSize="14px" color="#475569" mb="4px">Langkah {step + 1} dari {STEPS.length}</Text>
-        <Text as="h2" fontSize="24px" fontWeight="bold" color="#0F172A" mb="8px">{s.title}</Text>
-        <Text fontSize="18px" color="#1E293B" lineHeight="1.6">{s.body}</Text>
+        <Text fontSize="13px" color="#475569" mb="4px">Langkah {step + 1} dari {STEPS.length}</Text>
+        <Text as="h2" fontSize="22px" fontWeight="bold" color="#0F172A" mb="8px">{s.title}</Text>
+        <Text fontSize="17px" color="#1E293B" lineHeight="1.6">{s.body}</Text>
         <Flex mt="24px" gap="12px" justify="space-between" wrap="wrap">
-          <Button variant="ghost" minH="48px" fontSize="16px" color="#475569" onClick={finish}>Lewati</Button>
+          <Button variant="ghost" minH="48px" fontSize="15px" color="#475569" onClick={finish}>Lewati</Button>
           <Flex gap="8px">
-            {step > 0 && <Button variant="outline" minH="48px" fontSize="16px" onClick={() => setStep(step - 1)}>Kembali</Button>}
-            <Button minH="48px" fontSize="16px" bg="#1D4ED8" color="white" onClick={() => (last ? finish() : setStep(step + 1))}>
+            {step > 0 && <Button variant="outline" minH="48px" fontSize="15px" onClick={() => setStep(step - 1)}>Kembali</Button>}
+            <Button minH="48px" fontSize="15px" bg="#1D4ED8" color="white" onClick={() => (last ? finish() : setStep(step + 1))}>
               {last ? "Mulai Pakai" : "Lanjut"}
             </Button>
           </Flex>

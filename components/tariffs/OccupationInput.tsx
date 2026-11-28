@@ -51,8 +51,8 @@ export function OccupationInput({ code, onPick, bg }: {
                     {options.map((o) => (
                         <Box key={o.occupation_id} as="button" textAlign="left" px="10px" py="8px" _hover={{ bg: "#F1F5F9" }}
                             onMouseDown={(e) => { e.preventDefault(); setQuery(o.code); setSyncedCode(o.code); onPick(o.code, o.description); setOpen(false) }}>
-                            <Text fontSize="14px" fontWeight="semibold" color="#1C2833">{o.code}{o.tariff_class ? ` · kelas ${o.tariff_class}` : ""}</Text>
-                            <Text fontSize="14px" color="#64748B">{o.description}</Text>
+                            <Text fontSize="13px" fontWeight="semibold" color="#1C2833">{o.code}{o.tariff_class ? ` · kelas ${o.tariff_class}` : ""}</Text>
+                            <Text fontSize="13px" color="#64748B">{o.description}</Text>
                         </Box>
                     ))}
                 </Flex>

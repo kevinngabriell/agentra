@@ -44,11 +44,11 @@ export function TravelAssistButton({ policyNumber, policyId, insurerName, assist
 
     return (
         <>
-            <Button size="sm" variant="outline" fontSize="15px" gap="6px" onClick={send} w="max-content">
+            <Button size="sm" variant="outline" fontSize="14px" gap="6px" onClick={send} w="max-content">
                 <FaWhatsapp color="#25D366" size={14} /> Kirim info darurat sebelum berangkat
             </Button>
-            {!assistancePhone && <Text fontSize="14px" color="#B45309">Nomor darurat 24 jam penanggung belum diisi (Pengaturan → Asuransi).</Text>}
-            {error && <Text fontSize="14px" color="#DC2626">{error}</Text>}
+            {!assistancePhone && <Text fontSize="13px" color="#B45309">Nomor darurat 24 jam penanggung belum diisi (Pengaturan → Asuransi).</Text>}
+            {error && <Text fontSize="13px" color="#DC2626">{error}</Text>}
         </>
     )
 }

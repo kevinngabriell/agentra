@@ -28,7 +28,7 @@ function formatDate(iso: string) {
 }
 
 const colHeader = {
-  color: "#64748B", fontSize: "16px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px",
+  color: "#64748B", fontSize: "15px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px",
 }
 
 export default function CommissionStatements() {
@@ -231,8 +231,8 @@ export default function CommissionStatements() {
                 onClick={() => router.push("/agentra/commissions")}>
                 <LuArrowLeft size={13} /> Komisi
               </Button>
-              <Text color="#1C2833" fontSize="24px" fontWeight="bold">Rekonsiliasi Statement Penanggung</Text>
-              <Text color="#5D6D7E" fontSize="16px">
+              <Text color="#1C2833" fontSize="22px" fontWeight="bold">Rekonsiliasi Statement Penanggung</Text>
+              <Text color="#5D6D7E" fontSize="15px">
                 Catat satu pembayaran dari penanggung, lalu cocokkan ke banyak komisi sekaligus.
               </Text>
             </Flex>
@@ -242,13 +242,13 @@ export default function CommissionStatements() {
           </Flex>
 
           <Box maxW="260px">
-            <SearchSelect value={insurerFilter} onChange={setInsurerFilter} clearable height="40px" fontSize="16px"
+            <SearchSelect value={insurerFilter} onChange={setInsurerFilter} clearable height="40px" fontSize="15px"
               ariaLabel="Filter penanggung" placeholder="Semua penanggung" options={insurerOptions} />
           </Box>
 
           {error && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-              <Text color="#DC2626" fontSize="16px">{error}</Text>
+              <Text color="#DC2626" fontSize="15px">{error}</Text>
             </Box>
           )}
 
@@ -260,7 +260,7 @@ export default function CommissionStatements() {
             ) : rows.length === 0 ? (
               <Flex align="center" justify="center" py="48px" flexDir="column" gap="8px">
                 <LuReceipt size={32} color="#CBD5E1" />
-                <Text color="#64748B" fontSize="16px">Belum ada statement</Text>
+                <Text color="#64748B" fontSize="15px">Belum ada statement</Text>
               </Flex>
             ) : (
               <Box overflowX="auto">
@@ -275,26 +275,26 @@ export default function CommissionStatements() {
                   <Table.Body>
                     {rows.map((s) => (
                       <Table.Row key={s.statement_id} borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
-                        <Table.Cell px="16px" py="12px"><Text fontSize="16px" color="#1C2833">{formatDate(s.statement_date)}</Text></Table.Cell>
-                        <Table.Cell px="16px" py="12px"><Text fontSize="16px" color="#1C2833">{s.insurer_short_name ?? s.insurer_name ?? "—"}</Text></Table.Cell>
-                        <Table.Cell px="16px" py="12px"><Text fontSize="16px" color="#64748B" fontFamily="mono">{s.reference_number ?? "—"}</Text></Table.Cell>
-                        <Table.Cell px="16px" py="12px"><Text fontSize="16px" fontWeight="semibold" color="#1C2833">{fmtIDR(s.amount)}</Text></Table.Cell>
+                        <Table.Cell px="16px" py="12px"><Text fontSize="15px" color="#1C2833">{formatDate(s.statement_date)}</Text></Table.Cell>
+                        <Table.Cell px="16px" py="12px"><Text fontSize="15px" color="#1C2833">{s.insurer_short_name ?? s.insurer_name ?? "—"}</Text></Table.Cell>
+                        <Table.Cell px="16px" py="12px"><Text fontSize="15px" color="#64748B" fontFamily="mono">{s.reference_number ?? "—"}</Text></Table.Cell>
+                        <Table.Cell px="16px" py="12px"><Text fontSize="15px" fontWeight="semibold" color="#1C2833">{fmtIDR(s.amount)}</Text></Table.Cell>
                         <Table.Cell px="16px" py="12px">
-                          <Text fontSize="16px" color="#16A34A" fontWeight="semibold">{fmtIDR(s.matched_amount)}</Text>
-                          <Text fontSize="16px" color="#64748B">{s.matched_count} komisi</Text>
+                          <Text fontSize="15px" color="#16A34A" fontWeight="semibold">{fmtIDR(s.matched_amount)}</Text>
+                          <Text fontSize="15px" color="#64748B">{s.matched_count} komisi</Text>
                         </Table.Cell>
                         <Table.Cell px="16px" py="12px">
-                          <Text fontSize="16px" fontWeight="semibold" color={s.unmatched_amount === 0 ? "#16A34A" : "#D97706"}>
+                          <Text fontSize="15px" fontWeight="semibold" color={s.unmatched_amount === 0 ? "#16A34A" : "#D97706"}>
                             {fmtIDR(s.unmatched_amount)}
                           </Text>
                         </Table.Cell>
                         <Table.Cell px="16px" py="12px">
                           {s.discrepancy_count > 0
                             ? <Badge bg="#FEE2E2" color="#DC2626" borderRadius="full" px="8px">{s.discrepancy_count} komisi</Badge>
-                            : <Text fontSize="16px" color="#64748B">—</Text>}
+                            : <Text fontSize="15px" color="#64748B">—</Text>}
                         </Table.Cell>
                         <Table.Cell px="16px" py="12px">
-                          <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
+                          <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" borderRadius="8px"
                             onClick={() => openDetail(s.statement_id)}>
                             Cocokkan / Detail
                           </Button>
@@ -317,39 +317,39 @@ export default function CommissionStatements() {
         <Dialog.Positioner>
           <Dialog.Content maxW="480px" borderRadius="16px" p="0" overflow="hidden">
             <Dialog.Header bg="#F8FAFC" borderBottom="1px solid" borderColor="#E2E8F0" px="24px" py="16px">
-              <Dialog.Title fontSize="16px" color="#1C2833" fontWeight="bold">Catat Statement Penanggung</Dialog.Title>
+              <Dialog.Title fontSize="15px" color="#1C2833" fontWeight="bold">Catat Statement Penanggung</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body px="24px" py="20px">
               <Flex flexDir="column" gap="16px">
                 <Field.Root required>
-                  <Field.Label fontSize="16px" color="#374151" fontWeight="semibold">Penanggung <Field.RequiredIndicator /></Field.Label>
+                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">Penanggung <Field.RequiredIndicator /></Field.Label>
                   <SearchSelect value={form.insurer_id} onChange={(v) => setForm((f) => ({ ...f, insurer_id: v }))}
                     options={insurerOptions} placeholder="Pilih penanggung" ariaLabel="Penanggung" />
                 </Field.Root>
                 <Field.Root required>
-                  <Field.Label fontSize="16px" color="#374151" fontWeight="semibold">Tanggal <Field.RequiredIndicator /></Field.Label>
-                  <Input type="date" fontSize="16px" borderRadius="8px" borderColor="#E2E8F0" value={form.statement_date}
+                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">Tanggal <Field.RequiredIndicator /></Field.Label>
+                  <Input type="date" fontSize="15px" borderRadius="8px" borderColor="#E2E8F0" value={form.statement_date}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, statement_date: e.target.value }))} />
                 </Field.Root>
                 <Field.Root required>
-                  <Field.Label fontSize="16px" color="#374151" fontWeight="semibold">Jumlah Dibayar (Rp) <Field.RequiredIndicator /></Field.Label>
-                  <Input inputMode="numeric" placeholder="25.000.000" fontSize="16px" borderRadius="8px" borderColor="#E2E8F0"
+                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">Jumlah Dibayar (Rp) <Field.RequiredIndicator /></Field.Label>
+                  <Input inputMode="numeric" placeholder="25.000.000" fontSize="15px" borderRadius="8px" borderColor="#E2E8F0"
                     value={formatIDR(form.amount)}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, amount: e.target.value.replace(/\D/g, "") }))} />
                 </Field.Root>
                 <Field.Root>
-                  <Field.Label fontSize="16px" color="#374151" fontWeight="semibold">No. Referensi</Field.Label>
-                  <Input placeholder="STM/2026/10/001" fontSize="16px" borderRadius="8px" borderColor="#E2E8F0" value={form.reference_number}
+                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">No. Referensi</Field.Label>
+                  <Input placeholder="STM/2026/10/001" fontSize="15px" borderRadius="8px" borderColor="#E2E8F0" value={form.reference_number}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, reference_number: e.target.value }))} />
                 </Field.Root>
                 <Field.Root>
-                  <Field.Label fontSize="16px" color="#374151" fontWeight="semibold">Catatan</Field.Label>
-                  <Textarea rows={2} fontSize="16px" borderRadius="8px" borderColor="#E2E8F0" value={form.notes}
+                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">Catatan</Field.Label>
+                  <Textarea rows={2} fontSize="15px" borderRadius="8px" borderColor="#E2E8F0" value={form.notes}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm((f) => ({ ...f, notes: e.target.value }))} />
                 </Field.Root>
                 {createError && (
                   <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="8px" p="10px">
-                    <Text color="#DC2626" fontSize="16px" role="alert">{createError}</Text>
+                    <Text color="#DC2626" fontSize="15px" role="alert">{createError}</Text>
                   </Box>
                 )}
               </Flex>
@@ -376,11 +376,11 @@ export default function CommissionStatements() {
             <Dialog.Header bg="#F8FAFC" borderBottom="1px solid" borderColor="#E2E8F0" px="24px" py="16px">
               <Flex justify="space-between" align="center" w="full">
                 <Flex flexDir="column" gap="2px">
-                  <Dialog.Title fontSize="16px" color="#1C2833" fontWeight="bold">
+                  <Dialog.Title fontSize="15px" color="#1C2833" fontWeight="bold">
                     Statement {detail?.insurer_short_name ?? detail?.insurer_name ?? ""}
                   </Dialog.Title>
                   {detail && (
-                    <Text fontSize="16px" color="#64748B">
+                    <Text fontSize="15px" color="#64748B">
                       {formatDate(detail.statement_date)}{detail.reference_number ? ` · ${detail.reference_number}` : ""}
                     </Text>
                   )}
@@ -395,7 +395,7 @@ export default function CommissionStatements() {
               {detailLoading && <Skeleton h="120px" borderRadius="8px" />}
               {detailError && (
                 <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="8px" p="10px" mb="16px">
-                  <Text color="#DC2626" fontSize="16px" role="alert">{detailError}</Text>
+                  <Text color="#DC2626" fontSize="15px" role="alert">{detailError}</Text>
                 </Box>
               )}
               {detail && (
@@ -408,17 +408,17 @@ export default function CommissionStatements() {
                       { label: "Komisi Selisih", value: `${detail.discrepancy_count}`, color: detail.discrepancy_count ? "#DC2626" : "#64748B" },
                     ].map((c) => (
                       <Box key={c.label} flex="1" minW="150px" bg="#F8FAFC" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" p="12px">
-                        <Text fontSize="16px" color="#64748B" fontWeight="bold">{c.label.toUpperCase()}</Text>
-                        <Text fontSize="16px" fontWeight="bold" color={c.color}>{c.value}</Text>
+                        <Text fontSize="15px" color="#64748B" fontWeight="bold">{c.label.toUpperCase()}</Text>
+                        <Text fontSize="15px" fontWeight="bold" color={c.color}>{c.value}</Text>
                       </Box>
                     ))}
                   </Flex>
 
                   {/* matched */}
                   <Box>
-                    <Text fontSize="16px" fontWeight="bold" color="#1C2833" mb="8px">Komisi Tercocokkan ({detail.items.length})</Text>
+                    <Text fontSize="15px" fontWeight="bold" color="#1C2833" mb="8px">Komisi Tercocokkan ({detail.items.length})</Text>
                     {detail.items.length === 0 ? (
-                      <Text fontSize="16px" color="#64748B">Belum ada komisi yang dicocokkan.</Text>
+                      <Text fontSize="15px" color="#64748B">Belum ada komisi yang dicocokkan.</Text>
                     ) : (
                       <Box overflowX="auto" border="1px solid" borderColor="#E2E8F0" borderRadius="10px">
                         <Table.Root size="sm">
@@ -432,12 +432,12 @@ export default function CommissionStatements() {
                           <Table.Body>
                             {detail.items.map((it) => (
                               <Table.Row key={it.commission_id}>
-                                <Table.Cell px="16px" py="8px"><Text fontSize="16px">{it.customer_name ?? "—"}</Text></Table.Cell>
-                                <Table.Cell px="16px" py="8px"><Text fontSize="16px" fontFamily="mono" color="#64748B">{it.policy_number ?? "—"}</Text></Table.Cell>
-                                <Table.Cell px="16px" py="8px"><Text fontSize="16px">{fmtIDR(it.expected_amount)}</Text></Table.Cell>
-                                <Table.Cell px="16px" py="8px"><Text fontSize="16px" fontWeight="semibold">{fmtIDR(it.allocated_amount)}</Text></Table.Cell>
+                                <Table.Cell px="16px" py="8px"><Text fontSize="15px">{it.customer_name ?? "—"}</Text></Table.Cell>
+                                <Table.Cell px="16px" py="8px"><Text fontSize="15px" fontFamily="mono" color="#64748B">{it.policy_number ?? "—"}</Text></Table.Cell>
+                                <Table.Cell px="16px" py="8px"><Text fontSize="15px">{fmtIDR(it.expected_amount)}</Text></Table.Cell>
+                                <Table.Cell px="16px" py="8px"><Text fontSize="15px" fontWeight="semibold">{fmtIDR(it.allocated_amount)}</Text></Table.Cell>
                                 <Table.Cell px="16px" py="8px">
-                                  <Text fontSize="16px" fontWeight="semibold" color={Math.abs(it.difference) <= 1 ? "#94A3B8" : "#DC2626"}>
+                                  <Text fontSize="15px" fontWeight="semibold" color={Math.abs(it.difference) <= 1 ? "#94A3B8" : "#DC2626"}>
                                     {Math.abs(it.difference) <= 1 ? "—" : `${it.difference > 0 ? "+" : "−"}${fmtIDR(Math.abs(it.difference))}`}
                                   </Text>
                                 </Table.Cell>
@@ -456,13 +456,13 @@ export default function CommissionStatements() {
 
                   {/* candidates */}
                   <Box>
-                    <Text fontSize="16px" fontWeight="bold" color="#1C2833" mb="8px">
+                    <Text fontSize="15px" fontWeight="bold" color="#1C2833" mb="8px">
                       Komisi {detail.insurer_short_name ?? ""} yang Belum Dicocokkan
                     </Text>
                     {candidates === null ? (
                       <Skeleton h="60px" borderRadius="8px" />
                     ) : candidates.length === 0 ? (
-                      <Text fontSize="16px" color="#64748B">Tidak ada komisi yang tersedia untuk dicocokkan.</Text>
+                      <Text fontSize="15px" color="#64748B">Tidak ada komisi yang tersedia untuk dicocokkan.</Text>
                     ) : (
                       <Box overflowX="auto" border="1px solid" borderColor="#E2E8F0" borderRadius="10px" maxH="260px" overflowY="auto">
                         <Table.Root size="sm">
@@ -478,10 +478,10 @@ export default function CommissionStatements() {
                                     </Checkbox.Root>
                                   </Table.Cell>
                                   <Table.Cell px="12px" py="6px">
-                                    <Text fontSize="16px">{c.customer_name ?? "—"}</Text>
-                                    <Text fontSize="16px" fontFamily="mono" color="#64748B">{c.policy_number ?? "—"}</Text>
+                                    <Text fontSize="15px">{c.customer_name ?? "—"}</Text>
+                                    <Text fontSize="15px" fontFamily="mono" color="#64748B">{c.policy_number ?? "—"}</Text>
                                   </Table.Cell>
-                                  <Table.Cell px="12px" py="6px"><Text fontSize="16px" fontWeight="semibold">{fmtIDR(c.expected_amount)}</Text></Table.Cell>
+                                  <Table.Cell px="12px" py="6px"><Text fontSize="15px" fontWeight="semibold">{fmtIDR(c.expected_amount)}</Text></Table.Cell>
                                   <Table.Cell px="12px" py="6px" w="160px">
                                     {on && (
                                       <Input size="xs" inputMode="numeric" aria-label="Jumlah dibayar" borderRadius="6px"
@@ -510,7 +510,7 @@ export default function CommissionStatements() {
                   </Button>
                   <Flex align="center" gap="12px">
                     {Object.keys(picked).length > 0 && (
-                      <Text fontSize="16px" color={remainderAfterPick < 0 ? "#DC2626" : "#64748B"}>
+                      <Text fontSize="15px" color={remainderAfterPick < 0 ? "#DC2626" : "#64748B"}>
                         Dipilih {fmtIDR(pickedTotal)} · sisa {fmtIDR(remainderAfterPick)}
                       </Text>
                     )}

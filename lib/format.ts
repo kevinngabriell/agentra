@@ -71,3 +71,25 @@ export function fmtFileSize(bytes: number): string {
   if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`
   return `${bytes} B`
 }
+
+// ── Phone numbers (Indonesia, +62) ───────────────────────────────────────────
+// The API stores "628114411307"; the UI shows the fixed "+62" prefix and only the
+// local part, grouped as "811-4411-307".
+
+/** Digits only, without a leading "0" or "62" country code — what the user types after "+62". */
+export function localPhoneDigits(input: string | null | undefined): string {
+  const digits = (input ?? "").replace(/\D/g, "")
+  return digits.replace(/^(?:62)?0*/, "")
+}
+
+/** "628114411307" / "08114411307" / "811-4411-307" → "811-4411-307". */
+export function formatLocalPhone(input: string | null | undefined): string {
+  const d = localPhoneDigits(input).slice(0, 12)
+  return [d.slice(0, 3), d.slice(3, 7), d.slice(7)].filter(Boolean).join("-")
+}
+
+/** "811-4411-307" → "628114411307" (empty string when nothing was entered). */
+export function toApiPhone(input: string): string {
+  const d = localPhoneDigits(input)
+  return d ? `62${d}` : ""
+}

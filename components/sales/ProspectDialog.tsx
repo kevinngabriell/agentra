@@ -12,6 +12,8 @@ import { getActiveSubAgents, type ApiSubAgent } from "@/lib/api/sub-agents"
 import { SearchSelect } from "@/components/ui/search-select"
 import { FormDialog, FormField, FormRow } from "@/components/ui/form-dialog"
 import { CLAIM_INPUT, MoneyInput } from "@/components/claims/fields"
+import { PhoneInput } from "@/components/ui/phone-input"
+import { formatLocalPhone, toApiPhone } from "@/lib/format"
 import { useProductOptions } from "@/lib/hooks/useProductOptions"
 
 interface Form {
@@ -22,8 +24,8 @@ interface Form {
 
 function initial(type: ProspectType, p: ApiProspect | null): Form {
     return {
-        type: p?.prospect_type ?? type, name: p?.name ?? "", contact_name: p?.contact_name ?? "", phone: p?.phone ?? "",
-        whatsapp: p?.whatsapp ?? "", email: p?.email ?? "", source: p?.source ?? "direct", agent: p?.referred_by_agent_id ?? "",
+        type: p?.prospect_type ?? type, name: p?.name ?? "", contact_name: p?.contact_name ?? "", phone: formatLocalPhone(p?.phone),
+        whatsapp: formatLocalPhone(p?.whatsapp), email: p?.email ?? "", source: p?.source ?? "direct", agent: p?.referred_by_agent_id ?? "",
         product: p?.product_interest ?? "", expected: p ? String(p.expected_premium) : "", follow_up: p?.follow_up_date ?? "",
         c_insurer: p?.competitor_insurer ?? "", c_number: p?.competitor_policy_number ?? "", c_expiry: p?.competitor_expiry ?? "",
         c_premium: p?.competitor_premium != null ? String(p.competitor_premium) : "", notes: p?.notes ?? "",
@@ -58,7 +60,7 @@ export function ProspectDialog({ type, editing, onClose, onSaved }: {
         if (isCompetitor && !form.c_expiry) { setError("Tanggal berakhir polis wajib diisi"); return }
         const text = (v: string) => v.trim() || null
         const body: ProspectPayload = {
-            name: form.name.trim(), contact_name: text(form.contact_name), phone: text(form.phone), whatsapp: text(form.whatsapp),
+            name: form.name.trim(), contact_name: text(form.contact_name), phone: text(toApiPhone(form.phone)), whatsapp: text(toApiPhone(form.whatsapp)),
             email: text(form.email), source: form.source, referred_by_agent_id: form.agent || null,
             product_interest: form.product || null, expected_premium: Number(form.expected || 0), follow_up_date: form.follow_up || null,
             competitor_insurer: isCompetitor ? text(form.c_insurer) : null,
@@ -84,8 +86,8 @@ export function ProspectDialog({ type, editing, onClose, onSaved }: {
             <FormField label="Nama prospek / perusahaan *"><Input {...CLAIM_INPUT} maxLength={150} value={form.name} onChange={(e) => set({ name: e.target.value })} /></FormField>
             <FormField label="Nama kontak (opsional)"><Input {...CLAIM_INPUT} maxLength={150} value={form.contact_name} onChange={(e) => set({ contact_name: e.target.value })} /></FormField>
             <FormRow>
-                <FormField label="No. WhatsApp"><Input {...CLAIM_INPUT} inputMode="tel" maxLength={30} value={form.whatsapp} onChange={(e) => set({ whatsapp: e.target.value })} /></FormField>
-                <FormField label="No. telepon"><Input {...CLAIM_INPUT} inputMode="tel" maxLength={30} value={form.phone} onChange={(e) => set({ phone: e.target.value })} /></FormField>
+                <FormField label="No. WhatsApp"><PhoneInput {...CLAIM_INPUT} value={form.whatsapp} onChange={(v) => set({ whatsapp: v })} /></FormField>
+                <FormField label="No. telepon"><PhoneInput {...CLAIM_INPUT} value={form.phone} onChange={(v) => set({ phone: v })} /></FormField>
             </FormRow>
             <FormField label="Email"><Input {...CLAIM_INPUT} type="email" maxLength={150} value={form.email} onChange={(e) => set({ email: e.target.value })} /></FormField>
             <FormRow>

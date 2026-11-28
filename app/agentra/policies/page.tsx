@@ -74,7 +74,7 @@ function getAvatarColor(id: string) {
   return avatarColors[hash % avatarColors.length]
 }
 
-const colHdr = { color: "#64748B", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.05em", px: "20px", py: "12px" }
+const colHdr = { color: "#64748B", fontSize: "13px", fontWeight: "bold", letterSpacing: "0.05em", px: "20px", py: "12px" }
 
 function TableSkeleton() {
   return (
@@ -220,11 +220,11 @@ export default function Policies() {
           <Flex gap="12px" align={{ base: "stretch", md: "flex-end" }} flexDir={{ base: "column", md: "row" }} flexWrap="wrap">
             {/* Search */}
             <Flex flexDir="column" gap="4px" flex="1" minW={{ base: "0", md: "200px" }}>
-              <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Cari</Text>
+              <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">Cari</Text>
               <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="12px">
                 <LuSearch size={14} color="#64748B" />
                 <Input
-                  border="0" fontSize="15px" color="#1C2833" placeholder="No. polis, nasabah, plat, rangka, atau B/L..."
+                  border="0" fontSize="14px" color="#1C2833" placeholder="No. polis, nasabah, plat, rangka, atau B/L..."
                   aria-label="Cari polis"
                   value={search}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
@@ -240,7 +240,7 @@ export default function Policies() {
 
             {/* Product type */}
             <Flex flexDir="column" gap="4px" minW={{ base: "0", md: "160px" }} w={{ base: "100%", md: "auto" }}>
-              <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Jenis Produk</Text>
+              <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">Jenis Produk</Text>
               <SearchSelect
                 ariaLabel="Jenis Produk"
                 value={productFilter}
@@ -254,7 +254,7 @@ export default function Policies() {
 
             {/* Renewal status */}
             <Flex flexDir="column" gap="4px" minW={{ base: "0", md: "160px" }} w={{ base: "100%", md: "auto" }}>
-              <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">Status Perpanjangan</Text>
+              <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">Status Perpanjangan</Text>
               <SearchSelect
                 ariaLabel="Status Perpanjangan"
                 value={statusFilter}
@@ -271,21 +271,21 @@ export default function Policies() {
 
             <Flex gap="8px" ml={{ base: 0, md: "auto" }} flexDir={{ base: "column", md: "row" }} w={{ base: "100%", md: "auto" }}>
               <Button
-                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px"
+                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px"
                 fontWeight="semibold" borderRadius="8px" gap="6px" px="16px"
                 onClick={() => { setExportError(null); setExportOpen(true) }}
               >
                 <LuDownload size={14} /> Export Excel
               </Button>
               <Button
-                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px"
+                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px"
                 fontWeight="semibold" borderRadius="8px" gap="6px" px="16px"
                 onClick={() => router.push("/agentra/import?type=policies")}
               >
                 <LuUpload size={14} /> Impor Polis
               </Button>
               <Button
-                bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold" borderRadius="8px"
+                bg="#0D1B3E" color="white" fontSize="14px" fontWeight="semibold" borderRadius="8px"
                 gap="6px" px="16px"
                 onClick={() => router.push("/agentra/policies/new")}
               >
@@ -305,8 +305,8 @@ export default function Policies() {
                 <Flex justify="space-between" align="flex-start" mb="12px">
                   <Box p="10px" bg={iconBg} borderRadius="10px" color={iconColor}><Icon size={20} /></Box>
                 </Flex>
-                <Text color="#5D6D7E" fontSize="14px" mb="4px">{label}</Text>
-                <Text color="#1C2833" fontSize="24px" fontWeight="bold">{value}</Text>
+                <Text color="#5D6D7E" fontSize="13px" mb="4px">{label}</Text>
+                <Text color="#1C2833" fontSize="22px" fontWeight="bold">{value}</Text>
               </Box>
             ))}
           </Grid>
@@ -315,8 +315,8 @@ export default function Policies() {
           <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
             {isEmpty ? (
               <Flex flexDir="column" align="center" gap="8px" py="64px" px="24px">
-                <Text color="#1C2833" fontWeight="semibold" fontSize="18px">Polis belum ditemukan</Text>
-                <Text color="#5D6D7E" fontSize="16px" textAlign="center" maxW="360px">
+                <Text color="#1C2833" fontWeight="semibold" fontSize="17px">Polis belum ditemukan</Text>
+                <Text color="#5D6D7E" fontSize="15px" textAlign="center" maxW="360px">
                   Coba hapus pilihan filter, atau tekan tombol di bawah untuk mencatat polis baru.
                 </Text>
                 <Button mt="8px" bg="#001F40" color="white" gap="8px" onClick={() => router.push("/agentra/policies/new")}>
@@ -339,7 +339,7 @@ export default function Policies() {
                     <Table.Row>
                       <Table.Cell colSpan={7} px="20px" py="40px" textAlign="center">
                         <Flex flexDir="column" align="center" gap="10px">
-                          <Text color="#DC2626" fontSize="16px">{error}</Text>
+                          <Text color="#DC2626" fontSize="15px">{error}</Text>
                           <Button size="sm" variant="outline" borderColor="#E2E8F0" onClick={() => setRetryKey((k) => k + 1)}>
                             Coba Lagi
                           </Button>
@@ -362,10 +362,10 @@ export default function Policies() {
                       >
                         {/* No. Polis */}
                         <Table.Cell px="20px" py="14px">
-                          <Text color="#1C2833" fontSize="15px" fontWeight="semibold" fontFamily="mono">{p.policy_number}</Text>
-                          <Text color="#64748B" fontSize="14px">Tahun ke-{p.policy_year ?? 1}</Text>
+                          <Text color="#1C2833" fontSize="14px" fontWeight="semibold" fontFamily="mono">{p.policy_number}</Text>
+                          <Text color="#64748B" fontSize="13px">Tahun ke-{p.policy_year ?? 1}</Text>
                           {(p.plate_number || p.chassis_number || p.bl_awb_number) && (
-                            <Text color="#64748B" fontSize="14px" fontFamily="mono">
+                            <Text color="#64748B" fontSize="13px" fontFamily="mono">
                               {p.plate_number ?? (p.chassis_number ? `Rangka ${p.chassis_number}` : `B/L ${p.bl_awb_number}`)}
                             </Text>
                           )}
@@ -378,14 +378,14 @@ export default function Policies() {
                         >
                           <Flex align="center" gap="8px">
                             <Avatar.Root w="34px" h="34px" bg={getAvatarColor(p.customer_id)} borderRadius="full">
-                              <Avatar.Fallback color="white" fontSize="14px" fontWeight="bold">
+                              <Avatar.Fallback color="white" fontSize="13px" fontWeight="bold">
                                 {getInitials(p.customer_name)}
                               </Avatar.Fallback>
                             </Avatar.Root>
                             <Flex flexDir="column" gap="2px">
-                              <Text color="#3B82F6" fontSize="15px" fontWeight="semibold">{p.customer_name}</Text>
+                              <Text color="#3B82F6" fontSize="14px" fontWeight="semibold">{p.customer_name}</Text>
                               {p.object_insured && (
-                                <Text color="#64748B" fontSize="14px">{p.object_insured}</Text>
+                                <Text color="#64748B" fontSize="13px">{p.object_insured}</Text>
                               )}
                             </Flex>
                           </Flex>
@@ -395,9 +395,9 @@ export default function Policies() {
                         <Table.Cell px="20px" py="14px">
                           <Flex align="center" gap="6px" mb="4px">
                             <Box color="#64748B"><ProductIcon size={14} /></Box>
-                            <Text color="#1C2833" fontSize="15px">{productCatalog.label(p.product_type)}</Text>
+                            <Text color="#1C2833" fontSize="14px">{productCatalog.label(p.product_type)}</Text>
                           </Flex>
-                          <Badge px="6px" py="1px" borderRadius="4px" fontSize="14px" fontWeight="bold"
+                          <Badge px="6px" py="1px" borderRadius="4px" fontSize="13px" fontWeight="bold"
                             bg={insurerColor + "20"} color={insurerColor}>
                             {p.insurer_short_name ?? p.insurer_name}
                           </Badge>
@@ -405,20 +405,20 @@ export default function Policies() {
 
                         {/* Premi */}
                         <Table.Cell px="20px" py="14px">
-                          <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{fmt(p.premium_amount)}</Text>
+                          <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{fmt(p.premium_amount)}</Text>
                         </Table.Cell>
 
                         {/* Periode */}
                         <Table.Cell px="20px" py="14px">
-                          <Text color="#64748B" fontSize="14px">{formatDate(p.coverage_start)}</Text>
-                          <Text color={endExpired ? "#DC2626" : "#64748B"} fontSize="14px">
+                          <Text color="#64748B" fontSize="13px">{formatDate(p.coverage_start)}</Text>
+                          <Text color={endExpired ? "#DC2626" : "#64748B"} fontSize="13px">
                             s/d {formatDate(p.coverage_end)}
                           </Text>
                         </Table.Cell>
 
                         {/* Status */}
                         <Table.Cell px="20px" py="14px">
-                          <Badge px="10px" py="3px" borderRadius="full" fontSize="14px" fontWeight="medium"
+                          <Badge px="10px" py="3px" borderRadius="full" fontSize="13px" fontWeight="medium"
                             bg={STATUS_CFG[status].bg} color={STATUS_CFG[status].color}>
                             {status.toUpperCase()}
                           </Badge>
@@ -447,11 +447,11 @@ export default function Policies() {
             {/* Pagination */}
             {!loading && !error && policies.length > 0 && (
               <Flex px="20px" py="14px" justify="space-between" align="center" borderTop="1px solid" borderColor="#E2E8F0">
-                <Text color="#64748B" fontSize="15px">Menampilkan {start}–{end} dari {total.toLocaleString()} Polis</Text>
+                <Text color="#64748B" fontSize="14px">Menampilkan {start}–{end} dari {total.toLocaleString()} Polis</Text>
                 <Pagination.Root count={total} pageSize={PAGE_SIZE} page={page} onPageChange={(e) => setPage(e.page)}>
                   <ButtonGroup variant="ghost" size="sm" gap="2px">
                     <Pagination.PrevTrigger asChild>
-                      <Button variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" px="12px" _hover={{ bg: "#F1F5F9" }}>
+                      <Button variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px" px="12px" _hover={{ bg: "#F1F5F9" }}>
                         <LuChevronLeft size={14} /> Sebelumnya
                       </Button>
                     </Pagination.PrevTrigger>
@@ -461,13 +461,13 @@ export default function Policies() {
                           borderColor={item.value === page ? "#0D1B3E" : "#E2E8F0"}
                           bg={item.value === page ? "#0D1B3E" : "white"}
                           color={item.value === page ? "white" : "#374151"}
-                          fontSize="15px" _hover={{ bg: item.value === page ? "#1A2F5C" : "#F1F5F9" }}>
+                          fontSize="14px" _hover={{ bg: item.value === page ? "#1A2F5C" : "#F1F5F9" }}>
                           {item.value}
                         </Button>
                       </Pagination.Item>
                     )} ellipsis={<Flex w="32px" h="32px" align="center" justify="center" color="#64748B">…</Flex>} />
                     <Pagination.NextTrigger asChild>
-                      <Button variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" px="12px" _hover={{ bg: "#F1F5F9" }}>
+                      <Button variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px" px="12px" _hover={{ bg: "#F1F5F9" }}>
                         Selanjutnya <LuChevronRight size={14} />
                       </Button>
                     </Pagination.NextTrigger>
@@ -490,7 +490,7 @@ export default function Policies() {
         <Dialog.Positioner>
           <Dialog.Content bg="white" borderRadius="16px" maxW="400px" w="90vw" shadow="xl">
             <Dialog.Header px="24px" pt="24px" pb="0">
-              <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">
+              <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">
                 Export Polis ke Excel
               </Dialog.Title>
             </Dialog.Header>
@@ -499,7 +499,7 @@ export default function Policies() {
               <Flex flexDir="column" gap="16px">
 
                 <Flex flexDir="column" gap="4px">
-                  <Text fontSize="14px" color="#5D6D7E" fontWeight="medium">
+                  <Text fontSize="13px" color="#5D6D7E" fontWeight="medium">
                     Bulan (opsional)
                   </Text>
                   <input
@@ -507,12 +507,12 @@ export default function Policies() {
                     value={exportMonth}
                     onChange={(e) => setExportMonth(e.target.value)}
                     style={{
-                      fontSize: "15px", color: "#1C2833", border: "1px solid #E2E8F0",
+                      fontSize: "14px", color: "#1C2833", border: "1px solid #E2E8F0",
                       borderRadius: "8px", padding: "8px 12px", width: "100%",
                       outline: "none", background: "white",
                     }}
                   />
-                  <Text fontSize="14px" color="#64748B">
+                  <Text fontSize="13px" color="#64748B">
                     Kosongkan untuk mengekspor semua polis
                   </Text>
                 </Flex>
@@ -529,27 +529,27 @@ export default function Policies() {
                     >
                       <Checkbox.Indicator color="white" />
                     </Checkbox.Control>
-                    <Checkbox.Label fontSize="15px" color="#374151">
+                    <Checkbox.Label fontSize="14px" color="#374151">
                       Terapkan filter aktif (produk, status)
                     </Checkbox.Label>
                   </Checkbox.Root>
                 </Flex>
 
                 {exportError && (
-                  <Text fontSize="15px" color="#DC2626">{exportError}</Text>
+                  <Text fontSize="14px" color="#DC2626">{exportError}</Text>
                 )}
               </Flex>
             </Dialog.Body>
 
             <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
               <Button
-                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px"
+                variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="14px"
                 borderRadius="8px" onClick={() => setExportOpen(false)}
               >
                 Batal
               </Button>
               <Button
-                bg="#0D1B3E" color="white" fontSize="15px" fontWeight="semibold"
+                bg="#0D1B3E" color="white" fontSize="14px" fontWeight="semibold"
                 borderRadius="8px" gap="6px" loading={exporting}
                 onClick={handleExport}
               >

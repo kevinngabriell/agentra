@@ -24,8 +24,8 @@ function Info({ label, value }: { label: string; value: string | null | undefine
     if (!value) return null
     return (
         <Flex flexDir="column" gap="2px" minW="0">
-            <Text color="#64748B" fontSize="14px" fontWeight="semibold">{label.toUpperCase()}</Text>
-            <Text color="#1C2833" fontSize="15px" wordBreak="break-word">{value}</Text>
+            <Text color="#64748B" fontSize="13px" fontWeight="semibold">{label.toUpperCase()}</Text>
+            <Text color="#1C2833" fontSize="14px" wordBreak="break-word">{value}</Text>
         </Flex>
     )
 }
@@ -87,11 +87,11 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Prospects" /></Box>
 
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column" maxW="1100px">
-                    <Button alignSelf="flex-start" variant="ghost" size="sm" fontSize="15px" color="#475569" onClick={() => router.push("/agentra/prospects")}>
+                    <Button alignSelf="flex-start" variant="ghost" size="sm" fontSize="14px" color="#475569" onClick={() => router.push("/agentra/prospects")}>
                         <LuArrowLeft size={14} /> Semua prospek
                     </Button>
 
-                    {error && <Text color="#DC2626" fontSize="15px" role="alert">{error}</Text>}
+                    {error && <Text color="#DC2626" fontSize="14px" role="alert">{error}</Text>}
                     {!prospect && !error && <Skeleton h="200px" borderRadius="12px" />}
 
                     {prospect && (
@@ -100,25 +100,25 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                                 <Flex justify="space-between" align="flex-start" gap="12px" flexWrap="wrap" mb="16px">
                                     <Box>
                                         <Flex align="center" gap="10px" flexWrap="wrap">
-                                            <Text color="#1C2833" fontSize="22px" fontWeight="bold">{prospect.name}</Text>
+                                            <Text color="#1C2833" fontSize="20px" fontWeight="bold">{prospect.name}</Text>
                                             <StageBadge stage={prospect.stage} />
                                         </Flex>
-                                        <Text color="#64748B" fontSize="15px">{PROSPECT_TYPE_LABELS[prospect.prospect_type]}</Text>
+                                        <Text color="#64748B" fontSize="14px">{PROSPECT_TYPE_LABELS[prospect.prospect_type]}</Text>
                                     </Box>
                                     <Flex gap="8px" flexWrap="wrap">
-                                        {wa && <Button asChild size="sm" variant="outline" fontSize="15px"><a href={wa} target="_blank" rel="noopener noreferrer">WhatsApp</a></Button>}
-                                        {!closed && <Button size="sm" variant="outline" fontSize="15px" onClick={() => setDialog("edit")}><LuPencil size={13} /> Ubah</Button>}
+                                        {wa && <Button asChild size="sm" variant="outline" fontSize="14px"><a href={wa} target="_blank" rel="noopener noreferrer">WhatsApp</a></Button>}
+                                        {!closed && <Button size="sm" variant="outline" fontSize="14px" onClick={() => setDialog("edit")}><LuPencil size={13} /> Ubah</Button>}
                                         {prospect.customer_id
-                                            ? <Button size="sm" variant="outline" fontSize="15px" onClick={() => router.push(`/agentra/customer/detail?id=${encodeURIComponent(prospect.customer_id!)}`)}><LuUserCheck size={13} /> Lihat Nasabah</Button>
-                                            : !closed && <Button size="sm" bg="#16A34A" color="white" fontSize="15px" _hover={{ bg: "#15803D" }} onClick={() => setDialog("convert")}><LuUserCheck size={13} /> Jadikan Nasabah</Button>}
-                                        {!closed && <Button size="sm" variant="outline" color="#DC2626" fontSize="15px" onClick={() => setDialog("lost")}>Tandai Batal</Button>}
+                                            ? <Button size="sm" variant="outline" fontSize="14px" onClick={() => router.push(`/agentra/customer/detail?id=${encodeURIComponent(prospect.customer_id!)}`)}><LuUserCheck size={13} /> Lihat Nasabah</Button>
+                                            : !closed && <Button size="sm" bg="#16A34A" color="white" fontSize="14px" _hover={{ bg: "#15803D" }} onClick={() => setDialog("convert")}><LuUserCheck size={13} /> Jadikan Nasabah</Button>}
+                                        {!closed && <Button size="sm" variant="outline" color="#DC2626" fontSize="14px" onClick={() => setDialog("lost")}>Tandai Batal</Button>}
                                         {!prospect.customer_id && <Button size="sm" variant="ghost" color="#DC2626" aria-label="Hapus prospek" onClick={remove}><LuTrash2 size={14} /></Button>}
                                     </Flex>
                                 </Flex>
 
                                 {!closed && (
                                     <Flex align="center" gap="10px" mb="16px" flexWrap="wrap">
-                                        <Text color="#64748B" fontSize="14px">Tahap</Text>
+                                        <Text color="#64748B" fontSize="13px">Tahap</Text>
                                         <Box w="200px" opacity={busy ? 0.6 : 1}>
                                             <SearchSelect value={prospect.stage} onChange={(v) => moveTo(v as MovableStage)} ariaLabel="Ubah tahap"
                                                 options={MOVABLE_STAGES.map(s => ({ value: s, label: PROSPECT_STAGE_LABELS[s] }))} />
@@ -128,8 +128,8 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
 
                                 {prospect.stage === "lost" && (
                                     <Box bg="#FEF2F2" borderRadius="8px" p="12px" mb="16px">
-                                        <Text color="#DC2626" fontSize="15px" fontWeight="semibold">Batal: {prospect.lost_reason ? LOST_REASON_LABELS[prospect.lost_reason] : "—"}</Text>
-                                        {prospect.lost_note && <Text color="#7F1D1D" fontSize="14px">{prospect.lost_note}</Text>}
+                                        <Text color="#DC2626" fontSize="14px" fontWeight="semibold">Batal: {prospect.lost_reason ? LOST_REASON_LABELS[prospect.lost_reason] : "—"}</Text>
+                                        {prospect.lost_note && <Text color="#7F1D1D" fontSize="13px">{prospect.lost_note}</Text>}
                                     </Box>
                                 )}
 
@@ -149,19 +149,19 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                                     <Info label="Premi saat ini" value={prospect.competitor_premium ? fmtIDR(prospect.competitor_premium) : null} />
                                     <Info label="Nasabah" value={prospect.customer_name} />
                                 </Grid>
-                                {prospect.notes && <Text mt="16px" color="#475569" fontSize="15px" whiteSpace="pre-wrap">{prospect.notes}</Text>}
+                                {prospect.notes && <Text mt="16px" color="#475569" fontSize="14px" whiteSpace="pre-wrap">{prospect.notes}</Text>}
                             </Box>
 
                             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="24px">
                                 <Flex justify="space-between" align="center" gap="8px" mb="16px" flexWrap="wrap">
                                     <Flex align="center" gap="8px">
                                         <LuFileText size={16} color="#0D1B3E" />
-                                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Penawaran ({quotes.length})</Text>
+                                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Penawaran ({quotes.length})</Text>
                                     </Flex>
-                                    {!closed && <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog("quote")}><LuPlus size={13} /> Buat Penawaran</Button>}
+                                    {!closed && <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog("quote")}><LuPlus size={13} /> Buat Penawaran</Button>}
                                 </Flex>
                                 {quotes.length === 0 ? (
-                                    <Text color="#64748B" fontSize="15px">Belum ada penawaran. Buat penawaran dan bandingkan beberapa asuransi sekaligus.</Text>
+                                    <Text color="#64748B" fontSize="14px">Belum ada penawaran. Buat penawaran dan bandingkan beberapa asuransi sekaligus.</Text>
                                 ) : (
                                     <Flex flexDir="column" gap="8px">
                                         {quotes.map(q => (
@@ -169,15 +169,15 @@ export default function ProspectDetailPage({ params }: { params: Promise<{ id: s
                                                 onClick={() => router.push(`/agentra/quotes/${encodeURIComponent(q.quote_id)}`)}>
                                                 <Flex flexDir="column" gap="2px" minW="0">
                                                     <Flex align="center" gap="8px" flexWrap="wrap">
-                                                        <Text color="#1D4ED8" fontSize="15px" fontWeight="semibold">{q.quote_number}</Text>
+                                                        <Text color="#1D4ED8" fontSize="14px" fontWeight="semibold">{q.quote_number}</Text>
                                                         <QuoteStatusBadge status={q.status} expired={q.is_expired} />
                                                     </Flex>
-                                                    <Text color="#64748B" fontSize="14px">
+                                                    <Text color="#64748B" fontSize="13px">
                                                         {productCatalog.label(q.product_type)} · Nilai {fmtIDR(q.sum_insured)} · {q.option_count} asuransi
                                                         {q.lowest_premium !== null ? ` · mulai ${fmtIDR(q.lowest_premium)}` : ""}
                                                     </Text>
                                                 </Flex>
-                                                <Text color="#64748B" fontSize="14px" flexShrink={0}>{fmtDate(q.created_at)}</Text>
+                                                <Text color="#64748B" fontSize="13px" flexShrink={0}>{fmtDate(q.created_at)}</Text>
                                             </Flex>
                                         ))}
                                     </Flex>

@@ -7,6 +7,8 @@ import { Header } from "../../components/Header"
 import { Logo } from "../../components/Logo"
 import { ErrorAlert } from "@/components/ui/error-alert"
 import { SearchSelect } from "@/components/ui/search-select"
+import { PhoneInput } from "@/components/ui/phone-input"
+import { localPhoneDigits, toApiPhone } from "@/lib/format"
 import { FaShieldAlt } from "react-icons/fa"
 import { FiCheck, FiEye, FiEyeOff, FiLock, FiShield, FiZap, FiMessageCircle } from "react-icons/fi"
 import { MdSupportAgent } from "react-icons/md"
@@ -676,9 +678,8 @@ export default function Register() {
     if (!formData.phone.trim()) {
       errs.phone = "Nomor telepon wajib diisi"
     } else {
-      const digits = formData.phone.replace(/\D/g, "")
-      if (digits.length < 8 || digits.length > 15) {
-        errs.phone = "Nomor telepon tidak valid (8-15 digit)"
+      if (!/^8\d{8,11}$/.test(localPhoneDigits(formData.phone))) {
+        errs.phone = "Nomor telepon tidak valid. Contoh: 811-4411-307"
       }
     }
     setFieldErrors(errs)
@@ -702,8 +703,8 @@ export default function Register() {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.password_confirmation,
-        phone: formData.phone,
-        whatsapp_number: formData.phone,
+        phone: toApiPhone(formData.phone),
+        whatsapp_number: toApiPhone(formData.phone),
         business_name: formData.business_name,
         city: formData.city,
         plan: planToUse?.plan_id ?? "",
@@ -855,14 +856,7 @@ export default function Register() {
                       <Field.Label color="#1C2833" fontWeight="semibold" fontSize="14px">
                         Nomor WhatsApp / Telepon
                       </Field.Label>
-                      <InputGroup width="100%" startAddon="+62">
-                        <Input
-                          placeholder="812xxxx"
-                          fontSize="14px"
-                          value={formData.phone}
-                          onChange={(e) => setField("phone")(e.target.value)}
-                        />
-                      </InputGroup>
+                      <PhoneInput fontSize="14px" value={formData.phone} onChange={setField("phone")} />
                       {fieldErrors.phone && (
                         <Field.ErrorText fontSize="12px">{fieldErrors.phone}</Field.ErrorText>
                       )}

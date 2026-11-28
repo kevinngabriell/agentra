@@ -14,7 +14,7 @@ import {
 import { fmtFileSize } from "@/lib/format"
 import { useOpenOnMount } from "@/components/ui/use-open-on-mount"
 
-const LABEL = { fontSize: "14px", color: "#5D6D7E", fontWeight: "medium" } as const
+const LABEL = { fontSize: "13px", color: "#5D6D7E", fontWeight: "medium" } as const
 const ACCEPTED_TYPES = DOCUMENT_ACCEPT.split(",")
 const TYPE_OPTIONS = (Object.entries(DOCUMENT_TYPE_LABELS) as [ApiDocumentType, string][]).map(([value, label]) => ({ value, label }))
 
@@ -99,9 +99,9 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                 <Dialog.Content bg="white" borderRadius="12px" maxW="480px" w="92vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
                         <Flex flexDir="column" gap="2px">
-                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Unggah Dokumen</Dialog.Title>
+                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">Unggah Dokumen</Dialog.Title>
                             {(policy || customer || claim) && (
-                                <Text color="#64748B" fontSize="14px">
+                                <Text color="#64748B" fontSize="13px">
                                     {claim ? `Klaim ${claim.number}${claim.requirement ? ` · ${claim.requirement.label}` : ""}` : policy ? `Polis ${policy.number}` : customer?.name}
                                 </Text>
                             )}
@@ -116,8 +116,8 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                                 <Flex align="center" gap="10px" px="12px" py="10px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px">
                                     <Box color="#0D1B3E" flexShrink={0}>{file.type === "application/pdf" ? <LuFileText size={20} /> : <LuImage size={20} />}</Box>
                                     <Flex flexDir="column" minW="0" flex="1">
-                                        <Text color="#1C2833" fontSize="15px" fontWeight="medium" truncate>{file.name}</Text>
-                                        <Text color="#64748B" fontSize="14px">{fmtFileSize(file.size)}</Text>
+                                        <Text color="#1C2833" fontSize="14px" fontWeight="medium" truncate>{file.name}</Text>
+                                        <Text color="#64748B" fontSize="13px">{fmtFileSize(file.size)}</Text>
                                     </Flex>
                                     <Button size="xs" variant="ghost" color="#64748B" aria-label="Hapus file" disabled={saving} onClick={() => setFile(null)}>
                                         <LuX size={14} />
@@ -135,8 +135,8 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                                     onDrop={(e: React.DragEvent) => { e.preventDefault(); setDragging(false); pickFile(e.dataTransfer.files?.[0]) }}
                                 >
                                     <Box color="#0D1B3E"><LuUpload size={22} /></Box>
-                                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Klik atau seret file ke sini</Text>
-                                    <Text color="#64748B" fontSize="14px">PDF, JPG, atau PNG · Maks. 10MB</Text>
+                                    <Text color="#1C2833" fontSize="14px" fontWeight="semibold">Klik atau seret file ke sini</Text>
+                                    <Text color="#64748B" fontSize="13px">PDF, JPG, atau PNG · Maks. 10MB</Text>
                                 </Flex>
                             )}
 
@@ -163,12 +163,12 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
                             <Flex gap="12px">
                                 <Flex flexDir="column" gap="4px" flex="2">
                                     <Text {...LABEL}>Judul (opsional)</Text>
-                                    <Input fontSize="15px" borderColor="#E2E8F0" borderRadius="8px" placeholder={claim?.requirement?.label ?? "Contoh: KTP Direktur"}
+                                    <Input fontSize="14px" borderColor="#E2E8F0" borderRadius="8px" placeholder={claim?.requirement?.label ?? "Contoh: KTP Direktur"}
                                         maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} />
                                 </Flex>
                                 <Flex flexDir="column" gap="4px" flex="1">
                                     <Text {...LABEL}>Tahun</Text>
-                                    <Input fontSize="15px" borderColor="#E2E8F0" borderRadius="8px" placeholder="Otomatis"
+                                    <Input fontSize="14px" borderColor="#E2E8F0" borderRadius="8px" placeholder="Otomatis"
                                         inputMode="numeric" maxLength={4} value={year}
                                         onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))} />
                                 </Flex>
@@ -176,19 +176,19 @@ function UploadDocumentForm({ onClose, onUploaded, customer, policy, claim, defa
 
                             <Flex flexDir="column" gap="4px">
                                 <Text {...LABEL}>Catatan (opsional)</Text>
-                                <Textarea fontSize="15px" borderColor="#E2E8F0" borderRadius="8px" rows={2}
+                                <Textarea fontSize="14px" borderColor="#E2E8F0" borderRadius="8px" rows={2}
                                     value={notes} onChange={(e) => setNotes(e.target.value)} />
                             </Flex>
 
-                            {error && <Text fontSize="14px" color="#DC2626">{error}</Text>}
+                            {error && <Text fontSize="13px" color="#DC2626">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
+                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="15px" borderRadius="8px"
                             _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={onClose}>
                             Batal
                         </Button>
-                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="15px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                             loading={saving} loadingText="Mengunggah..." onClick={handleSubmit}>
                             Unggah
                         </Button>
@@ -225,7 +225,7 @@ export function CustomerPicker({ value, onChange, disabled }: {
     if (value) {
         return (
             <Flex align="center" justify="space-between" px="12px" h="40px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px">
-                <Text color="#1C2833" fontSize="15px" truncate>{value.name}</Text>
+                <Text color="#1C2833" fontSize="14px" truncate>{value.name}</Text>
                 <Button size="xs" variant="ghost" color="#64748B" aria-label="Ganti nasabah" disabled={disabled} onClick={() => onChange(null)}>
                     <LuX size={14} />
                 </Button>
@@ -239,17 +239,17 @@ export function CustomerPicker({ value, onChange, disabled }: {
 
     return (
         <Box position="relative">
-            <Input fontSize="15px" borderColor="#E2E8F0" borderRadius="8px" placeholder="Ketik nama, NIK, atau NPWP..."
+            <Input fontSize="14px" borderColor="#E2E8F0" borderRadius="8px" placeholder="Ketik nama, NIK, atau NPWP..."
                 aria-label="Cari nasabah" value={query} disabled={disabled} onChange={(e) => setQuery(e.target.value)} />
             {q.length >= 2 && (
                 <Box mt="4px" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" maxH="200px" overflowY="auto" bg="white">
                     {searching && <Flex justify="center" py="10px"><Spinner size="xs" color="#64748B" /></Flex>}
-                    {!searching && list.length === 0 && <Text color="#64748B" fontSize="14px" px="12px" py="10px">Nasabah tidak ditemukan</Text>}
+                    {!searching && list.length === 0 && <Text color="#64748B" fontSize="13px" px="12px" py="10px">Nasabah tidak ditemukan</Text>}
                     {list.map((c) => (
                         <Box key={c.customer_id} as="button" w="100%" textAlign="left" px="12px" py="8px" _hover={{ bg: "#F1F5F9" }}
                             onClick={() => onChange({ id: c.customer_id, name: c.display_name })}>
-                            <Text color="#1C2833" fontSize="15px">{c.display_name}</Text>
-                            <Text color="#64748B" fontSize="14px">
+                            <Text color="#1C2833" fontSize="14px">{c.display_name}</Text>
+                            <Text color="#64748B" fontSize="13px">
                                 {c.customer_type === "company" ? "Perusahaan" : "Perorangan"}
                                 {c.nik ? ` · ${c.nik}` : c.npwp_company ? ` · ${c.npwp_company}` : ""}
                             </Text>

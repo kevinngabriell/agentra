@@ -23,7 +23,7 @@ const fmtDate = (iso: string | null | undefined) => (iso ? new Date(iso + "T00:0
 function Title({ icon, children, action }: { icon: ReactNode; children: ReactNode; action?: ReactNode }) {
     return (
         <Flex justify="space-between" align="center" mb="10px" gap="8px">
-            <Flex align="center" gap="8px" color="#0D1B3E">{icon}<Text color="#1C2833" fontSize="16px" fontWeight="semibold">{children}</Text></Flex>
+            <Flex align="center" gap="8px" color="#0D1B3E">{icon}<Text color="#1C2833" fontSize="15px" fontWeight="semibold">{children}</Text></Flex>
             {action}
         </Flex>
     )
@@ -31,7 +31,7 @@ function Title({ icon, children, action }: { icon: ReactNode; children: ReactNod
 
 function Line({ label, value, strong, muted }: { label: string; value: ReactNode; strong?: boolean; muted?: boolean }) {
     return (
-        <Flex justify="space-between" gap="12px" py="5px" fontSize="15px" borderBottom="1px solid #F1F5F9">
+        <Flex justify="space-between" gap="12px" py="5px" fontSize="14px" borderBottom="1px solid #F1F5F9">
             <Text color={muted ? "#94A3B8" : "#64748B"}>{label}</Text>
             <Text color="#1C2833" fontWeight={strong ? "bold" : "normal"} textAlign="right">{value}</Text>
         </Flex>
@@ -45,17 +45,17 @@ export function ClaimDeadlinesCard({ claim }: { claim: ApiClaimDetail }) {
     return (
         <Box {...CARD}>
             <Title icon={<LuClock size={15} />}>Batas Waktu</Title>
-            {set.length === 0 ? <Text fontSize="14px" color="#64748B">Belum ada batas waktu. Isi batas lapor & dokumen sesuai wording polis lewat tombol Ubah data klaim besar.</Text>
+            {set.length === 0 ? <Text fontSize="13px" color="#64748B">Belum ada batas waktu. Isi batas lapor & dokumen sesuai wording polis lewat tombol Ubah data klaim besar.</Text>
                 : set.map((d) => {
                     const [bg, color, label] = style[d.state]
                     return (
-                        <Flex key={d.key} justify="space-between" align="center" py="5px" borderBottom="1px solid #F1F5F9" fontSize="14px" gap="8px">
+                        <Flex key={d.key} justify="space-between" align="center" py="5px" borderBottom="1px solid #F1F5F9" fontSize="13px" gap="8px">
                             <Box><Text color="#1C2833">{d.label}</Text><Text color="#64748B">{fmtDate(d.date)}</Text></Box>
-                            <Badge bg={bg} color={color} fontSize="14px">{label || (d.days_left !== null ? (d.days_left === 0 ? "Hari ini" : `${d.days_left} hari lagi`) : "")}</Badge>
+                            <Badge bg={bg} color={color} fontSize="13px">{label || (d.days_left !== null ? (d.days_left === 0 ? "Hari ini" : `${d.days_left} hari lagi`) : "")}</Badge>
                         </Flex>
                     )
                 })}
-            <Text fontSize="14px" color="#94A3B8" mt="6px">Keputusan & pembayaran penanggung: umumnya 30 hari (POJK 69/2016), dihitung otomatis.</Text>
+            <Text fontSize="13px" color="#94A3B8" mt="6px">Keputusan & pembayaran penanggung: umumnya 30 hari (POJK 69/2016), dihitung otomatis.</Text>
         </Box>
     )
 }
@@ -86,17 +86,17 @@ export function SettlementCard({ claim, onChanged }: { claim: ApiClaimDetail; on
             <Line label="Perkiraan ganti rugi bersih" value={fmtIDR(s.net_payable)} strong />
             {s.approved_amount !== null && (
                 <Line label="Disetujui penanggung" value={<>{fmtIDR(s.approved_amount)}{s.difference_vs_approved !== null && s.difference_vs_approved !== 0 &&
-                    <Text as="span" color={s.difference_vs_approved < 0 ? "#B91C1C" : "#15803D"} fontSize="14px"> ({s.difference_vs_approved > 0 ? "+" : "−"}{fmtIDR(Math.abs(s.difference_vs_approved))})</Text>}</>} />
+                    <Text as="span" color={s.difference_vs_approved < 0 ? "#B91C1C" : "#15803D"} fontSize="13px"> ({s.difference_vs_approved > 0 ? "+" : "−"}{fmtIDR(Math.abs(s.difference_vs_approved))})</Text>}</>} />
             )}
             <Line label="Sudah dibayar" value={fmtIDR(s.paid_to_date)} />
             <Line label="Sisa" value={fmtIDR(s.outstanding)} strong />
             {s.deductible_differs && (
-                <Flex mt="8px" p="8px 10px" bg="#FFFBEB" borderRadius="8px" fontSize="14px" color="#92400E" justify="space-between" align="center" gap="8px" flexWrap="wrap">
+                <Flex mt="8px" p="8px 10px" bg="#FFFBEB" borderRadius="8px" fontSize="13px" color="#92400E" justify="space-between" align="center" gap="8px" flexWrap="wrap">
                     <Text>Risiko sendiri tercatat {fmtIDR(s.deductible_on_claim)}, ketentuan polis memberi {fmtIDR(s.deductible_suggested)} untuk kerugian ini.</Text>
                     <Button size="2xs" variant="outline" loading={busy} onClick={useSuggested}>Pakai dari polis</Button>
                 </Flex>
             )}
-            {error && <Text color="#DC2626" fontSize="14px">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px">{error}</Text>}
         </Box>
     )
 }
@@ -105,11 +105,11 @@ export function ReservesCard({ claim, onChanged }: { claim: ApiClaimDetail; onCh
     const [open, setOpen] = useState(false)
     return (
         <Box {...CARD}>
-            <Title icon={<LuTrendingDown size={15} />} action={<Button size="xs" variant="outline" fontSize="14px" onClick={() => setOpen(true)}><LuPlus size={12} /> Perbarui estimasi</Button>}>
+            <Title icon={<LuTrendingDown size={15} />} action={<Button size="xs" variant="outline" fontSize="13px" onClick={() => setOpen(true)}><LuPlus size={12} /> Perbarui estimasi</Button>}>
                 Riwayat Estimasi Kerugian
             </Title>
-            {claim.reserves.length === 0 ? <Text fontSize="14px" color="#64748B">Belum ada riwayat.</Text> : claim.reserves.map((r) => (
-                <Flex key={r.reserve_id} justify="space-between" gap="10px" py="5px" borderBottom="1px solid #F1F5F9" fontSize="14px">
+            {claim.reserves.length === 0 ? <Text fontSize="13px" color="#64748B">Belum ada riwayat.</Text> : claim.reserves.map((r) => (
+                <Flex key={r.reserve_id} justify="space-between" gap="10px" py="5px" borderBottom="1px solid #F1F5F9" fontSize="13px">
                     <Box><Text color="#1C2833">{r.source_label}</Text><Text color="#64748B">{fmtDate(r.reserve_date)}{r.note ? ` · ${r.note}` : ""}</Text></Box>
                     <Text fontWeight="semibold">{fmtIDR(r.amount)}</Text>
                 </Flex>
@@ -162,17 +162,17 @@ export function PaymentsCard({ claim, onChanged }: { claim: ApiClaimDetail; onCh
     }
     return (
         <Box {...CARD}>
-            <Title icon={<LuHandCoins size={15} />} action={canPay && <Button size="xs" variant="outline" fontSize="14px" onClick={() => setOpen(true)}><LuPlus size={12} /> Catat pembayaran</Button>}>
+            <Title icon={<LuHandCoins size={15} />} action={canPay && <Button size="xs" variant="outline" fontSize="13px" onClick={() => setOpen(true)}><LuPlus size={12} /> Catat pembayaran</Button>}>
                 Pembayaran Klaim
             </Title>
-            {error && <Text color="#DC2626" fontSize="14px">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px">{error}</Text>}
             {claim.payments.length === 0
-                ? <Text fontSize="14px" color="#64748B">{canPay ? "Belum ada pembayaran. Klaim besar sering dibayar bertahap (uang muka klaim) — catat tiap pembayaran." : "Pembayaran dicatat setelah klaim disetujui."}</Text>
+                ? <Text fontSize="13px" color="#64748B">{canPay ? "Belum ada pembayaran. Klaim besar sering dibayar bertahap (uang muka klaim) — catat tiap pembayaran." : "Pembayaran dicatat setelah klaim disetujui."}</Text>
                 : claim.payments.map((p) => (
-                    <Flex key={p.payment_id} justify="space-between" align="center" gap="10px" py="5px" borderBottom="1px solid #F1F5F9" fontSize="14px">
+                    <Flex key={p.payment_id} justify="space-between" align="center" gap="10px" py="5px" borderBottom="1px solid #F1F5F9" fontSize="13px">
                         <Box>
                             <Flex gap="6px" align="center"><Text color="#1C2833">{fmtDate(p.payment_date)}</Text>
-                                <Badge fontSize="14px" bg={p.payment_type === "final" ? "#E0E7FF" : "#EDE9FE"} color={p.payment_type === "final" ? "#4338CA" : "#6D28D9"}>{p.payment_type === "final" ? "Akhir" : "Sebagian"}</Badge></Flex>
+                                <Badge fontSize="13px" bg={p.payment_type === "final" ? "#E0E7FF" : "#EDE9FE"} color={p.payment_type === "final" ? "#4338CA" : "#6D28D9"}>{p.payment_type === "final" ? "Akhir" : "Sebagian"}</Badge></Flex>
                             <Text color="#64748B">{[p.payer_name, p.reference].filter(Boolean).join(" · ") || "—"}</Text>
                         </Box>
                         <Flex align="center" gap="4px"><Text fontWeight="semibold">{fmtIDR(p.amount)}</Text>
@@ -181,14 +181,14 @@ export function PaymentsCard({ claim, onChanged }: { claim: ApiClaimDetail; onCh
                 ))}
             {claim.coinsurance_split.length > 0 && (
                 <Box mt="12px">
-                    <Text fontSize="14px" fontWeight="semibold" color="#0D1B3E" mb="4px">Porsi koasuransi</Text>
+                    <Text fontSize="13px" fontWeight="semibold" color="#0D1B3E" mb="4px">Porsi koasuransi</Text>
                     {claim.coinsurance_split.map((c) => (
-                        <Flex key={c.co_insurer_name} justify="space-between" gap="8px" py="4px" fontSize="14px" borderBottom="1px dashed #E2E8F0">
+                        <Flex key={c.co_insurer_name} justify="space-between" gap="8px" py="4px" fontSize="13px" borderBottom="1px dashed #E2E8F0">
                             <Text>{c.co_insurer_name}{c.is_leader ? " (leader)" : ""} · {c.share_percent}%</Text>
                             <Text color={c.outstanding > 0 ? "#B45309" : "#15803D"}>{fmtIDR(c.paid_amount)} / {fmtIDR(c.share_amount)}</Text>
                         </Flex>
                     ))}
-                    <Text fontSize="14px" color="#94A3B8" mt="4px">Isi nama pembayar sama dengan nama co-insurer agar porsinya terhitung.</Text>
+                    <Text fontSize="13px" color="#94A3B8" mt="4px">Isi nama pembayar sama dengan nama co-insurer agar porsinya terhitung.</Text>
                 </Box>
             )}
             {open && <PaymentDialog claim={claim} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); onChanged() }} />}
@@ -217,7 +217,7 @@ function PaymentDialog({ claim, onClose, onSaved }: { claim: ApiClaimDetail; onC
     const payerOptions = [...new Set([...claim.coinsurance_split.map((c) => c.co_insurer_name), claim.insurer_name ?? ""].filter(Boolean))]
     return (
         <FormDialog title="Catat pembayaran klaim" saving={saving} error={error} onClose={onClose} onSubmit={submit}>
-            <Text fontSize="14px" color="#64748B">Disetujui {fmtIDR(claim.approved_amount ?? 0)} · sudah dibayar {fmtIDR(claim.settlement.paid_to_date)} · sisa {fmtIDR(remaining)}</Text>
+            <Text fontSize="13px" color="#64748B">Disetujui {fmtIDR(claim.approved_amount ?? 0)} · sudah dibayar {fmtIDR(claim.settlement.paid_to_date)} · sisa {fmtIDR(remaining)}</Text>
             <FormRow>
                 <FormField label="Jumlah (Rp)"><MoneyInput value={amount} onChange={setAmount} /></FormField>
                 <FormField label="Jenis"><SearchSelect value={type} onChange={(v) => setType(v as "interim" | "final")}
@@ -248,13 +248,13 @@ export function RecoveriesCard({ claim, onChanged }: { claim: ApiClaimDetail; on
     if (!["approved", "partially_paid", "paid"].includes(claim.status) && claim.recoveries.length === 0) return null
     return (
         <Box {...CARD}>
-            <Title icon={<LuRecycle size={15} />} action={<Button size="xs" variant="outline" fontSize="14px" onClick={() => setOpen(true)}><LuPlus size={12} /> Catat</Button>}>
+            <Title icon={<LuRecycle size={15} />} action={<Button size="xs" variant="outline" fontSize="13px" onClick={() => setOpen(true)}><LuPlus size={12} /> Catat</Button>}>
                 Salvage & Subrogasi
             </Title>
-            {error && <Text color="#DC2626" fontSize="14px">{error}</Text>}
-            {claim.recoveries.length === 0 ? <Text fontSize="14px" color="#64748B">Belum ada pemulihan. Catat penjualan sisa barang (salvage) atau tuntutan ke pihak penyebab (subrogasi).</Text>
+            {error && <Text color="#DC2626" fontSize="13px">{error}</Text>}
+            {claim.recoveries.length === 0 ? <Text fontSize="13px" color="#64748B">Belum ada pemulihan. Catat penjualan sisa barang (salvage) atau tuntutan ke pihak penyebab (subrogasi).</Text>
                 : claim.recoveries.map((r) => (
-                    <Flex key={r.recovery_id} justify="space-between" align="center" gap="10px" py="5px" borderBottom="1px solid #F1F5F9" fontSize="14px">
+                    <Flex key={r.recovery_id} justify="space-between" align="center" gap="10px" py="5px" borderBottom="1px solid #F1F5F9" fontSize="13px">
                         <Box><Text color="#1C2833">{labels[r.recovery_type]}{r.party ? ` · ${r.party}` : ""}</Text>
                             <Text color="#64748B">{fmtDate(r.recovery_date)}{r.returned_to_insured ? ` · ke tertanggung ${fmtIDR(r.returned_to_insured)}` : ""}</Text></Box>
                         <Flex align="center" gap="4px"><Text fontWeight="semibold">{fmtIDR(r.amount)}</Text>
@@ -303,7 +303,7 @@ export function LargeLossInfoCard({ claim, productGroup, onChanged }: { claim: A
     const motor = productGroup === "motor"
     return (
         <Box {...CARD}>
-            <Title icon={<LuScale size={15} />} action={claim.status !== "paid" && <Button size="xs" variant="outline" fontSize="14px" onClick={() => setOpen(true)}><LuPencil size={12} /> Ubah</Button>}>
+            <Title icon={<LuScale size={15} />} action={claim.status !== "paid" && <Button size="xs" variant="outline" fontSize="13px" onClick={() => setOpen(true)}><LuPencil size={12} /> Ubah</Button>}>
                 {motor ? "Bengkel & Adjuster" : "Adjuster & Penilaian"}
             </Title>
             <Line label="Jenis kerugian" value={claim.claim_type === "total_loss" ? "Total loss" : "Sebagian"} />

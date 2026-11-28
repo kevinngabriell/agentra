@@ -18,8 +18,8 @@ function fmtDate(iso: string) {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
     return (
         <Flex justify="space-between" py="6px" borderBottom="1px solid" borderColor="#E2E8F0" fontWeight={bold ? "bold" : "normal"}>
-            <Text fontSize="16px">{label}</Text>
-            <Text fontSize="16px">{value}</Text>
+            <Text fontSize="15px">{label}</Text>
+            <Text fontSize="15px">{value}</Text>
         </Flex>
     )
 }
@@ -65,25 +65,25 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
             <Box maxW="720px" mx="auto" bg="white" p={{ base: "20px", md: "40px" }} borderRadius="8px" border="1px solid" borderColor="#E2E8F0" color="#1C2833">
                 <Flex justify="space-between" align="flex-start" mb="24px" gap="12px" flexWrap="wrap">
                     <Box>
-                        <Text fontSize="22px" fontWeight="bold">DEBIT NOTE</Text>
-                        {payments.debit_note_number && <Text fontSize="16px" fontWeight="semibold">No. {payments.debit_note_number}</Text>}
-                        <Text fontSize="15px" color="#64748B">Polis {p.policy_number}</Text>
+                        <Text fontSize="20px" fontWeight="bold">DEBIT NOTE</Text>
+                        {payments.debit_note_number && <Text fontSize="15px" fontWeight="semibold">No. {payments.debit_note_number}</Text>}
+                        <Text fontSize="14px" color="#64748B">Polis {p.policy_number}</Text>
                     </Box>
                     <Box textAlign="right">
-                        <Text fontSize="15px" color="#64748B">Tanggal terbit</Text>
-                        <Text fontSize="16px" fontWeight="semibold">{fmtDate(new Date().toISOString())}</Text>
-                        <Text fontSize="15px" color="#64748B" mt="6px">Jatuh tempo</Text>
-                        <Text fontSize="16px" fontWeight="semibold">{fmtDate(payments.effective_due_date)}</Text>
+                        <Text fontSize="14px" color="#64748B">Tanggal terbit</Text>
+                        <Text fontSize="15px" fontWeight="semibold">{fmtDate(new Date().toISOString())}</Text>
+                        <Text fontSize="14px" color="#64748B" mt="6px">Jatuh tempo</Text>
+                        <Text fontSize="15px" fontWeight="semibold">{fmtDate(payments.effective_due_date)}</Text>
                     </Box>
                 </Flex>
 
                 <Box mb="20px">
-                    <Text fontSize="14px" color="#64748B">Kepada</Text>
-                    <Text fontSize="16px" fontWeight="semibold">{p.customer_name}</Text>
-                    {insuredName !== p.customer_name && <Text fontSize="15px">Tertanggung: {insuredName}</Text>}
+                    <Text fontSize="13px" color="#64748B">Kepada</Text>
+                    <Text fontSize="15px" fontWeight="semibold">{p.customer_name}</Text>
+                    {insuredName !== p.customer_name && <Text fontSize="14px">Tertanggung: {insuredName}</Text>}
                 </Box>
 
-                <Box mb="20px" fontSize="15px">
+                <Box mb="20px" fontSize="14px">
                     <Text><b>Penanggung:</b> {p.insurer_name}</Text>
                     <Text><b>Produk:</b> {productCatalog.label(p.product_type)}{p.object_insured ? ` · ${p.object_insured}` : ""}</Text>
                     <Text><b>Periode:</b> {fmtDate(p.coverage_start)} – {fmtDate(p.coverage_end)}</Text>
@@ -98,7 +98,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
 
                 {payments.installments.length > 0 && (
                     <Box mt="20px">
-                        <Text fontSize="15px" fontWeight="semibold" mb="4px">Jadwal cicilan</Text>
+                        <Text fontSize="14px" fontWeight="semibold" mb="4px">Jadwal cicilan</Text>
                         {payments.installments.map((i) => (
                             <Row key={i.installment_id} label={`Cicilan ${i.seq} · ${fmtDate(i.due_date)}${i.is_paid ? " (lunas)" : ""}`} value={fmtIDR(i.amount)} />
                         ))}
@@ -106,12 +106,12 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                 )}
 
                 {endorsementCount > 0 && (
-                    <Text mt="16px" fontSize="14px" color="#64748B">
+                    <Text mt="16px" fontSize="13px" color="#64748B">
                         Polis ini memiliki {endorsementCount} nota endorsemen yang ditagih terpisah (lihat panel Nota &amp; Endorsemen).
                     </Text>
                 )}
 
-                <Text mt="24px" fontSize="14px" color="#64748B">
+                <Text mt="24px" fontSize="13px" color="#64748B">
                     Mohon lakukan pembayaran sebelum tanggal jatuh tempo dan sertakan nomor polis pada berita transfer.
                 </Text>
             </Box>
@@ -131,27 +131,27 @@ function EndorsementNote({ policy: p, note: n, productName }: { policy: ApiPolic
             <Box maxW="720px" mx="auto" bg="white" p={{ base: "20px", md: "40px" }} borderRadius="8px" border="1px solid" borderColor="#E2E8F0" color="#1C2833">
                 <Flex justify="space-between" align="flex-start" mb="24px" gap="12px" flexWrap="wrap">
                     <Box>
-                        <Text fontSize="22px" fontWeight="bold">{credit ? "CREDIT NOTE" : "DEBIT NOTE"}</Text>
-                        <Text fontSize="16px" fontWeight="semibold">No. {n.note_number ?? "—"}</Text>
-                        <Text fontSize="15px" color="#64748B">Polis {p.policy_number}{n.endorsement_number ? ` · Endorsemen ${n.endorsement_number}` : ""}</Text>
+                        <Text fontSize="20px" fontWeight="bold">{credit ? "CREDIT NOTE" : "DEBIT NOTE"}</Text>
+                        <Text fontSize="15px" fontWeight="semibold">No. {n.note_number ?? "—"}</Text>
+                        <Text fontSize="14px" color="#64748B">Polis {p.policy_number}{n.endorsement_number ? ` · Endorsemen ${n.endorsement_number}` : ""}</Text>
                     </Box>
                     <Box textAlign="right">
-                        <Text fontSize="15px" color="#64748B">Berlaku efektif</Text>
-                        <Text fontSize="16px" fontWeight="semibold">{fmtDate(n.effective_date)}</Text>
+                        <Text fontSize="14px" color="#64748B">Berlaku efektif</Text>
+                        <Text fontSize="15px" fontWeight="semibold">{fmtDate(n.effective_date)}</Text>
                         {n.due_date && (
                             <>
-                                <Text fontSize="15px" color="#64748B" mt="6px">{credit ? "Dikembalikan paling lambat" : "Jatuh tempo"}</Text>
-                                <Text fontSize="16px" fontWeight="semibold">{fmtDate(n.due_date)}</Text>
+                                <Text fontSize="14px" color="#64748B" mt="6px">{credit ? "Dikembalikan paling lambat" : "Jatuh tempo"}</Text>
+                                <Text fontSize="15px" fontWeight="semibold">{fmtDate(n.due_date)}</Text>
                             </>
                         )}
                     </Box>
                 </Flex>
                 <Box mb="20px">
-                    <Text fontSize="14px" color="#64748B">Kepada</Text>
-                    <Text fontSize="16px" fontWeight="semibold">{p.customer_name}</Text>
-                    {p.qq_name && p.qq_name !== p.customer_name && <Text fontSize="15px">Tertanggung: {p.qq_name}</Text>}
+                    <Text fontSize="13px" color="#64748B">Kepada</Text>
+                    <Text fontSize="15px" fontWeight="semibold">{p.customer_name}</Text>
+                    {p.qq_name && p.qq_name !== p.customer_name && <Text fontSize="14px">Tertanggung: {p.qq_name}</Text>}
                 </Box>
-                <Box mb="20px" fontSize="15px">
+                <Box mb="20px" fontSize="14px">
                     <Text><b>Penanggung:</b> {p.insurer_name}</Text>
                     <Text><b>Produk:</b> {productName}</Text>
                     <Text><b>Endorsemen:</b> {ENDORSEMENT_TYPE_LABELS[n.endorsement_type]}{n.description ? ` — ${n.description}` : ""}</Text>
@@ -161,7 +161,7 @@ function EndorsementNote({ policy: p, note: n, productName }: { policy: ApiPolic
                 {n.materai_amount > 0 && <Row label="Biaya materai" value={fmtIDR(n.materai_amount)} />}
                 {n.biaya_polis > 0 && <Row label="Biaya endorsemen" value={fmtIDR(n.biaya_polis)} />}
                 <Row label={credit ? "Total dikembalikan ke nasabah" : "Total yang harus dibayar"} value={fmtIDR(abs(n.gross_amount))} bold />
-                <Text mt="24px" fontSize="14px" color="#64748B">
+                <Text mt="24px" fontSize="13px" color="#64748B">
                     {credit ? "Pengembalian dihitung dari sisa periode pertanggungan sesuai ketentuan polis." : "Mohon lakukan pembayaran sebelum jatuh tempo dan sertakan nomor nota pada berita transfer."}
                 </Text>
             </Box>

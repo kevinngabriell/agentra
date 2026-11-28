@@ -51,7 +51,7 @@ const STATUS_META: Record<CommissionStatus, { label: string; bg: string; color: 
 }
 
 const colHeader = {
-  color: "#64748B", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px",
+  color: "#64748B", fontSize: "13px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px",
 }
 
 // ── subcomponents ─────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ const colHeader = {
 function StatusBadge({ status }: { status: CommissionStatus }) {
   const { label, bg, color, Icon } = STATUS_META[status] ?? STATUS_META.pending
   return (
-    <Badge display="flex" alignItems="center" gap="4px" px="8px" py="3px" borderRadius="full" fontSize="14px" fontWeight="semibold" bg={bg} color={color}>
+    <Badge display="flex" alignItems="center" gap="4px" px="8px" py="3px" borderRadius="full" fontSize="13px" fontWeight="semibold" bg={bg} color={color}>
       <Icon size={11} />
       {label}
     </Badge>
@@ -271,8 +271,8 @@ export default function Commissions() {
 
           {/* Heading */}
           <Flex flexDir="column" gap="4px">
-            <Text color="#1C2833" fontSize="24px" fontWeight="bold">Manajemen Komisi</Text>
-            <Text color="#5D6D7E" fontSize="16px">
+            <Text color="#1C2833" fontSize="22px" fontWeight="bold">Manajemen Komisi</Text>
+            <Text color="#5D6D7E" fontSize="15px">
               Pantau dan catat komisi yang diterima dari penanggung untuk setiap polis.
             </Text>
           </Flex>
@@ -290,10 +290,10 @@ export default function Commissions() {
                     <Box p="6px" borderRadius="8px" bg={bg}>
                       <Icon size={14} color={accent} />
                     </Box>
-                    <Text fontSize="14px" fontWeight="bold" color={accent} letterSpacing="0.04em">{label.toUpperCase()}</Text>
+                    <Text fontSize="13px" fontWeight="bold" color={accent} letterSpacing="0.04em">{label.toUpperCase()}</Text>
                   </Flex>
-                  <Text color="#1C2833" fontSize="18px" fontWeight="bold">{value}</Text>
-                  <Text color="#64748B" fontSize="14px" mt="2px">{sub}</Text>
+                  <Text color="#1C2833" fontSize="17px" fontWeight="bold">{value}</Text>
+                  <Text color="#64748B" fontSize="13px" mt="2px">{sub}</Text>
                 </Box>
               ))}
             </Grid>
@@ -304,7 +304,7 @@ export default function Commissions() {
             <Flex flex="1" minW={{ base: "0", md: "200px" }} align="center" gap="10px" bg="white" border="1px solid"
               borderColor="#E2E8F0" borderRadius="10px" px="14px" py="10px">
               <LuSearch size={15} color="#64748B" />
-              <Input flex="1" outline="none" border="none" fontSize="16px" color="#1C2833"
+              <Input flex="1" outline="none" border="none" fontSize="15px" color="#1C2833"
                 placeholder="Cari nasabah atau no. polis..."
                 aria-label="Cari komisi"
                 value={query}
@@ -313,26 +313,26 @@ export default function Commissions() {
             </Flex>
             <MonthPickerButton month={month} onChange={setMonth} />
             <Box minW={{ base: "0", md: "180px" }} w={{ base: "100%", md: "auto" }}>
-              <SearchSelect value={insurerId} onChange={setInsurerId} clearable height="40px" fontSize="16px"
+              <SearchSelect value={insurerId} onChange={setInsurerId} clearable height="40px" fontSize="15px"
                 ariaLabel="Filter penanggung" placeholder="Semua penanggung"
                 options={insurers.map((i) => ({ value: i.insurer_id, label: i.short_name || i.name }))} />
             </Box>
             <Box minW={{ base: "0", md: "180px" }} w={{ base: "100%", md: "auto" }}>
-              <SearchSelect value={productType} onChange={setProductType} clearable height="40px" fontSize="16px"
+              <SearchSelect value={productType} onChange={setProductType} clearable height="40px" fontSize="15px"
                 ariaLabel="Filter produk" placeholder="Semua produk"
                 options={products.map((p) => ({ value: p.product_code, label: p.product_name }))} />
             </Box>
-            <Button size="sm" w={{ base: "100%", md: "auto" }} variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px" gap="6px"
+            <Button size="sm" w={{ base: "100%", md: "auto" }} variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" gap="6px"
               onClick={handleExport} loading={exporting}>
               <LuDownload size={13} /> Excel
             </Button>
-            <Button size="sm" w={{ base: "100%", md: "auto" }} bg="#0D1B3E" color="white" fontSize="16px" gap="6px"
+            <Button size="sm" w={{ base: "100%", md: "auto" }} bg="#0D1B3E" color="white" fontSize="15px" gap="6px"
               onClick={() => router.push("/agentra/commissions/statements")}>
               <LuReceipt size={13} /> Rekonsiliasi Statement
             </Button>
           </Flex>
 
-          {exportError && <Text color="#DC2626" fontSize="16px" role="alert">{exportError}</Text>}
+          {exportError && <Text color="#DC2626" fontSize="15px" role="alert">{exportError}</Text>}
 
           {/* Status tabs */}
           <Flex gap="8px" flexWrap="wrap">
@@ -343,11 +343,11 @@ export default function Commissions() {
                   bg={active ? "#0D1B3E" : "white"}
                   color={active ? "white" : "#374151"}
                   border="1px solid" borderColor={active ? "#0D1B3E" : "#E2E8F0"}
-                  borderRadius="8px" fontSize="14px" fontWeight={active ? "semibold" : "normal"}
+                  borderRadius="8px" fontSize="13px" fontWeight={active ? "semibold" : "normal"}
                   px="14px">
                   {label}
                   {key !== "all" && summary && (
-                    <Box as="span" ml="6px" px="5px" py="1px" borderRadius="full" fontSize="14px"
+                    <Box as="span" ml="6px" px="5px" py="1px" borderRadius="full" fontSize="13px"
                       bg={active ? "rgba(255,255,255,0.25)" : "#F1F5F9"} color={active ? "white" : "#64748B"}>
                       {key === "pending" ? summary.pending.count
                         : key === "received" ? summary.received.count
@@ -363,7 +363,7 @@ export default function Commissions() {
           {/* Error */}
           {error && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-              <Text color="#DC2626" fontSize="16px">{error}</Text>
+              <Text color="#DC2626" fontSize="15px">{error}</Text>
             </Box>
           )}
 
@@ -378,8 +378,8 @@ export default function Commissions() {
                 <Flex align="center" justify="center" w="72px" h="72px" borderRadius="full" bg="#EFF6FF" border="8px solid" borderColor="#F8FAFC">
                   <LuBanknote size={30} color="#1D4ED8" aria-hidden="true" />
                 </Flex>
-                <Text color="#1C2833" fontSize="18px" fontWeight="bold">Belum ada komisi</Text>
-                <Text color="#64748B" fontSize="15px" maxW="320px">
+                <Text color="#1C2833" fontSize="17px" fontWeight="bold">Belum ada komisi</Text>
+                <Text color="#64748B" fontSize="14px" maxW="320px">
                   Belum ada komisi pada bulan ini. Komisi muncul otomatis setelah polis dibayar.
                 </Text>
               </Flex>
@@ -399,9 +399,9 @@ export default function Commissions() {
 
                         {/* Nasabah */}
                         <Table.Cell px="16px" py="12px">
-                          <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{c.customer_name ?? "—"}</Text>
+                          <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{c.customer_name ?? "—"}</Text>
                           {c.coverage_start && (
-                            <Text color="#64748B" fontSize="14px" mt="1px">
+                            <Text color="#64748B" fontSize="13px" mt="1px">
                               {formatDate(c.coverage_start)} – {c.coverage_end ? formatDate(c.coverage_end) : ""}
                             </Text>
                           )}
@@ -409,31 +409,31 @@ export default function Commissions() {
 
                         {/* No. Polis */}
                         <Table.Cell px="16px" py="12px">
-                          <Text color="#64748B" fontSize="14px" fontFamily="mono">{c.policy_number ?? "—"}</Text>
+                          <Text color="#64748B" fontSize="13px" fontFamily="mono">{c.policy_number ?? "—"}</Text>
                         </Table.Cell>
 
                         {/* Produk */}
                         <Table.Cell px="16px" py="12px">
-                          <Text color="#64748B" fontSize="14px">
+                          <Text color="#64748B" fontSize="13px">
                             {c.product_type ? productCatalog.label(c.product_type) : "—"}
                           </Text>
                         </Table.Cell>
 
                         {/* Penanggung */}
                         <Table.Cell px="16px" py="12px">
-                          <Text color="#1C2833" fontSize="15px">{c.insurer_short_name ?? c.insurer_name ?? "—"}</Text>
+                          <Text color="#1C2833" fontSize="14px">{c.insurer_short_name ?? c.insurer_name ?? "—"}</Text>
                         </Table.Cell>
 
                         {/* Komisi */}
                         <Table.Cell px="16px" py="12px">
-                          <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{formatRp(c.expected_amount)}</Text>
+                          <Text color="#1C2833" fontSize="14px" fontWeight="semibold">{formatRp(c.expected_amount)}</Text>
                           {c.commission_tax_amount != null && c.commission_tax_amount > 0 ? (
                             <>
-                              <Text color="#DC2626" fontSize="14px" mt="1px">PPh: −{formatRp(c.commission_tax_amount)}</Text>
-                              <Text color="#16A34A" fontSize="14px" fontWeight="semibold">Net: {formatRp(c.net_expected_amount ?? 0)}</Text>
+                              <Text color="#DC2626" fontSize="13px" mt="1px">PPh: −{formatRp(c.commission_tax_amount)}</Text>
+                              <Text color="#16A34A" fontSize="13px" fontWeight="semibold">Net: {formatRp(c.net_expected_amount ?? 0)}</Text>
                             </>
                           ) : (
-                            <Text color="#64748B" fontSize="14px" mt="1px">Rate: {Number(c.commission_rate).toFixed(1)}%</Text>
+                            <Text color="#64748B" fontSize="13px" mt="1px">Rate: {Number(c.commission_rate).toFixed(1)}%</Text>
                           )}
                         </Table.Cell>
 
@@ -441,13 +441,13 @@ export default function Commissions() {
                         <Table.Cell px="16px" py="12px">
                           {c.received_amount > 0 ? (
                             <>
-                              <Text color="#16A34A" fontSize="15px" fontWeight="semibold">{formatRp(c.received_amount)}</Text>
+                              <Text color="#16A34A" fontSize="14px" fontWeight="semibold">{formatRp(c.received_amount)}</Text>
                               {c.received_date && (
-                                <Text color="#64748B" fontSize="14px" mt="1px">{formatDate(c.received_date)}</Text>
+                                <Text color="#64748B" fontSize="13px" mt="1px">{formatDate(c.received_date)}</Text>
                               )}
                             </>
                           ) : (
-                            <Text color="#64748B" fontSize="14px">—</Text>
+                            <Text color="#64748B" fontSize="13px">—</Text>
                           )}
                         </Table.Cell>
 
@@ -460,14 +460,14 @@ export default function Commissions() {
                         <Table.Cell px="16px" py="12px">
                           <Flex gap="6px">
                             {(c.status === "pending" || c.status === "discrepancy") && (
-                              <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px"
+                              <Button size="sm" bg="#0D1B3E" color="white" fontSize="13px"
                                 fontWeight="semibold" borderRadius="8px" px="12px"
                                 onClick={() => openMark(c)}>
                                 Tandai Diterima
                               </Button>
                             )}
                             <Button size="sm" variant="outline" borderColor="#E2E8F0"
-                              color="#374151" fontSize="14px" borderRadius="8px" px="12px"
+                              color="#374151" fontSize="13px" borderRadius="8px" px="12px"
                               onClick={() => router.push(`/agentra/policies/${encodeURIComponent(c.policy_id)}`)}>
                               Lihat Polis
                             </Button>
@@ -498,9 +498,9 @@ export default function Commissions() {
             <Dialog.Header bg="#F8FAFC" borderBottom="1px solid" borderColor="#E2E8F0" px="24px" py="16px">
               <Flex justify="space-between" align="center">
                 <Flex flexDir="column" gap="2px">
-                  <Dialog.Title fontSize="16px" color="#1C2833" fontWeight="bold">Tandai Komisi Diterima</Dialog.Title>
+                  <Dialog.Title fontSize="15px" color="#1C2833" fontWeight="bold">Tandai Komisi Diterima</Dialog.Title>
                   {selected && (
-                    <Text fontSize="14px" color="#64748B">{selected.customer_name} · {selected.policy_number}</Text>
+                    <Text fontSize="13px" color="#64748B">{selected.customer_name} · {selected.policy_number}</Text>
                   )}
                 </Flex>
                 <Dialog.CloseTrigger asChild>
@@ -517,21 +517,21 @@ export default function Commissions() {
                 {/* Expected amount breakdown */}
                 {selected && (
                   <Box bg="#EFF6FF" borderRadius="10px" p="12px" border="1px solid" borderColor="#BFDBFE">
-                    <Text fontSize="14px" color="#1D4ED8" fontWeight="semibold" mb="8px">Rincian Komisi</Text>
+                    <Text fontSize="13px" color="#1D4ED8" fontWeight="semibold" mb="8px">Rincian Komisi</Text>
                     <Flex justify="space-between" align="center" mb="4px">
-                      <Text fontSize="14px" color="#64748B">Gross ({Number(selected.commission_rate).toFixed(1)}%)</Text>
-                      <Text fontSize="16px" color="#1D4ED8" fontWeight="semibold">{formatRp(selected.expected_amount)}</Text>
+                      <Text fontSize="13px" color="#64748B">Gross ({Number(selected.commission_rate).toFixed(1)}%)</Text>
+                      <Text fontSize="15px" color="#1D4ED8" fontWeight="semibold">{formatRp(selected.expected_amount)}</Text>
                     </Flex>
                     {selected.commission_tax_amount != null && selected.commission_tax_amount > 0 && (
                       <Flex justify="space-between" align="center" mb="4px">
-                        <Text fontSize="14px" color="#64748B">PPh ({((selected.commission_tax_rate ?? 0) * 100).toFixed(1)}%)</Text>
-                        <Text fontSize="15px" color="#DC2626">−{formatRp(selected.commission_tax_amount)}</Text>
+                        <Text fontSize="13px" color="#64748B">PPh ({((selected.commission_tax_rate ?? 0) * 100).toFixed(1)}%)</Text>
+                        <Text fontSize="14px" color="#DC2626">−{formatRp(selected.commission_tax_amount)}</Text>
                       </Flex>
                     )}
                     <Box borderTop="1px solid" borderColor="#BFDBFE" pt="6px" mt="4px">
                       <Flex justify="space-between" align="center">
-                        <Text fontSize="14px" color="#1D4ED8" fontWeight="bold">Net (yang diterima)</Text>
-                        <Text fontSize="16px" color="#1D4ED8" fontWeight="bold">
+                        <Text fontSize="13px" color="#1D4ED8" fontWeight="bold">Net (yang diterima)</Text>
+                        <Text fontSize="15px" color="#1D4ED8" fontWeight="bold">
                           {formatRp(selected.net_expected_amount ?? selected.expected_amount)}
                         </Text>
                       </Flex>
@@ -541,13 +541,13 @@ export default function Commissions() {
 
                 {/* received_amount */}
                 <Field.Root required>
-                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">
+                  <Field.Label fontSize="14px" color="#374151" fontWeight="semibold">
                     Jumlah Diterima (Rp) <Field.RequiredIndicator />
                   </Field.Label>
                   <Input
                     type="text" inputMode="numeric"
                     placeholder="5.000.000"
-                    fontSize="16px" borderRadius="8px" borderColor="#E2E8F0"
+                    fontSize="15px" borderRadius="8px" borderColor="#E2E8F0"
                     value={formatIDR(markForm.received_amount)}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       const raw = e.target.value.replace(/\D/g, "")
@@ -558,9 +558,9 @@ export default function Commissions() {
 
                 {/* received_date */}
                 <Field.Root>
-                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">Tanggal Diterima</Field.Label>
+                  <Field.Label fontSize="14px" color="#374151" fontWeight="semibold">Tanggal Diterima</Field.Label>
                   <Input
-                    type="date" fontSize="16px" borderRadius="8px" borderColor="#E2E8F0"
+                    type="date" fontSize="15px" borderRadius="8px" borderColor="#E2E8F0"
                     value={markForm.received_date}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setMarkForm((f) => ({ ...f, received_date: e.target.value }))
@@ -570,9 +570,9 @@ export default function Commissions() {
 
                 {/* reference_number */}
                 <Field.Root>
-                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">No. Referensi / Bukti Transfer</Field.Label>
+                  <Field.Label fontSize="14px" color="#374151" fontWeight="semibold">No. Referensi / Bukti Transfer</Field.Label>
                   <Input
-                    placeholder="INV/2025/06/001" fontSize="16px" borderRadius="8px" borderColor="#E2E8F0"
+                    placeholder="INV/2025/06/001" fontSize="15px" borderRadius="8px" borderColor="#E2E8F0"
                     value={markForm.reference_number}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setMarkForm((f) => ({ ...f, reference_number: e.target.value }))
@@ -582,10 +582,10 @@ export default function Commissions() {
 
                 {/* discrepancy_notes */}
                 <Field.Root>
-                  <Field.Label fontSize="15px" color="#374151" fontWeight="semibold">Catatan Selisih (opsional)</Field.Label>
+                  <Field.Label fontSize="14px" color="#374151" fontWeight="semibold">Catatan Selisih (opsional)</Field.Label>
                   <Textarea
                     placeholder="Contoh: Penanggung memotong biaya admin Rp 50.000"
-                    fontSize="16px" borderRadius="8px" borderColor="#E2E8F0" rows={2}
+                    fontSize="15px" borderRadius="8px" borderColor="#E2E8F0" rows={2}
                     value={markForm.discrepancy_notes}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setMarkForm((f) => ({ ...f, discrepancy_notes: e.target.value }))
@@ -595,7 +595,7 @@ export default function Commissions() {
 
                 {markError && (
                   <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="8px" p="10px">
-                    <Text color="#DC2626" fontSize="15px">{markError}</Text>
+                    <Text color="#DC2626" fontSize="14px">{markError}</Text>
                   </Box>
                 )}
 

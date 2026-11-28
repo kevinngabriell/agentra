@@ -81,7 +81,7 @@ export function MobileBottomNav() {
               {item.icon}
             </Box>
             <Text
-              fontSize="14px"
+              fontSize="13px"
               color={active ? "#1E3A8A" : "#475569"}
               fontWeight={active ? "semibold" : "normal"}
             >
@@ -107,7 +107,7 @@ export function MobileBottomNav() {
               bg={moreActive ? "#EFF6FF" : "transparent"} color={moreActive ? "#1D4ED8" : "#64748B"}>
               <FiGrid size={24} />
             </Box>
-            <Text fontSize="14px" color={moreActive ? "#1E3A8A" : "#475569"} fontWeight={moreActive ? "semibold" : "normal"}>
+            <Text fontSize="13px" color={moreActive ? "#1E3A8A" : "#475569"} fontWeight={moreActive ? "semibold" : "normal"}>
               Lainnya
             </Text>
           </Flex>
@@ -120,7 +120,7 @@ export function MobileBottomNav() {
           <Dialog.Content borderTopRadius="20px" borderBottomRadius="0" maxH="85vh" m="0" w="100%">
             <Dialog.Header px="20px" py="16px" borderBottom="1px solid" borderColor="#E2E8F0">
               <Flex justify="space-between" align="center" w="100%">
-                <Dialog.Title fontSize="20px" fontWeight="bold" color="#1C2833">Menu Lainnya</Dialog.Title>
+                <Dialog.Title fontSize="18px" fontWeight="bold" color="#1C2833">Menu Lainnya</Dialog.Title>
                 <Dialog.CloseTrigger asChild>
                   <Box as="button" aria-label="Tutup" w="44px" h="44px" display="flex" alignItems="center" justifyContent="center" borderRadius="full" bg="#F1F5F9" color="#475569">
                     <FiX size={20} />
@@ -131,7 +131,7 @@ export function MobileBottomNav() {
             <Dialog.Body px="16px" py="12px" pb="32px">
               {sheetGroups.map((group) => (
                 <Flex key={group.title} flexDir="column" gap="8px" mb="16px">
-                  <Text fontSize="16px" fontWeight="bold" color="#111827" px="4px">{group.title}</Text>
+                  <Text fontSize="15px" fontWeight="bold" color="#111827" px="4px">{group.title}</Text>
                   {group.items.map((item) => {
                     const active = pathname === item.href || pathname.startsWith(item.href + "/")
                     return (
@@ -141,8 +141,8 @@ export function MobileBottomNav() {
                           borderColor={active ? "#1D4ED8" : "#E2E8F0"} bg={active ? "#EFF6FF" : "white"}>
                           <Box color={active ? "#1D4ED8" : "#0D1B3E"} flexShrink={0}>{item.icon}</Box>
                           <Flex flexDir="column" gap="2px" minW="0">
-                            <Text fontSize="16px" fontWeight="semibold" color="#1C2833">{item.label}</Text>
-                            {item.hint && <Text fontSize="16px" color="#475569">{item.hint}</Text>}
+                            <Text fontSize="15px" fontWeight="semibold" color="#1C2833">{item.label}</Text>
+                            {item.hint && <Text fontSize="15px" color="#475569">{item.hint}</Text>}
                           </Flex>
                         </Flex>
                       </Link>

@@ -4,10 +4,10 @@ import { QUOTE_STATUS_COLORS, QUOTE_STATUS_LABELS, type QuoteStatus } from "@/li
 
 export function StageBadge({ stage }: { stage: ProspectStage }) {
     const c = PROSPECT_STAGE_COLORS[stage]
-    return <Badge px="8px" py="2px" borderRadius="full" bg={c.bg} color={c.color} fontSize="14px" whiteSpace="nowrap">{PROSPECT_STAGE_LABELS[stage]}</Badge>
+    return <Badge px="8px" py="2px" borderRadius="full" bg={c.bg} color={c.color} fontSize="13px" whiteSpace="nowrap">{PROSPECT_STAGE_LABELS[stage]}</Badge>
 }
 
 export function QuoteStatusBadge({ status, expired }: { status: QuoteStatus; expired?: boolean }) {
     const c = expired ? { bg: "#FEF3C7", color: "#B45309" } : QUOTE_STATUS_COLORS[status]
-    return <Badge px="8px" py="2px" borderRadius="full" bg={c.bg} color={c.color} fontSize="14px" whiteSpace="nowrap">{expired ? "Kedaluwarsa" : QUOTE_STATUS_LABELS[status]}</Badge>
+    return <Badge px="8px" py="2px" borderRadius="full" bg={c.bg} color={c.color} fontSize="13px" whiteSpace="nowrap">{expired ? "Kedaluwarsa" : QUOTE_STATUS_LABELS[status]}</Badge>
 }

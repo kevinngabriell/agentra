@@ -75,10 +75,10 @@ export default function Tasks() {
         <Flex flexDir="column" gap="20px" p={{ base: "16px", md: "32px" }}>
           <Flex justify="space-between" align="flex-start" flexWrap="wrap" gap="16px">
             <Flex flexDir="column" gap="4px">
-              <Text color="#1C2833" fontSize="24px" fontWeight="bold">Tugas & Pengingat</Text>
-              <Text color="#5D6D7E" fontSize="16px">Catat hal yang harus dikerjakan dan kaitkan dengan customer, polis, atau klaim.</Text>
+              <Text color="#1C2833" fontSize="22px" fontWeight="bold">Tugas & Pengingat</Text>
+              <Text color="#5D6D7E" fontSize="15px">Catat hal yang harus dikerjakan dan kaitkan dengan customer, polis, atau klaim.</Text>
             </Flex>
-            <Button bg="#0D1B3E" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog({})}>
+            <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog({})}>
               <LuPlus size={14} /> Tugas Baru
             </Button>
           </Flex>
@@ -86,12 +86,12 @@ export default function Tasks() {
           <Flex gap="6px" flexWrap="wrap" role="tablist" aria-label="Filter tugas">
             {TABS.map((t) => (
               <Box key={t.key} as="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-                px="14px" py="7px" borderRadius="full" fontSize="16px" fontWeight="medium" border="1px solid"
+                px="14px" py="7px" borderRadius="full" fontSize="15px" fontWeight="medium" border="1px solid"
                 bg={tab === t.key ? "#0D1B3E" : "white"} color={tab === t.key ? "white" : "#475569"}
                 borderColor={tab === t.key ? "#0D1B3E" : "#E2E8F0"}>
                 {t.label}
                 {t.key === "today" && data && (data.overdue_count + data.today_count) > 0 && (
-                  <Badge ml="6px" px="6px" borderRadius="full" bg="#DC2626" color="white" fontSize="16px">{data.overdue_count + data.today_count}</Badge>
+                  <Badge ml="6px" px="6px" borderRadius="full" bg="#DC2626" color="white" fontSize="15px">{data.overdue_count + data.today_count}</Badge>
                 )}
               </Box>
             ))}
@@ -99,13 +99,13 @@ export default function Tasks() {
 
           {(error || actionError) && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px" role="alert">
-              <Text color="#DC2626" fontSize="16px">{actionError ?? error}</Text>
+              <Text color="#DC2626" fontSize="15px">{actionError ?? error}</Text>
             </Box>
           )}
 
           <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" px="20px" py="8px">
             {loading ? <Skeleton h="120px" my="12px" borderRadius="8px" /> : !data || data.items.length === 0 ? (
-              <Text color="#64748B" fontSize="16px" py="32px" textAlign="center">Belum ada tugas. Tekan Tambah Tugas untuk membuat pengingat, misalnya menelepon nasabah.</Text>
+              <Text color="#64748B" fontSize="15px" py="32px" textAlign="center">Belum ada tugas. Tekan Tambah Tugas untuk membuat pengingat, misalnya menelepon nasabah.</Text>
             ) : data.items.map((t) => (
               <TaskRow key={t.task_id} task={t} onToggle={toggle} onEdit={t.status === "open" ? (x) => setDialog({ task: x }) : undefined} onDelete={remove} />
             ))}

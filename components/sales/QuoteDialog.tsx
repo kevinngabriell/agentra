@@ -171,12 +171,12 @@ export function QuoteDialog({ prospect, editing, onClose, onSaved }: {
                     <SearchSelect value={product} onChange={setProduct} placeholder="Pilih produk" options={productCatalog.options} />
                 </FormField>
                 {itemised
-                    ? <FormField label="Nilai pertanggungan (TSI)"><Text fontSize="15px" fontWeight="semibold" pt="8px">{fmtIDR(itemTsi)}</Text></FormField>
+                    ? <FormField label="Nilai pertanggungan (TSI)"><Text fontSize="14px" fontWeight="semibold" pt="8px">{fmtIDR(itemTsi)}</Text></FormField>
                     : <FormField label="Nilai pertanggungan (Rp) *"><MoneyInput value={sum} onChange={setSum} /></FormField>}
             </FormRow>
             <Switch.Root checked={itemised} onCheckedChange={(e) => setItemised(e.checked)} colorPalette="blue" size="sm">
                 <Switch.HiddenInput /><Switch.Control />
-                <Switch.Label fontSize="15px">Rinci per item / peril (bangunan, stok, mesin, banjir, gempa…) — untuk risiko besar</Switch.Label>
+                <Switch.Label fontSize="14px">Rinci per item / peril (bangunan, stok, mesin, banjir, gempa…) — untuk risiko besar</Switch.Label>
             </Switch.Root>
             {itemised && (
                 <Box border="1px solid" borderColor="#E2E8F0" borderRadius="10px" p="12px">
@@ -186,12 +186,12 @@ export function QuoteDialog({ prospect, editing, onClose, onSaved }: {
                             <Box flex="1" minW="150px"><FormField label={idx === 0 ? "Keterangan" : ""}><Input {...CLAIM_INPUT} maxLength={150} placeholder="Mis: Gudang A / Banjir" value={it.label} onChange={(e) => patchItem(it.key, { label: e.target.value })} /></FormField></Box>
                             <Box flex="1" minW="150px"><FormField label={idx === 0 ? "Nilai (Rp)" : ""}><MoneyInput value={it.sum} onChange={(v) => patchItem(it.key, { sum: v })} /></FormField></Box>
                             <Switch.Root checked={it.in_tsi} onCheckedChange={(e) => patchItem(it.key, { in_tsi: e.checked })} size="sm" colorPalette="blue" title="Dihitung ke TSI (matikan untuk perluasan atas objek yang sama)">
-                                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="14px">TSI</Switch.Label>
+                                <Switch.HiddenInput /><Switch.Control /><Switch.Label fontSize="13px">TSI</Switch.Label>
                             </Switch.Root>
                             {items.length > 1 && <IconButton size="2xs" variant="ghost" color="#DC2626" aria-label="Hapus item" onClick={() => setItems(is => is.filter(x => x.key !== it.key))}><LuTrash2 size={13} /></IconButton>}
                         </Flex>
                     ))}
-                    <Button size="xs" variant="outline" fontSize="14px" onClick={() => setItems(is => [...is, blankItem(Math.max(0, ...is.map(i => i.key)) + 1, "dll")])}><LuPlus size={12} /> Tambah item / peril</Button>
+                    <Button size="xs" variant="outline" fontSize="13px" onClick={() => setItems(is => [...is, blankItem(Math.max(0, ...is.map(i => i.key)) + 1, "dll")])}><LuPlus size={12} /> Tambah item / peril</Button>
                 </Box>
             )}
             <FormField label="Objek yang dipertanggungkan" hint="Contoh: Toyota Avanza 2022 B 1234 XYZ, Gudang di Cikarang">
@@ -208,17 +208,17 @@ export function QuoteDialog({ prospect, editing, onClose, onSaved }: {
                     {currency !== "IDR" && <FormField label="Kurs (Rp)"><Input {...CLAIM_INPUT} inputMode="decimal" value={fx} onChange={(e) => setFx(e.target.value.replace(/[^\d.,]/g, ""))} /></FormField>}
                 </FormRow>
             </FormRow>
-            {currency !== "IDR" && <Text fontSize="14px" color="#64748B" mt="-6px">Nilai diisi dalam rupiah; dicetak juga dalam {currency} dengan kurs ini.</Text>}
+            {currency !== "IDR" && <Text fontSize="13px" color="#64748B" mt="-6px">Nilai diisi dalam rupiah; dicetak juga dalam {currency} dengan kurs ini.</Text>}
 
             <Flex justify="space-between" align="center" pt="6px" gap="8px" flexWrap="wrap">
-                <Text color="#0D1B3E" fontSize="14px" fontWeight="semibold" letterSpacing="0.04em">PENAWARAN / PENEMPATAN PER ASURANSI</Text>
-                <Button size="xs" variant="outline" fontSize="14px" disabled={options.length >= MAX_OPTIONS}
+                <Text color="#0D1B3E" fontSize="13px" fontWeight="semibold" letterSpacing="0.04em">PENAWARAN / PENEMPATAN PER ASURANSI</Text>
+                <Button size="xs" variant="outline" fontSize="13px" disabled={options.length >= MAX_OPTIONS}
                     onClick={() => setOptions(os => [...os, blankOption(Math.max(...os.map(o => o.key)) + 1)])}>
                     <LuPlus size={12} /> Tambah asuransi
                 </Button>
             </Flex>
             {shareTotal > 0 && (
-                <Text fontSize="14px" color={Math.abs(shareTotal - 100) < 0.01 ? "#15803D" : "#B45309"}>Total share koasuransi: {shareTotal}% {Math.abs(shareTotal - 100) < 0.01 ? "✓" : "(harus 100% untuk diterima sebagai panel)"}</Text>
+                <Text fontSize="13px" color={Math.abs(shareTotal - 100) < 0.01 ? "#15803D" : "#B45309"}>Total share koasuransi: {shareTotal}% {Math.abs(shareTotal - 100) < 0.01 ? "✓" : "(harus 100% untuk diterima sebagai panel)"}</Text>
             )}
             {options.map((o, idx) => {
                 const auto = computedPremium(sum, o.rate)
@@ -226,7 +226,7 @@ export function QuoteDialog({ prospect, editing, onClose, onSaved }: {
                 return (
                     <Box key={o.key} border="1px solid" borderColor="#E2E8F0" borderRadius="10px" p="12px">
                         <Flex justify="space-between" align="center" mb="8px">
-                            <Text fontSize="14px" fontWeight="semibold" color="#475569">Opsi {idx + 1}{prem > 0 ? ` · premi ${fmtIDR(prem)}` : ""}</Text>
+                            <Text fontSize="13px" fontWeight="semibold" color="#475569">Opsi {idx + 1}{prem > 0 ? ` · premi ${fmtIDR(prem)}` : ""}</Text>
                             {options.length > 1 && (
                                 <IconButton size="2xs" variant="ghost" color="#DC2626" aria-label={`Hapus opsi ${idx + 1}`} onClick={() => setOptions(os => os.filter(x => x.key !== o.key))}><LuTrash2 size={13} /></IconButton>
                             )}
@@ -297,7 +297,7 @@ export function QuoteDialog({ prospect, editing, onClose, onSaved }: {
                                     {EXTENSIONS.map((e) => {
                                         const on = o.exts.includes(e.code)
                                         return (
-                                            <Button key={e.code} size="2xs" fontSize="14px" variant={on ? "solid" : "outline"} bg={on ? "#0D1B3E" : undefined} color={on ? "white" : undefined}
+                                            <Button key={e.code} size="2xs" fontSize="13px" variant={on ? "solid" : "outline"} bg={on ? "#0D1B3E" : undefined} color={on ? "white" : undefined}
                                                 onClick={() => patch(o.key, { exts: on ? o.exts.filter(x => x !== e.code) : [...o.exts, e.code] })}>{e.label}</Button>
                                         )
                                     })}

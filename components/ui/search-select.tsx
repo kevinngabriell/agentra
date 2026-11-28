@@ -72,7 +72,7 @@ export function SearchSelect({
   loading = false,
   loadingText = "Memuat...",
   clearable = false,
-  fontSize = "16px",
+  fontSize = "15px",
   height = "44px",
   disabled,
   positioning,
@@ -223,7 +223,7 @@ export function SearchSelect({
               </Combobox.Item>
             ))}
             {truncated && (
-              <Box px="12px" py="8px" fontSize="16px" color="#475569">
+              <Box px="12px" py="8px" fontSize="15px" color="#475569">
                 Ketik untuk mempersempit pilihan…
               </Box>
             )}

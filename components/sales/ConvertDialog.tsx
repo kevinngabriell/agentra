@@ -9,6 +9,8 @@ import { convertProspect, type ApiProspect } from "@/lib/api/prospects"
 import { CustomerPicker } from "@/components/policy-change/CustomerPicker"
 import { FormDialog, FormField, FormRow } from "@/components/ui/form-dialog"
 import { CLAIM_INPUT } from "@/components/claims/fields"
+import { PhoneInput } from "@/components/ui/phone-input"
+import { formatLocalPhone, toApiPhone } from "@/lib/format"
 
 type Mode = "existing" | "individual" | "company"
 
@@ -29,8 +31,8 @@ export function ConvertDialog({ prospect, onClose, onConverted }: {
     const [npwp, setNpwp] = useState("")
     const [picName, setPicName] = useState(prospect.contact_name ?? "")
     // A company needs the PIC's phone and WhatsApp. Start from the prospect's numbers; either one may be missing there.
-    const [picPhone, setPicPhone] = useState(prospect.phone ?? prospect.whatsapp ?? "")
-    const [picWhatsapp, setPicWhatsapp] = useState(prospect.whatsapp ?? prospect.phone ?? "")
+    const [picPhone, setPicPhone] = useState(formatLocalPhone(prospect.phone ?? prospect.whatsapp))
+    const [picWhatsapp, setPicWhatsapp] = useState(formatLocalPhone(prospect.whatsapp ?? prospect.phone))
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -48,8 +50,8 @@ export function ConvertDialog({ prospect, onClose, onConverted }: {
         } else {
             if (!npwp.trim()) { setError("NPWP perusahaan wajib diisi"); return }
             if (!picName.trim()) { setError("Nama PIC wajib diisi"); return }
-            if (!picPhone.trim()) { setError("Telepon PIC wajib diisi"); return }
-            if (!picWhatsapp.trim()) { setError("WhatsApp PIC wajib diisi"); return }
+            if (!toApiPhone(picPhone)) { setError("Telepon PIC wajib diisi"); return }
+            if (!toApiPhone(picWhatsapp)) { setError("WhatsApp PIC wajib diisi"); return }
         }
 
         setSaving(true); setError(null)
@@ -63,7 +65,7 @@ export function ConvertDialog({ prospect, onClose, onConverted }: {
                 }
                 const created = await createCustomer(token, mode === "individual"
                     ? { ...base, nik, personal_phone: phone || undefined, personal_whatsapp: whatsapp || undefined, personal_email: prospect.email ?? undefined }
-                    : { ...base, company_legal_name: prospect.name, npwp_company: npwp.trim(), pic_name: picName.trim(), pic_phone: picPhone.trim(), pic_whatsapp: picWhatsapp.trim(),
+                    : { ...base, company_legal_name: prospect.name, npwp_company: npwp.trim(), pic_name: picName.trim(), pic_phone: toApiPhone(picPhone), pic_whatsapp: toApiPhone(picWhatsapp),
                         company_email: prospect.email ?? undefined })
                 customerId = created.customer_id
                 createdId.current = customerId
@@ -85,7 +87,7 @@ export function ConvertDialog({ prospect, onClose, onConverted }: {
 
     return (
         <FormDialog title="Jadikan Nasabah" saving={saving} error={error} submitLabel="Jadikan Nasabah" onClose={onClose} onSubmit={submit}>
-            <Text fontSize="15px" color="#64748B">Hubungkan {prospect.name} dengan data nasabah agar polis bisa diterbitkan.</Text>
+            <Text fontSize="14px" color="#64748B">Hubungkan {prospect.name} dengan data nasabah agar polis bisa diterbitkan.</Text>
             <div style={{ display: "flex", gap: 6 }}>
                 {tab("individual", "Nasabah baru (perorangan)")}
                 {tab("company", "Nasabah baru (perusahaan)")}
@@ -108,8 +110,8 @@ export function ConvertDialog({ prospect, onClose, onConverted }: {
                         <FormField label="Nama PIC *"><Input {...CLAIM_INPUT} maxLength={150} value={picName} onChange={(e) => setPicName(e.target.value)} /></FormField>
                     </FormRow>
                     <FormRow>
-                        <FormField label="Telepon PIC *"><Input {...CLAIM_INPUT} inputMode="tel" maxLength={30} value={picPhone} onChange={(e) => setPicPhone(e.target.value)} /></FormField>
-                        <FormField label="WhatsApp PIC *"><Input {...CLAIM_INPUT} inputMode="tel" maxLength={30} value={picWhatsapp} onChange={(e) => setPicWhatsapp(e.target.value)} /></FormField>
+                        <FormField label="Telepon PIC *"><PhoneInput {...CLAIM_INPUT} value={picPhone} onChange={setPicPhone} /></FormField>
+                        <FormField label="WhatsApp PIC *"><PhoneInput {...CLAIM_INPUT} value={picWhatsapp} onChange={setPicWhatsapp} /></FormField>
                     </FormRow>
                 </>
             )}

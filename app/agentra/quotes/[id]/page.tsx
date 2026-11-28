@@ -121,46 +121,46 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
         <Box bg="#F1F5F9" minH="100vh" py="24px" px="16px" css={{ "@media print": { background: "white", padding: 0 } }}>
       {confirmDialog}
             <Flex maxW="960px" mx="auto" mb="12px" gap="8px" flexWrap="wrap" justify="space-between" css={{ "@media print": { display: "none" } }}>
-                <Button size="sm" variant="ghost" fontSize="15px" color="#475569" onClick={() => router.push(`/agentra/prospects/${encodeURIComponent(quote.prospect_id)}`)}>
+                <Button size="sm" variant="ghost" fontSize="14px" color="#475569" onClick={() => router.push(`/agentra/prospects/${encodeURIComponent(quote.prospect_id)}`)}>
                     <LuArrowLeft size={14} /> {quote.prospect_name}
                 </Button>
                 <Flex gap="8px" flexWrap="wrap">
-                    {editable && <Button size="sm" variant="outline" bg="white" fontSize="15px" disabled={busy} onClick={() => setDialog("edit")}><LuPencil size={13} /> Ubah</Button>}
-                    {editable && <Button size="sm" variant="outline" bg="white" fontSize="15px" disabled={busy} onClick={sendWhatsApp}><LuSend size={13} /> Kirim via WhatsApp</Button>}
-                    {moves.includes("sent") && !editable && <Button size="sm" variant="outline" bg="white" fontSize="15px" disabled={busy} onClick={() => run(t => changeQuoteStatus(t, id, "draft"))}>Buka kembali sebagai draf</Button>}
-                    {quote.status === "sent" && <Button size="sm" variant="outline" bg="white" color="#DC2626" fontSize="15px" disabled={busy} onClick={() => run(t => changeQuoteStatus(t, id, "declined"))}>Nasabah menolak</Button>}
-                    {quote.status === "declined" && <Button size="sm" variant="outline" bg="white" fontSize="15px" disabled={busy} onClick={() => run(t => changeQuoteStatus(t, id, "draft"))}>Buka kembali sebagai draf</Button>}
+                    {editable && <Button size="sm" variant="outline" bg="white" fontSize="14px" disabled={busy} onClick={() => setDialog("edit")}><LuPencil size={13} /> Ubah</Button>}
+                    {editable && <Button size="sm" variant="outline" bg="white" fontSize="14px" disabled={busy} onClick={sendWhatsApp}><LuSend size={13} /> Kirim via WhatsApp</Button>}
+                    {moves.includes("sent") && !editable && <Button size="sm" variant="outline" bg="white" fontSize="14px" disabled={busy} onClick={() => run(t => changeQuoteStatus(t, id, "draft"))}>Buka kembali sebagai draf</Button>}
+                    {quote.status === "sent" && <Button size="sm" variant="outline" bg="white" color="#DC2626" fontSize="14px" disabled={busy} onClick={() => run(t => changeQuoteStatus(t, id, "declined"))}>Nasabah menolak</Button>}
+                    {quote.status === "declined" && <Button size="sm" variant="outline" bg="white" fontSize="14px" disabled={busy} onClick={() => run(t => changeQuoteStatus(t, id, "draft"))}>Buka kembali sebagai draf</Button>}
                     {quote.status === "accepted" && !quote.policy_id && (
-                        <Button size="sm" bg="#16A34A" color="white" fontSize="15px" _hover={{ bg: "#15803D" }} onClick={startPolicy}><LuFileCheck size={13} /> Buat Polis</Button>
+                        <Button size="sm" bg="#16A34A" color="white" fontSize="14px" _hover={{ bg: "#15803D" }} onClick={startPolicy}><LuFileCheck size={13} /> Buat Polis</Button>
                     )}
-                    <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" gap="6px" onClick={() => window.print()}><LuPrinter size={14} /> Cetak / Simpan PDF</Button>
+                    <Button size="sm" bg="#0D1B3E" color="white" fontSize="14px" gap="6px" onClick={() => window.print()}><LuPrinter size={14} /> Cetak / Simpan PDF</Button>
                     {quote.status !== "accepted" && <Button size="sm" variant="ghost" color="#DC2626" aria-label="Hapus penawaran" onClick={remove}><LuTrash2 size={14} /></Button>}
                 </Flex>
             </Flex>
-            {error && <Text maxW="960px" mx="auto" mb="8px" color="#DC2626" fontSize="15px" role="alert" css={{ "@media print": { display: "none" } }}>{error}</Text>}
+            {error && <Text maxW="960px" mx="auto" mb="8px" color="#DC2626" fontSize="14px" role="alert" css={{ "@media print": { display: "none" } }}>{error}</Text>}
 
             <Box maxW="960px" mx="auto" bg="white" p={{ base: "20px", md: "40px" }} borderRadius="8px" border="1px solid" borderColor="#E2E8F0" color="#1C2833">
                 <Flex justify="space-between" align="flex-start" mb="24px" gap="12px" flexWrap="wrap">
                     <Box>
-                        <Text fontSize="22px" fontWeight="bold">PENAWARAN ASURANSI</Text>
+                        <Text fontSize="20px" fontWeight="bold">PENAWARAN ASURANSI</Text>
                         <Flex align="center" gap="8px">
-                            <Text fontSize="15px" color="#64748B">{quote.quote_number}</Text>
+                            <Text fontSize="14px" color="#64748B">{quote.quote_number}</Text>
                             <QuoteStatusBadge status={quote.status} expired={quote.is_expired} />
                         </Flex>
                     </Box>
                     <Box textAlign="right">
-                        <Text fontSize="15px" color="#64748B">Tanggal</Text>
-                        <Text fontSize="16px" fontWeight="semibold">{fmtDate(quote.created_at)}</Text>
+                        <Text fontSize="14px" color="#64748B">Tanggal</Text>
+                        <Text fontSize="15px" fontWeight="semibold">{fmtDate(quote.created_at)}</Text>
                         {quote.valid_until && (
                             <>
-                                <Text fontSize="15px" color="#64748B" mt="6px">Berlaku sampai</Text>
-                                <Text fontSize="16px" fontWeight="semibold">{fmtDate(quote.valid_until)}</Text>
+                                <Text fontSize="14px" color="#64748B" mt="6px">Berlaku sampai</Text>
+                                <Text fontSize="15px" fontWeight="semibold">{fmtDate(quote.valid_until)}</Text>
                             </>
                         )}
                     </Box>
                 </Flex>
 
-                <Box mb="20px" fontSize="15px">
+                <Box mb="20px" fontSize="14px">
                     <Text><b>Kepada:</b> {quote.prospect_name}</Text>
                     <Text><b>Produk:</b> {productCatalog.label(quote.product_type)}{quote.object_description ? ` · ${quote.object_description}` : ""}</Text>
                     <Text><b>Nilai pertanggungan:</b> {fmtIDR(quote.sum_insured)}{fx ? ` (${quote.currency} ${(quote.sum_insured / fx).toLocaleString("id-ID", { maximumFractionDigits: 2 })}, kurs ${fx.toLocaleString("id-ID")})` : ""}</Text>
@@ -168,7 +168,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                 </Box>
 
                 <Box overflowX="auto">
-                    <Box as="table" w="100%" fontSize="15px" style={{ borderCollapse: "collapse", tableLayout: "fixed", minWidth: `${140 + cols * 180}px` }}>
+                    <Box as="table" w="100%" fontSize="14px" style={{ borderCollapse: "collapse", tableLayout: "fixed", minWidth: `${140 + cols * 180}px` }}>
                         <Box as="thead">
                             <Box as="tr">
                                 <Box as="th" w="140px" />
@@ -176,20 +176,20 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                                     const accepted = o.option_id === quote.accepted_option_id
                                     return (
                                         <Box as="th" key={o.option_id} p="10px 8px" textAlign="left" verticalAlign="top" bg={accepted ? "#DCFCE7" : "#F8FAFC"} borderBottom="2px solid" borderColor={accepted ? "#16A34A" : "#0D1B3E"}>
-                                            <Text fontSize="16px" fontWeight="bold">{o.insurer_short_name || o.insurer_name}</Text>
-                                            {accepted && <Text fontSize="14px" color="#16A34A" fontWeight="semibold">{quote.accepted_panel ? "Leader panel" : "Dipilih nasabah"}</Text>}
-                                            {!accepted && inPanel(o) && <Text fontSize="14px" color="#16A34A" fontWeight="semibold">Anggota panel</Text>}
-                                            {o.total_amount === lowest && lowest > 0 && cols > 1 && !accepted && !inPanel(o) && <Text fontSize="14px" color="#0369A1" fontWeight="semibold">Termurah</Text>}
-                                            {o.share_percent !== null && <Text fontSize="14px" color="#6D28D9">Share {o.share_percent}%{o.is_leader ? " · leader" : ""}</Text>}
+                                            <Text fontSize="15px" fontWeight="bold">{o.insurer_short_name || o.insurer_name}</Text>
+                                            {accepted && <Text fontSize="13px" color="#16A34A" fontWeight="semibold">{quote.accepted_panel ? "Leader panel" : "Dipilih nasabah"}</Text>}
+                                            {!accepted && inPanel(o) && <Text fontSize="13px" color="#16A34A" fontWeight="semibold">Anggota panel</Text>}
+                                            {o.total_amount === lowest && lowest > 0 && cols > 1 && !accepted && !inPanel(o) && <Text fontSize="13px" color="#0369A1" fontWeight="semibold">Termurah</Text>}
+                                            {o.share_percent !== null && <Text fontSize="13px" color="#6D28D9">Share {o.share_percent}%{o.is_leader ? " · leader" : ""}</Text>}
                                             <Box mt="4px" css={{ "@media print": { display: "none" } }}>
                                                 {editable ? (
-                                                    <SearchSelect value={o.placement_status} onChange={(v) => setPlacement(o, v as PlacementStatus)} fontSize="14px"
+                                                    <SearchSelect value={o.placement_status} onChange={(v) => setPlacement(o, v as PlacementStatus)} fontSize="13px"
                                                         options={(Object.entries(PLACEMENT_STATUS_LABELS) as [PlacementStatus, string][]).map(([value, label]) => ({ value, label }))} />
                                                 ) : (
-                                                    <Box as="span" px="6px" py="1px" borderRadius="6px" fontSize="14px" bg={PLACEMENT_STATUS_COLORS[o.placement_status].bg} color={PLACEMENT_STATUS_COLORS[o.placement_status].color}>
+                                                    <Box as="span" px="6px" py="1px" borderRadius="6px" fontSize="13px" bg={PLACEMENT_STATUS_COLORS[o.placement_status].bg} color={PLACEMENT_STATUS_COLORS[o.placement_status].color}>
                                                         {PLACEMENT_STATUS_LABELS[o.placement_status]}</Box>
                                                 )}
-                                                {o.decline_reason && <Text fontSize="14px" color="#B91C1C" mt="2px">{o.decline_reason}</Text>}
+                                                {o.decline_reason && <Text fontSize="13px" color="#B91C1C" mt="2px">{o.decline_reason}</Text>}
                                             </Box>
                                         </Box>
                                     )
@@ -201,11 +201,11 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                                 <Box as="tr" key={it.item_id} borderBottom="1px solid" borderColor="#E2E8F0">
                                     <Box as="td" p="8px" color="#64748B" verticalAlign="top">
                                         <Text fontWeight="semibold">{it.label || COVERAGE_TYPE_LABELS[it.coverage_type as ApiCoverageType] || it.coverage_type}</Text>
-                                        <Text fontSize="14px">{fmtIDR(it.sum_insured)}{it.count_in_tsi ? "" : " (perluasan)"}</Text>
+                                        <Text fontSize="13px">{fmtIDR(it.sum_insured)}{it.count_in_tsi ? "" : " (perluasan)"}</Text>
                                     </Box>
                                     {quote.options.map(o => {
                                         const r = o.item_rates.find(x => x.item_id === it.item_id)
-                                        return <Box as="td" key={o.option_id} p="8px" verticalAlign="top" fontSize="14px">{r ? `${r.rate_permille}‰ · ${fmtIDR(r.premium_amount)}` : "—"}</Box>
+                                        return <Box as="td" key={o.option_id} p="8px" verticalAlign="top" fontSize="13px">{r ? `${r.rate_permille}‰ · ${fmtIDR(r.premium_amount)}` : "—"}</Box>
                                     })}
                                 </Box>
                             ))}
@@ -231,7 +231,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                                     <Box as="td" />
                                     {quote.options.map(o => (
                                         <Box as="td" key={o.option_id} p="10px 8px">
-                                            <Button size="xs" bg="#16A34A" color="white" fontSize="14px" _hover={{ bg: "#15803D" }} disabled={busy}
+                                            <Button size="xs" bg="#16A34A" color="white" fontSize="13px" _hover={{ bg: "#15803D" }} disabled={busy}
                                                 onClick={async () => { if (await confirm({ title: `Nasabah memilih ${o.insurer_short_name || o.insurer_name}?`, confirmLabel: "Ya, pilih" })) run(t => acceptQuote(t, id, o.option_id)) }}>
                                                 <LuCheck size={12} /> Nasabah pilih ini
                                             </Button>
@@ -245,20 +245,20 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
 
                 {editable && panel.length > 1 && panelLeader && (
                     <Flex mt="16px" p="12px" bg="#F5F3FF" borderRadius="8px" gap="10px" align="center" justify="space-between" flexWrap="wrap" css={{ "@media print": { display: "none" } }}>
-                        <Text fontSize="15px" color="#4C1D95">
+                        <Text fontSize="14px" color="#4C1D95">
                             Panel koasuransi: {panel.map(o => `${o.insurer_short_name || o.insurer_name} ${o.share_percent}%`).join(" + ")} = {panelTotal}%
                             {Math.abs(panelTotal - 100) > 0.01 && " — harus 100%"}
                         </Text>
-                        <Button size="sm" bg="#6D28D9" color="white" fontSize="14px" _hover={{ bg: "#5B21B6" }} disabled={busy || Math.abs(panelTotal - 100) > 0.01}
+                        <Button size="sm" bg="#6D28D9" color="white" fontSize="13px" _hover={{ bg: "#5B21B6" }} disabled={busy || Math.abs(panelTotal - 100) > 0.01}
                             onClick={async () => { if (await confirm({ title: "Nasabah menerima panel koasuransi?", message: `${panelLeader.insurer_short_name || panelLeader.insurer_name} sebagai leader.`, confirmLabel: "Ya, terima" }))
                                 run(t => acceptQuote(t, id, panelLeader.option_id, panel.filter(o => o.option_id !== panelLeader.option_id).map(o => o.option_id))) }}>
                             <LuCheck size={13} /> Terima sebagai panel
                         </Button>
                     </Flex>
                 )}
-                {quote.notes && <Text mt="20px" fontSize="15px" whiteSpace="pre-wrap">{quote.notes}</Text>}
-                {quote.policy_number && <Text mt="16px" fontSize="15px" color="#16A34A" fontWeight="semibold">Sudah diterbitkan sebagai polis {quote.policy_number}</Text>}
-                <Text mt="24px" fontSize="14px" color="#64748B">
+                {quote.notes && <Text mt="20px" fontSize="14px" whiteSpace="pre-wrap">{quote.notes}</Text>}
+                {quote.policy_number && <Text mt="16px" fontSize="14px" color="#16A34A" fontWeight="semibold">Sudah diterbitkan sebagai polis {quote.policy_number}</Text>}
+                <Text mt="24px" fontSize="13px" color="#64748B">
                     Premi dan ketentuan dapat berubah sesuai hasil seleksi risiko penanggung. Penawaran ini bukan polis dan bukan jaminan pertanggungan.
                 </Text>
             </Box>

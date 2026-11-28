@@ -63,25 +63,25 @@ export function TasksPanel({ link }: { link: TaskLink }) {
                 <Flex gap="10px" align="center">
                     <Box p="8px" bg="#EFF6FF" borderRadius="8px" color="#1D4ED8"><LuListChecks size={18} /></Box>
                     <Flex flexDir="column">
-                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Tugas</Text>
-                        <Text color="#5D6D7E" fontSize="16px">{loading ? "Memuat..." : `${open.length} tugas terbuka`}</Text>
+                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Tugas</Text>
+                        <Text color="#5D6D7E" fontSize="15px">{loading ? "Memuat..." : `${open.length} tugas terbuka`}</Text>
                     </Flex>
                 </Flex>
-                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog({})}>
+                <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog({})}>
                     <LuPlus size={14} /> Tambah Tugas
                 </Button>
             </Flex>
 
             <Box px="24px" pb="16px">
-                {(result?.error || actionError) && <Text color="#DC2626" fontSize="16px" role="alert" py="8px">{actionError ?? result?.error}</Text>}
+                {(result?.error || actionError) && <Text color="#DC2626" fontSize="15px" role="alert" py="8px">{actionError ?? result?.error}</Text>}
                 {loading ? <Skeleton h="60px" borderRadius="8px" /> : open.length === 0 ? (
-                    <Text color="#64748B" fontSize="16px" py="12px">Belum ada tugas terbuka.</Text>
+                    <Text color="#64748B" fontSize="15px" py="12px">Belum ada tugas terbuka.</Text>
                 ) : open.map((t) => (
                     <TaskRow key={t.task_id} task={t} showLink={false} onToggle={toggle} onEdit={(x) => setDialog({ task: x })} onDelete={remove} />
                 ))}
                 {done.length > 0 && (
                     <>
-                        <Box as="button" fontSize="16px" color="#1D4ED8" mt="8px" onClick={() => setShowDone((v) => !v)}>
+                        <Box as="button" fontSize="15px" color="#1D4ED8" mt="8px" onClick={() => setShowDone((v) => !v)}>
                             {showDone ? "Sembunyikan" : "Tampilkan"} tugas selesai ({done.length})
                         </Box>
                         {showDone && done.map((t) => <TaskRow key={t.task_id} task={t} showLink={false} onToggle={toggle} onDelete={remove} />)}

@@ -35,7 +35,7 @@ function SignedMoneyInput({ value, onChange }: { value: string; onChange: (v: st
     const digits = value.replace(/\D/g, "")
     return (
         <Flex gap="6px">
-            <Button size="sm" variant="outline" minW="44px" fontSize="15px" aria-label={neg ? "Pengurangan" : "Penambahan"}
+            <Button size="sm" variant="outline" minW="44px" fontSize="14px" aria-label={neg ? "Pengurangan" : "Penambahan"}
                 onClick={() => onChange(neg ? digits : `-${digits}`)}>{neg ? "−" : "+"}</Button>
             <MoneyInput value={digits} onChange={(d) => onChange(neg ? `-${d}` : d)} />
         </Flex>
@@ -83,7 +83,7 @@ function EndorsementDialog({ policy, onClose, onSaved }: { policy: BillingPanelP
 
     return (
         <FormDialog title="Catat Endorsemen dari Penanggung" size="620px" saving={saving} error={error} onClose={onClose} onSubmit={submit}>
-            <Text fontSize="14px" color="#64748B">
+            <Text fontSize="13px" color="#64748B">
                 Untuk perubahan item pertanggungan, kendaraan armada, atau lokasi, ubah langsung di panelnya (nota dibuat otomatis).
                 Pakai formulir ini untuk endorsemen lain, misalnya perpanjangan periode atau nominal yang sudah dihitung penanggung.
             </Text>
@@ -113,13 +113,13 @@ function EndorsementDialog({ policy, onClose, onSaved }: { policy: BillingPanelP
             </FormRow>
             <FormField label="Keterangan"><Textarea {...CLAIM_INPUT} rows={2} maxLength={1000} value={f.description} onChange={(e) => set({ description: e.target.value })} /></FormField>
             {!policy.hasCoverageItems && (
-                <Flex as="label" gap="8px" align="center" fontSize="14px" color="#1C2833">
+                <Flex as="label" gap="8px" align="center" fontSize="13px" color="#1C2833">
                     <input type="checkbox" checked={f.apply} onChange={(e) => set({ apply: e.target.checked })} />
                     Ubah juga premi & nilai pertanggungan tahunan polis
                 </Flex>
             )}
             {preview && (
-                <Box p="12px" bg="#F8FAFC" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="14px">
+                <Box p="12px" bg="#F8FAFC" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" fontSize="13px">
                     <Text fontWeight="semibold" color="#0D1B3E" mb="4px">
                         {preview.gross_amount >= 0 ? "Nota debit" : "Nota kredit"}: {signed(preview.gross_amount)}
                     </Text>
@@ -238,7 +238,7 @@ function CancelDialog({ policy, onClose, onSaved }: { policy: BillingPanelProps[
                 <FormField label="Catatan"><Input {...CLAIM_INPUT} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} /></FormField>
             </FormRow>
             {preview && (
-                <Box p="12px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="8px" fontSize="14px">
+                <Box p="12px" bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="8px" fontSize="13px">
                     <Text color="#1C2833">Premi ditagih {fmtIDR(preview.billed_premium)} · {preview.months_on_risk} bulan berjalan</Text>
                     <Text fontWeight="semibold" color="#B91C1C">Dikembalikan ke nasabah: {fmtIDR(preview.refund_amount)} (nota kredit)</Text>
                     <Text color="#64748B">Premi tertahan {fmtIDR(preview.retained_premium)} · komisi ditarik {fmtIDR(preview.commission_clawback)}
@@ -248,7 +248,7 @@ function CancelDialog({ policy, onClose, onSaved }: { policy: BillingPanelProps[
                     )}
                 </Box>
             )}
-            <Text fontSize="14px" color="#64748B">Bank / leasing yang tercatat pada polis akan dibuatkan tugas pemberitahuan pembatalan.</Text>
+            <Text fontSize="13px" color="#64748B">Bank / leasing yang tercatat pada polis akan dibuatkan tugas pemberitahuan pembatalan.</Text>
         </FormDialog>
     )
 }
@@ -283,19 +283,19 @@ export function BillingPanel({ policy, onChanged, refreshKey }: BillingPanelProp
             <Flex align="center" justify="space-between" gap="8px" mb="16px" flexWrap="wrap">
                 <Flex align="center" gap="8px">
                     <LuReceipt size={16} color="#0D1B3E" />
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Nota & Endorsemen</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Nota & Endorsemen</Text>
                 </Flex>
                 {!policy.cancelled && (
                     <Flex gap="8px">
-                        <Button size="xs" variant="outline" fontSize="14px" onClick={() => setDialog("add")}><LuPlus size={12} /> Catat Endorsemen</Button>
-                        <Button size="xs" variant="outline" fontSize="14px" color="#DC2626" borderColor="#FECACA" onClick={() => setDialog("cancel")}><LuBan size={12} /> Batalkan Polis</Button>
+                        <Button size="xs" variant="outline" fontSize="13px" onClick={() => setDialog("add")}><LuPlus size={12} /> Catat Endorsemen</Button>
+                        <Button size="xs" variant="outline" fontSize="13px" color="#DC2626" borderColor="#FECACA" onClick={() => setDialog("cancel")}><LuBan size={12} /> Batalkan Polis</Button>
                     </Flex>
                 )}
             </Flex>
 
-            {error && <Text color="#DC2626" fontSize="14px" mb="8px" role="alert">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="13px" mb="8px" role="alert">{error}</Text>}
             {data?.cancellation && (
-                <Box mb="12px" p="12px" bg="#F1F5F9" borderRadius="8px" fontSize="14px">
+                <Box mb="12px" p="12px" bg="#F1F5F9" borderRadius="8px" fontSize="13px">
                     <Text fontWeight="semibold" color="#1C2833">Polis dibatalkan per {fmtDate(data.cancellation.date)}</Text>
                     <Text color="#64748B">{CANCELLATION_REASON_LABELS[data.cancellation.reason] ?? data.cancellation.reason} · {CANCELLATION_METHOD_LABELS[data.cancellation.method] ?? data.cancellation.method}{data.cancellation.note ? ` · ${data.cancellation.note}` : ""}</Text>
                 </Box>
@@ -311,18 +311,18 @@ export function BillingPanel({ policy, onChanged, refreshKey }: BillingPanelProp
                             ["Belum lunas", `kredit ${fmtIDR(s?.open_credit_amount ?? 0)}`, fmtIDR(s?.open_debit_amount ?? 0)],
                         ].map(([label, sub, value]) => (
                             <Box key={label} p="10px 12px" bg="#F8FAFC" borderRadius="8px" border="1px solid" borderColor="#E2E8F0">
-                                <Text fontSize="14px" color="#64748B">{label}</Text>
-                                <Text fontSize="16px" fontWeight="semibold" color="#1C2833">{value}</Text>
-                                <Text fontSize="14px" color="#94A3B8">{sub}</Text>
+                                <Text fontSize="13px" color="#64748B">{label}</Text>
+                                <Text fontSize="15px" fontWeight="semibold" color="#1C2833">{value}</Text>
+                                <Text fontSize="13px" color="#94A3B8">{sub}</Text>
                             </Box>
                         ))}
                     </Grid>
 
                     {data.items.length === 0
-                        ? <Text color="#64748B" fontSize="15px">Belum ada endorsemen yang mengubah premi.</Text>
+                        ? <Text color="#64748B" fontSize="14px">Belum ada endorsemen yang mengubah premi.</Text>
                         : (
                             <Box overflowX="auto">
-                                <Box as="table" w="100%" fontSize="14px" style={{ borderCollapse: "collapse" }}>
+                                <Box as="table" w="100%" fontSize="13px" style={{ borderCollapse: "collapse" }}>
                                     <Box as="thead">
                                         <Box as="tr" color="#64748B" textAlign="left">
                                             {["Nota", "Berlaku", "Jenis", "Premi", "Komisi", "Pelunasan", ""].map((h) => <Box as="th" key={h} py="6px" pr="10px" fontWeight="semibold">{h}</Box>)}
@@ -350,8 +350,8 @@ export function BillingPanel({ policy, onChanged, refreshKey }: BillingPanelProp
                                                 </Box>
                                                 <Box as="td" py="8px" pr="10px">
                                                     {r.note_type === "none" ? "—" : r.is_settled
-                                                        ? <Badge bg="#DCFCE7" color="#16A34A" fontSize="14px">{r.note_type === "credit" ? "Dikembalikan" : "Lunas"} {fmtDate(r.settled_date)}</Badge>
-                                                        : <Badge bg="#FEF3C7" color="#B45309" fontSize="14px">{r.due_date ? `Jatuh tempo ${fmtDate(r.due_date)}` : "Belum"}</Badge>}
+                                                        ? <Badge bg="#DCFCE7" color="#16A34A" fontSize="13px">{r.note_type === "credit" ? "Dikembalikan" : "Lunas"} {fmtDate(r.settled_date)}</Badge>
+                                                        : <Badge bg="#FEF3C7" color="#B45309" fontSize="13px">{r.due_date ? `Jatuh tempo ${fmtDate(r.due_date)}` : "Belum"}</Badge>}
                                                 </Box>
                                                 <Box as="td" py="8px" whiteSpace="nowrap">
                                                     {!r.is_void && (

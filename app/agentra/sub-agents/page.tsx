@@ -39,9 +39,9 @@ function StatCard({ icon, label, value, sub, tone }: {
         <Flex flex="1" minW="200px" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="12px" p="16px" gap="12px" align="center">
             <Box p="10px" borderRadius="10px" bg={tone.bg} color={tone.color}>{icon}</Box>
             <Flex flexDir="column" flex="1" minW="0">
-                <Text color="#64748B" fontSize="14px">{label}</Text>
-                {value === null ? <Skeleton h="24px" w="60px" mt="2px" /> : <Text color="#1C2833" fontSize="22px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
-                {sub && <Text color="#64748B" fontSize="14px">{sub}</Text>}
+                <Text color="#64748B" fontSize="13px">{label}</Text>
+                {value === null ? <Skeleton h="24px" w="60px" mt="2px" /> : <Text color="#1C2833" fontSize="20px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
+                {sub && <Text color="#64748B" fontSize="13px">{sub}</Text>}
             </Flex>
         </Flex>
     )
@@ -120,11 +120,11 @@ export default function SubAgents() {
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column">
                     <Flex justify="space-between" align="flex-start" gap="12px" flexWrap="wrap">
                         <Flex gap="4px" flexDir="column">
-                            <Text color="#1C2833" fontSize="24px" fontWeight="bold">Sub-Agen</Text>
-                            <Text color="#5D6D7E" fontSize="16px">Jaringan agen referral: nasabah, polis, dan bagi hasil komisi</Text>
+                            <Text color="#1C2833" fontSize="22px" fontWeight="bold">Sub-Agen</Text>
+                            <Text color="#5D6D7E" fontSize="15px">Jaringan agen referral: nasabah, polis, dan bagi hasil komisi</Text>
                         </Flex>
                         {!lock && (
-                            <Button bg="#0D1B3E" color="white" gap="6px" fontSize="16px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setFormOpen(true)}>
+                            <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }} onClick={() => setFormOpen(true)}>
                                 <LuPlus size={14} /> Tambah Sub-Agen
                             </Button>
                         )}
@@ -158,14 +158,14 @@ export default function SubAgents() {
                             sub={overall ? `dari ${fmtIDRCompact(sum((a) => a.total_commission ?? 0))} komisi kotor` : undefined} tone={{ bg: "#FEF3C7", color: "#B45309" }} />
                     </Flex>
                     {overall && overall.length >= 100 && (
-                        <Text color="#64748B" fontSize="14px" mt="-12px">Ringkasan menghitung 100 sub-agen pertama.</Text>
+                        <Text color="#64748B" fontSize="13px" mt="-12px">Ringkasan menghitung 100 sub-agen pertama.</Text>
                     )}
 
                     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
                         <Flex px="20px" py="14px" gap="10px" flexWrap="wrap" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
                             <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="12px" h="40px" flex="1" minW="200px">
                                 <LuSearch size={15} color="#64748B" />
-                                <Input border="none" outline="none" fontSize="15px" color="#1C2833" aria-label="Cari sub-agen"
+                                <Input border="none" outline="none" fontSize="14px" color="#1C2833" aria-label="Cari sub-agen"
                                     placeholder="Cari nama, kode agen, atau nomor telepon..."
                                     value={query} onChange={(e) => set(setQuery)(e.target.value)} style={{ background: "transparent" }} />
                                 {query && (
@@ -179,7 +179,7 @@ export default function SubAgents() {
                             </Box>
                         </Flex>
 
-                        {error && <Text px="20px" py="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+                        {error && <Text px="20px" py="20px" fontSize="14px" color="#DC2626">{error}</Text>}
 
                         {!error && loading && (
                             <Flex flexDir="column" gap="8px" p="20px">
@@ -190,7 +190,7 @@ export default function SubAgents() {
                         {!error && !loading && agents.length === 0 && (
                             <Flex flexDir="column" align="center" gap="8px" py="48px" px="20px" textAlign="center">
                                 <LuUsers size={40} color="#CBD5E1" />
-                                <Text color="#64748B" fontSize="16px">
+                                <Text color="#64748B" fontSize="15px">
                                     {filtered ? "Tidak ada sub-agen yang cocok dengan filter." : "Belum ada sub-agen. Tambahkan sub-agen untuk mencatat nasabah dan polis yang mereka bawa."}
                                 </Text>
                             </Flex>
@@ -203,7 +203,7 @@ export default function SubAgents() {
                                         <Table.Header>
                                             <Table.Row bg="#F8FAFC">
                                                 {["SUB-AGEN", "KONTAK", "NASABAH", "POLIS AKTIF", "PREMI", "KOMISI SUB-AGEN", "BAGI HASIL", "STATUS"].map((h) => (
-                                                    <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">
+                                                    <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px" whiteSpace="nowrap">
                                                         {h}
                                                     </Table.ColumnHeader>
                                                 ))}
@@ -214,22 +214,22 @@ export default function SubAgents() {
                                                 <Table.Row key={a.sub_agent_id} borderBottom="1px solid" borderColor="#F1F5F9" cursor="pointer" _hover={{ bg: "#F8FAFC" }}
                                                     onClick={() => router.push(`/agentra/sub-agents/${encodeURIComponent(a.sub_agent_id)}`)}>
                                                     <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                                        <Text color="#1D4ED8" fontSize="15px" fontWeight="semibold">{a.full_name}</Text>
-                                                        <Text color="#64748B" fontSize="14px" fontFamily="mono">{a.agent_code}</Text>
+                                                        <Text color="#1D4ED8" fontSize="14px" fontWeight="semibold">{a.full_name}</Text>
+                                                        <Text color="#64748B" fontSize="13px" fontFamily="mono">{a.agent_code}</Text>
                                                     </Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">
                                                         {a.whatsapp_number || a.phone_number || <Text as="span" color="#CBD5E1">—</Text>}
                                                     </Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">{a.customers_count}</Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px">{a.customers_count}</Table.Cell>
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px">
                                                         {a.active_policies_count}
-                                                        <Text as="span" color="#64748B" fontSize="14px"> / {a.policies_count}</Text>
+                                                        <Text as="span" color="#64748B" fontSize="13px"> / {a.policies_count}</Text>
                                                     </Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" whiteSpace="nowrap">{fmtIDR(a.total_premium)}</Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px" fontWeight="medium" whiteSpace="nowrap">{fmtIDR(a.sub_agent_commission)}</Table.Cell>
-                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="15px">{a.default_split_rate}%</Table.Cell>
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" whiteSpace="nowrap">{fmtIDR(a.total_premium)}</Table.Cell>
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px" fontWeight="medium" whiteSpace="nowrap">{fmtIDR(a.sub_agent_commission)}</Table.Cell>
+                                                    <Table.Cell px="16px" py="10px" color="#1C2833" fontSize="14px">{a.default_split_rate}%</Table.Cell>
                                                     <Table.Cell px="16px" py="10px">
-                                                        <Badge bg={SUB_AGENT_STATUS_COLORS[a.status].bg} color={SUB_AGENT_STATUS_COLORS[a.status].color} fontSize="14px" px="10px" py="3px" borderRadius="full">
+                                                        <Badge bg={SUB_AGENT_STATUS_COLORS[a.status].bg} color={SUB_AGENT_STATUS_COLORS[a.status].color} fontSize="13px" px="10px" py="3px" borderRadius="full">
                                                             {SUB_AGENT_STATUS_LABELS[a.status]}
                                                         </Badge>
                                                     </Table.Cell>
@@ -239,7 +239,7 @@ export default function SubAgents() {
                                     </Table.Root>
                                 </Table.ScrollArea>
                                 <Flex justify="space-between" align="center" px="20px" py="12px" borderTop="1px solid" borderColor="#F1F5F9">
-                                    <Text color="#64748B" fontSize="14px">{start}–{end} dari {total}</Text>
+                                    <Text color="#64748B" fontSize="13px">{start}–{end} dari {total}</Text>
                                     <Flex gap="6px">
                                         <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151" aria-label="Halaman sebelumnya"
                                             disabled={page <= 1} onClick={() => setPage(page - 1)}>

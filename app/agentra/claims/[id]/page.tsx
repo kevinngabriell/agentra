@@ -41,7 +41,7 @@ const CARD = { bg: "white", borderRadius: "12px", border: "1px solid", borderCol
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
     return (
-        <Flex justify="space-between" gap="16px" py="8px" borderBottom="1px solid" borderColor="#F1F5F9" fontSize="16px">
+        <Flex justify="space-between" gap="16px" py="8px" borderBottom="1px solid" borderColor="#F1F5F9" fontSize="15px">
             <Text color="#64748B" flexShrink={0}>{label}</Text>
             <Box color="#1C2833" textAlign="right" minW="0" wordBreak="break-word">{children}</Box>
         </Flex>
@@ -115,14 +115,14 @@ export default function ClaimDetailPage() {
                 </Box>
 
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column" maxW="1200px">
-                    <Link href="/agentra/claims" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#64748B", fontSize: "16px", width: "fit-content" }}>
+                    <Link href="/agentra/claims" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#64748B", fontSize: "15px", width: "fit-content" }}>
                         <LuArrowLeft size={14} /> Semua klaim
                     </Link>
 
                     {error && (
                         <Flex {...CARD} p="32px" direction="column" align="center" gap="8px">
                             <LuShieldAlert size={36} color="#CBD5E1" />
-                            <Text color="#64748B" fontSize="16px">{error}</Text>
+                            <Text color="#64748B" fontSize="15px">{error}</Text>
                         </Flex>
                     )}
 
@@ -138,30 +138,30 @@ export default function ClaimDetailPage() {
                             <Flex justify="space-between" align="flex-start" gap="12px" flexWrap="wrap">
                                 <Flex flexDir="column" gap="6px">
                                     <Flex align="center" gap="10px" flexWrap="wrap">
-                                        <Text color="#1C2833" fontSize="24px" fontWeight="bold">{c.claim_number}</Text>
+                                        <Text color="#1C2833" fontSize="22px" fontWeight="bold">{c.claim_number}</Text>
                                         <ClaimStatusBadge status={c.status} />
                                     </Flex>
-                                    <Text color="#5D6D7E" fontSize="16px">
+                                    <Text color="#5D6D7E" fontSize="15px">
                                         {c.cause} · {fmtDate(c.date_of_loss)}
                                         {c.insurer_claim_number ? ` · No. asuransi ${c.insurer_claim_number}` : ""}
                                     </Text>
                                 </Flex>
                                 <Flex gap="8px" flexWrap="wrap">
                                     {canChangeStatus && (
-                                        <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="16px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog("status")}>
+                                        <Button size="sm" bg="#0D1B3E" color="white" gap="6px" fontSize="15px" _hover={{ bg: "#1A2F5C" }} onClick={() => setDialog("status")}>
                                             <LuRefreshCw size={14} /> Ubah Status
                                         </Button>
                                     )}
-                                    <Button size="sm" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="16px" onClick={() => setDialog("followup")}>
+                                    <Button size="sm" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="15px" onClick={() => setDialog("followup")}>
                                         <LuMessageSquare size={14} /> Catat Hubungan dengan Nasabah
                                     </Button>
                                     {c.status !== "paid" && (
-                                        <Button size="sm" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="16px" onClick={() => setDialog("edit")}>
+                                        <Button size="sm" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="15px" onClick={() => setDialog("edit")}>
                                             <LuPencil size={14} /> Ubah
                                         </Button>
                                     )}
                                     {canDelete && (
-                                        <Button size="sm" variant="outline" bg="white" borderColor="#FCA5A5" color="#DC2626" gap="6px" fontSize="16px"
+                                        <Button size="sm" variant="outline" bg="white" borderColor="#FCA5A5" color="#DC2626" gap="6px" fontSize="15px"
                                             onClick={() => { setDeleteError(null); setDialog("delete") }}>
                                             <LuTrash2 size={14} /> Hapus
                                         </Button>
@@ -173,8 +173,8 @@ export default function ClaimDetailPage() {
                                 <Flex px="16px" py="12px" gap="10px" borderRadius="10px" bg="#FEF2F2" border="1px solid #FECACA" align="flex-start">
                                     <Box color="#DC2626" mt="2px"><LuCircleAlert size={16} /></Box>
                                     <Flex flexDir="column">
-                                        <Text color="#991B1B" fontSize="16px" fontWeight="semibold">Klaim ditolak</Text>
-                                        <Text color="#991B1B" fontSize="16px">{c.rejection_reason}</Text>
+                                        <Text color="#991B1B" fontSize="15px" fontWeight="semibold">Klaim ditolak</Text>
+                                        <Text color="#991B1B" fontSize="15px">{c.rejection_reason}</Text>
                                     </Flex>
                                 </Flex>
                             )}
@@ -182,7 +182,7 @@ export default function ClaimDetailPage() {
                             <Flex gap="20px" flexDir={{ base: "column", lg: "row" }} align="flex-start">
                                 <Flex flexDir="column" gap="20px" flex="1" minW="0" w="100%">
                                     <Box {...CARD} p="20px">
-                                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold" mb="8px">Detail Klaim</Text>
+                                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold" mb="8px">Detail Klaim</Text>
                                         <Row label="Nasabah">
                                             <Link href={`/agentra/customer/detail?id=${encodeURIComponent(c.customer_id)}`} style={{ color: "#1D4ED8" }}>{c.customer_name}</Link>
                                         </Row>
@@ -200,8 +200,8 @@ export default function ClaimDetailPage() {
                                         )}
                                         {c.description && (
                                             <Box pt="10px">
-                                                <Text color="#64748B" fontSize="16px" mb="4px">Kronologi</Text>
-                                                <Text color="#1C2833" fontSize="16px" whiteSpace="pre-wrap">{c.description}</Text>
+                                                <Text color="#64748B" fontSize="15px" mb="4px">Kronologi</Text>
+                                                <Text color="#1C2833" fontSize="15px" whiteSpace="pre-wrap">{c.description}</Text>
                                             </Box>
                                         )}
                                     </Box>
@@ -214,12 +214,12 @@ export default function ClaimDetailPage() {
                                     <Box {...CARD} overflow="hidden">
                                         <Flex justify="space-between" align="center" px="20px" pt="18px" pb="12px" gap="12px" flexWrap="wrap">
                                             <Flex flexDir="column">
-                                                <Text color="#1C2833" fontSize="16px" fontWeight="semibold">Dokumen Klaim</Text>
-                                                <Text color="#5D6D7E" fontSize="16px">
+                                                <Text color="#1C2833" fontSize="15px" fontWeight="semibold">Dokumen Klaim</Text>
+                                                <Text color="#5D6D7E" fontSize="15px">
                                                     {c.docs_required === 0 ? "Tanpa dokumen wajib" : `${c.docs_provided}/${c.docs_required} dokumen wajib terkumpul`}
                                                 </Text>
                                             </Flex>
-                                            <Button size="sm" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="16px"
+                                            <Button size="sm" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" gap="6px" fontSize="15px"
                                                 onClick={() => setUpload({})}>
                                                 <LuUpload size={14} /> Dokumen Lain
                                             </Button>
@@ -231,9 +231,9 @@ export default function ClaimDetailPage() {
                                                     <Box color={item.provided ? "#16A34A" : item.required ? "#B45309" : "#94A3B8"} flexShrink={0}>
                                                         {item.provided ? <LuCircleCheck size={16} /> : item.required ? <LuCircleAlert size={16} /> : <LuCircleDashed size={16} />}
                                                     </Box>
-                                                    <Text flex="1" minW="0" color="#1C2833" fontSize="16px">{item.label}</Text>
-                                                    {!item.required && <Badge px="6px" py="0" borderRadius="full" fontSize="16px" bg="#F1F5F9" color="#64748B">Opsional</Badge>}
-                                                    <Button size="2xs" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="16px" gap="4px"
+                                                    <Text flex="1" minW="0" color="#1C2833" fontSize="15px">{item.label}</Text>
+                                                    {!item.required && <Badge px="6px" py="0" borderRadius="full" fontSize="15px" bg="#F1F5F9" color="#64748B">Opsional</Badge>}
+                                                    <Button size="2xs" variant="outline" borderColor="#E2E8F0" color="#374151" fontSize="15px" gap="4px"
                                                         onClick={() => setUpload({ requirement: item })}>
                                                         <LuUpload size={10} /> {item.provided ? "Tambah" : "Unggah"}
                                                     </Button>
@@ -247,7 +247,7 @@ export default function ClaimDetailPage() {
                                             </Box>
                                         ) : (
                                             <Flex align="center" gap="8px" px="20px" py="14px" borderTop="1px solid" borderColor="#F1F5F9" color="#64748B">
-                                                <LuFileText size={14} /> <Text fontSize="16px">Belum ada dokumen yang diunggah.</Text>
+                                                <LuFileText size={14} /> <Text fontSize="15px">Belum ada dokumen yang diunggah.</Text>
                                             </Flex>
                                         )}
                                     </Box>
@@ -255,7 +255,7 @@ export default function ClaimDetailPage() {
 
                                 <Flex flexDir="column" gap="20px" w={{ base: "100%", lg: "380px" }} flexShrink={0}>
                                     <Box {...CARD} p="20px">
-                                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold" mb="8px">Nilai Klaim</Text>
+                                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold" mb="8px">Nilai Klaim</Text>
                                         <Row label="Estimasi Kerugian">{fmtIDR(c.estimated_loss)}</Row>
                                         <Row label="Risiko Sendiri">{fmtIDR(c.deductible)}</Row>
                                         <Row label="Jumlah Disetujui">{c.approved_amount === null ? "—" : fmtIDR(c.approved_amount)}</Row>
@@ -271,18 +271,18 @@ export default function ClaimDetailPage() {
                                     <TasksPanel link={{ claim_id: c.claim_id, label: c.claim_number }} />
 
                                     <Box {...CARD} p="20px">
-                                        <Text color="#1C2833" fontSize="16px" fontWeight="semibold" mb="14px">Riwayat Aktivitas</Text>
+                                        <Text color="#1C2833" fontSize="15px" fontWeight="semibold" mb="14px">Riwayat Aktivitas</Text>
                                         <Flex flexDir="column" gap="14px">
                                             {c.events.map((e) => {
                                                 const st = EVENT_STYLE[e.event_type] ?? EVENT_STYLE.note
                                                 return (
                                                     <Flex key={e.event_id} flexDir="column" gap="4px" pl="12px" borderLeft="2px solid" borderColor={st.bg}>
                                                         <Flex align="center" gap="6px" flexWrap="wrap">
-                                                            <Badge px="8px" py="1px" borderRadius="full" fontSize="16px" bg={st.bg} color={st.color}>{st.label}</Badge>
-                                                            {e.channel && <Text color="#64748B" fontSize="16px">via {CLAIM_CHANNEL_LABELS[e.channel] ?? e.channel}</Text>}
+                                                            <Badge px="8px" py="1px" borderRadius="full" fontSize="15px" bg={st.bg} color={st.color}>{st.label}</Badge>
+                                                            {e.channel && <Text color="#64748B" fontSize="15px">via {CLAIM_CHANNEL_LABELS[e.channel] ?? e.channel}</Text>}
                                                         </Flex>
-                                                        {e.description && <Text color="#1C2833" fontSize="16px" whiteSpace="pre-wrap">{e.description}</Text>}
-                                                        <Text color="#64748B" fontSize="16px">
+                                                        {e.description && <Text color="#1C2833" fontSize="15px" whiteSpace="pre-wrap">{e.description}</Text>}
+                                                        <Text color="#64748B" fontSize="15px">
                                                             {fmtDate(e.event_date)}{e.created_by_name ? ` · ${e.created_by_name}` : ""}
                                                         </Text>
                                                     </Flex>
@@ -312,11 +312,11 @@ export default function ClaimDetailPage() {
                                 <Dialog.Positioner zIndex={1501}>
                                     <Dialog.Content bg="white" borderRadius="12px" maxW="420px" w="92vw" shadow="xl">
                                         <Dialog.Header px="24px" pt="24px" pb="0">
-                                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Hapus klaim?</Dialog.Title>
+                                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">Hapus klaim?</Dialog.Title>
                                         </Dialog.Header>
                                         <Dialog.Body px="24px" py="16px">
-                                            <Text color="#475569" fontSize="16px">Klaim {c.claim_number} akan dihapus. Hanya klaim yang baru dilaporkan dan belum memiliki dokumen yang dapat dihapus.</Text>
-                                            {deleteError && <Text mt="8px" fontSize="16px" color="#DC2626">{deleteError}</Text>}
+                                            <Text color="#475569" fontSize="15px">Klaim {c.claim_number} akan dihapus. Hanya klaim yang baru dilaporkan dan belum memiliki dokumen yang dapat dihapus.</Text>
+                                            {deleteError && <Text mt="8px" fontSize="15px" color="#DC2626">{deleteError}</Text>}
                                         </Dialog.Body>
                                         <Dialog.Footer px="24px" pb="24px" gap="8px">
                                             <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" disabled={deleting} onClick={() => setDialog(null)}>Batal</Button>

@@ -32,7 +32,7 @@ export function RenewalCalendarLegend() {
       {Object.values(STATUS_STYLE).map((s) => (
         <Flex key={s.label} align="center" gap="6px">
           <Box w="10px" h="10px" borderRadius="3px" bg={s.bg} border="1px solid" borderColor={s.color} />
-          <Text fontSize="16px" color="#64748B">{s.label}</Text>
+          <Text fontSize="15px" color="#64748B">{s.label}</Text>
         </Flex>
       ))}
     </Flex>
@@ -79,17 +79,17 @@ export function RenewalCalendar({ month, filters }: { month: string; filters: Re
   return (
     <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden" flex="1" minW="300px">
       <Flex px="16px" py="12px" borderBottom="1px solid" borderColor="#E2E8F0" justify="space-between" align="center">
-        <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{monthLabel(month)}</Text>
-        <Text color="#64748B" fontSize="16px">{loading ? "…" : `${items.length} polis`}</Text>
+        <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{monthLabel(month)}</Text>
+        <Text color="#64748B" fontSize="15px">{loading ? "…" : `${items.length} polis`}</Text>
       </Flex>
 
-      {error && <Text color="#DC2626" fontSize="16px" p="16px" role="alert">{error}</Text>}
+      {error && <Text color="#DC2626" fontSize="15px" p="16px" role="alert">{error}</Text>}
 
       {loading ? <Skeleton h="320px" /> : (
         <>
           <Box display="grid" gridTemplateColumns="repeat(7, minmax(0, 1fr))">
             {WEEKDAYS.map((d) => (
-              <Text key={d} fontSize="16px" fontWeight="bold" color="#64748B" textAlign="center" py="6px" bg="#F8FAFC" letterSpacing="0.05em">{d.toUpperCase()}</Text>
+              <Text key={d} fontSize="15px" fontWeight="bold" color="#64748B" textAlign="center" py="6px" bg="#F8FAFC" letterSpacing="0.05em">{d.toUpperCase()}</Text>
             ))}
             {Array.from({ length: lead }, (_, i) => <Box key={`b${i}`} minH="84px" bg="#FAFBFC" borderTop="1px solid" borderColor="#F1F5F9" />)}
             {Array.from({ length: daysInMonth }, (_, i) => {
@@ -103,20 +103,20 @@ export function RenewalCalendar({ month, filters }: { month: string; filters: Re
                   bg={isSelected ? "#EFF6FF" : "white"} cursor={list.length ? "pointer" : "default"}
                   aria-label={`${day} ${monthLabel(month)}: ${list.length} polis`} aria-pressed={isSelected}
                   onClick={() => list.length && setSelected(isSelected ? null : date)}>
-                  <Text fontSize="16px" fontWeight={date === today ? "bold" : "medium"} mb="2px"
+                  <Text fontSize="15px" fontWeight={date === today ? "bold" : "medium"} mb="2px"
                     color={date === today ? "white" : "#64748B"} bg={date === today ? "#0D1B3E" : "transparent"}
                     w="max-content" minW="18px" textAlign="center" borderRadius="full" px="4px">{day}</Text>
                   <Flex flexDir="column" gap="2px">
                     {list.slice(0, MAX_VISIBLE).map((r) => {
                       const st = STATUS_STYLE[statusOf(r)]
                       return (
-                        <Text key={r.policy_id} fontSize="16px" lineHeight="1.3" px="4px" borderRadius="3px" bg={st.bg} color={st.color}
+                        <Text key={r.policy_id} fontSize="15px" lineHeight="1.3" px="4px" borderRadius="3px" bg={st.bg} color={st.color}
                           overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                           {r.customer_name ?? r.policy_number}
                         </Text>
                       )
                     })}
-                    {list.length > MAX_VISIBLE && <Text fontSize="16px" color="#64748B" px="4px">+{list.length - MAX_VISIBLE} lagi</Text>}
+                    {list.length > MAX_VISIBLE && <Text fontSize="15px" color="#64748B" px="4px">+{list.length - MAX_VISIBLE} lagi</Text>}
                   </Flex>
                 </Box>
               )
@@ -125,7 +125,7 @@ export function RenewalCalendar({ month, filters }: { month: string; filters: Re
 
           {selected && (
             <Box borderTop="1px solid" borderColor="#E2E8F0" p="12px">
-              <Text fontSize="16px" fontWeight="bold" color="#1C2833" mb="8px">
+              <Text fontSize="15px" fontWeight="bold" color="#1C2833" mb="8px">
                 {new Date(selected).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}
               </Text>
               <Flex flexDir="column" gap="6px">
@@ -135,13 +135,13 @@ export function RenewalCalendar({ month, filters }: { month: string; filters: Re
                     <Link key={r.policy_id} href={`/agentra/policies/${r.policy_id}`} style={{ textDecoration: "none" }}>
                       <Flex justify="space-between" align="center" gap="8px" p="8px" borderRadius="8px" border="1px solid" borderColor="#E2E8F0" _hover={{ bg: "#F8FAFC" }}>
                         <Flex flexDir="column" minW={0}>
-                          <Text fontSize="16px" fontWeight="semibold" color="#1C2833" truncate>{r.customer_name ?? "-"}</Text>
-                          <Text fontSize="16px" color="#64748B" truncate>
+                          <Text fontSize="15px" fontWeight="semibold" color="#1C2833" truncate>{r.customer_name ?? "-"}</Text>
+                          <Text fontSize="15px" color="#64748B" truncate>
                             {r.policy_number} · {r.insurer_name} · {fmtIDR(r.premium_amount)}
                           </Text>
-                          <Text fontSize="16px" color="#64748B">Tahap: {RENEWAL_STAGE_LABELS[r.workflow_stage]}</Text>
+                          <Text fontSize="15px" color="#64748B">Tahap: {RENEWAL_STAGE_LABELS[r.workflow_stage]}</Text>
                         </Flex>
-                        <Text fontSize="16px" fontWeight="semibold" px="8px" py="2px" borderRadius="full" bg={st.bg} color={st.color} whiteSpace="nowrap">{st.label}</Text>
+                        <Text fontSize="15px" fontWeight="semibold" px="8px" py="2px" borderRadius="full" bg={st.bg} color={st.color} whiteSpace="nowrap">{st.label}</Text>
                       </Flex>
                     </Link>
                   )

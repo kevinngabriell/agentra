@@ -58,12 +58,12 @@ export function TemplateDialog({ template, placeholders, onClose, onSaved }: {
             )}
             <FormField label="Nama *"><Input {...CLAIM_INPUT} maxLength={150} value={name} onChange={(e) => setName(e.target.value)} /></FormField>
             <FormField label="Isi pesan *">
-                <Textarea fontSize="16px" rows={6} maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} />
+                <Textarea fontSize="15px" rows={6} maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} />
             </FormField>
             <Flex gap="6px" flexWrap="wrap" align="center">
-                <Text fontSize="16px" color="#64748B">Penanda:</Text>
+                <Text fontSize="15px" color="#64748B">Penanda:</Text>
                 {placeholders.map((p) => (
-                    <Box key={p} as="button" px="6px" py="1px" borderRadius="4px" bg="#F1F5F9" color="#475569" fontSize="16px" fontFamily="mono"
+                    <Box key={p} as="button" px="6px" py="1px" borderRadius="4px" bg="#F1F5F9" color="#475569" fontSize="15px" fontFamily="mono"
                         onClick={() => setBody((b) => b + p)}>{p}</Box>
                 ))}
             </Flex>
@@ -71,7 +71,7 @@ export function TemplateDialog({ template, placeholders, onClose, onSaved }: {
                 <Flex gap="12px" align="end" flexWrap="wrap">
                     <FormField label="Tanggal kirim"><Input {...CLAIM_INPUT} type="date" value={date} onChange={(e) => setDate(e.target.value)} /></FormField>
                     <Checkbox.Root checked={yearly} onCheckedChange={(d) => setYearly(d.checked === true)}>
-                        <Checkbox.HiddenInput /><Checkbox.Control /><Checkbox.Label fontSize="16px">Ulangi setiap tahun (tanggal yang sama)</Checkbox.Label>
+                        <Checkbox.HiddenInput /><Checkbox.Control /><Checkbox.Label fontSize="15px">Ulangi setiap tahun (tanggal yang sama)</Checkbox.Label>
                     </Checkbox.Root>
                 </Flex>
             )}
@@ -79,9 +79,9 @@ export function TemplateDialog({ template, placeholders, onClose, onSaved }: {
                 <Box>
                     <Checkbox.Root checked={auto} onCheckedChange={(d) => setAuto(d.checked === true)}>
                         <Checkbox.HiddenInput /><Checkbox.Control />
-                        <Checkbox.Label fontSize="16px">Kirim otomatis{type === "birthday" ? " pada hari ulang tahun nasabah perorangan" : " ke semua nasabah aktif pada tanggal kirim"}</Checkbox.Label>
+                        <Checkbox.Label fontSize="15px">Kirim otomatis{type === "birthday" ? " pada hari ulang tahun nasabah perorangan" : " ke semua nasabah aktif pada tanggal kirim"}</Checkbox.Label>
                     </Checkbox.Root>
-                    <Text mt="4px" fontSize="16px" color="#64748B">Dijalankan oleh tugas harian di server. Satu nasabah menerima satu template maksimal sekali per tahun.</Text>
+                    <Text mt="4px" fontSize="15px" color="#64748B">Dijalankan oleh tugas harian di server. Satu nasabah menerima satu template maksimal sekali per tahun.</Text>
                 </Box>
             )}
         </FormDialog>

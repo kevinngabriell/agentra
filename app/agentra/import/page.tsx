@@ -27,7 +27,7 @@ const KINDS: { key: ImportKind; label: string; hint: string; next: string; nextL
 ]
 
 const colHeader = {
-  color: "#64748B", fontSize: "16px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px",
+  color: "#64748B", fontSize: "15px", fontWeight: "bold", letterSpacing: "0.05em", px: "16px", py: "10px",
 }
 
 function ImportData() {
@@ -120,8 +120,8 @@ function ImportData() {
         <Flex flexDir="column" gap="24px" p={{ base: "16px", md: "32px" }} maxW="1100px">
 
           <Flex flexDir="column" gap="4px">
-            <Text color="#1C2833" fontSize="24px" fontWeight="bold">Pindahkan Data dari Excel</Text>
-            <Text color="#5D6D7E" fontSize="16px">
+            <Text color="#1C2833" fontSize="22px" fontWeight="bold">Pindahkan Data dari Excel</Text>
+            <Text color="#5D6D7E" fontSize="15px">
               Unggah file CSV atau Excel. File diperiksa baris demi baris sebelum apa pun disimpan.
             </Text>
           </Flex>
@@ -142,10 +142,10 @@ function ImportData() {
           {/* Step 1 + 2 */}
           <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
             <Flex flexDir="column" gap="16px">
-              <Text color="#5D6D7E" fontSize="16px">{meta.hint}</Text>
+              <Text color="#5D6D7E" fontSize="15px">{meta.hint}</Text>
 
               <Flex gap="10px" flexWrap="wrap" align="center">
-                <Text fontSize="16px" fontWeight="bold" color="#1C2833">1. Template</Text>
+                <Text fontSize="15px" fontWeight="bold" color="#1C2833">1. Template</Text>
                 <Button size="sm" variant="outline" borderColor="#E2E8F0" color="#374151" gap="6px"
                   loading={busy === "template"} onClick={() => template("xlsx")}>
                   <LuDownload size={13} /> Excel (.xlsx)
@@ -157,7 +157,7 @@ function ImportData() {
               </Flex>
 
               <Flex gap="10px" flexWrap="wrap" align="center">
-                <Text fontSize="16px" fontWeight="bold" color="#1C2833">2. File</Text>
+                <Text fontSize="15px" fontWeight="bold" color="#1C2833">2. File</Text>
                 <input ref={fileInput} type="file" hidden aria-label="Pilih file import"
                   accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   onChange={(e) => pick(e.target.files?.[0] ?? null)} />
@@ -168,8 +168,8 @@ function ImportData() {
                 {file && (
                   <Flex align="center" gap="6px">
                     <LuFileSpreadsheet size={14} color="#64748B" />
-                    <Text fontSize="16px" color="#1C2833">{file.name}</Text>
-                    <Text fontSize="16px" color="#64748B">{fmtFileSize(file.size)}</Text>
+                    <Text fontSize="15px" color="#1C2833">{file.name}</Text>
+                    <Text fontSize="15px" color="#64748B">{fmtFileSize(file.size)}</Text>
                   </Flex>
                 )}
               </Flex>
@@ -178,7 +178,7 @@ function ImportData() {
 
           {error && (
             <Box bg="#FEF2F2" border="1px solid" borderColor="#FECACA" borderRadius="10px" p="16px">
-              <Text color="#DC2626" fontSize="16px" role="alert">{error}</Text>
+              <Text color="#DC2626" fontSize="15px" role="alert">{error}</Text>
             </Box>
           )}
 
@@ -187,12 +187,12 @@ function ImportData() {
             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" overflow="hidden">
               <Flex p="20px" gap="16px" align="center" justify="space-between" flexWrap="wrap" borderBottom="1px solid" borderColor="#E2E8F0">
                 <Flex gap="12px" flexWrap="wrap" align="center">
-                  <Text fontSize="16px" fontWeight="bold" color="#1C2833">3. Pratinjau</Text>
+                  <Text fontSize="15px" fontWeight="bold" color="#1C2833">3. Pratinjau</Text>
                   <Badge bg="#DCFCE7" color="#16A34A" borderRadius="full" px="10px" py="2px">{preview.valid_count} baris valid</Badge>
                   <Badge bg={preview.failed_count ? "#FEE2E2" : "#F1F5F9"} color={preview.failed_count ? "#DC2626" : "#64748B"} borderRadius="full" px="10px" py="2px">
                     {preview.failed_count} baris bermasalah
                   </Badge>
-                  <Text fontSize="16px" color="#64748B">dari {preview.total} baris</Text>
+                  <Text fontSize="15px" color="#64748B">dari {preview.total} baris</Text>
                 </Flex>
                 <Button bg="#0D1B3E" color="white" borderRadius="8px" px="20px" disabled={preview.valid_count === 0}
                   loading={busy === "import"} loadingText="Mengimpor..." onClick={confirm}>
@@ -200,7 +200,7 @@ function ImportData() {
                 </Button>
               </Flex>
               {preview.failed_count > 0 && (
-                <Text px="20px" py="10px" fontSize="16px" color="#92400E" bg="#FFFBEB" borderBottom="1px solid" borderColor="#FDE68A">
+                <Text px="20px" py="10px" fontSize="15px" color="#92400E" bg="#FFFBEB" borderBottom="1px solid" borderColor="#FDE68A">
                   Baris bermasalah dilewati saat impor. Perbaiki di file lalu unggah ulang jika ingin menyertakannya.
                 </Text>
               )}
@@ -220,31 +220,31 @@ function ImportData() {
                       const ok = r.errors.length === 0
                       return (
                         <Table.Row key={r.row} bg={ok ? undefined : "#FEF2F2"}>
-                          <Table.Cell px="16px" py="8px"><Text fontSize="16px" color="#64748B">{r.row}</Text></Table.Cell>
+                          <Table.Cell px="16px" py="8px"><Text fontSize="15px" color="#64748B">{r.row}</Text></Table.Cell>
                           {kind === "customers" ? (
                             <>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px">{r.customer_type || "—"}</Text></Table.Cell>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px">{r.display_name || "—"}</Text></Table.Cell>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px" fontFamily="mono">{r.identifier || "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px">{r.customer_type || "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px">{r.display_name || "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px" fontFamily="mono">{r.identifier || "—"}</Text></Table.Cell>
                             </>
                           ) : (
                             <>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px" fontFamily="mono">{r.policy_number || "—"}</Text></Table.Cell>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px">{r.customer_name ?? "—"}</Text></Table.Cell>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px">{r.insurer_name ?? "—"}</Text></Table.Cell>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px">{r.product_type || "—"}</Text></Table.Cell>
-                              <Table.Cell px="16px" py="8px"><Text fontSize="16px">{r.premium_amount ? fmtIDR(r.premium_amount) : "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px" fontFamily="mono">{r.policy_number || "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px">{r.customer_name ?? "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px">{r.insurer_name ?? "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px">{r.product_type || "—"}</Text></Table.Cell>
+                              <Table.Cell px="16px" py="8px"><Text fontSize="15px">{r.premium_amount ? fmtIDR(r.premium_amount) : "—"}</Text></Table.Cell>
                             </>
                           )}
                           <Table.Cell px="16px" py="8px">
                             {ok ? (
-                              <Flex align="center" gap="4px" color="#16A34A"><LuCircleCheck size={13} /><Text fontSize="16px">Valid</Text></Flex>
+                              <Flex align="center" gap="4px" color="#16A34A"><LuCircleCheck size={13} /><Text fontSize="15px">Valid</Text></Flex>
                             ) : (
                               <Flex flexDir="column" gap="2px">
                                 {r.errors.map((m) => (
                                   <Flex key={m} align="flex-start" gap="4px" color="#DC2626">
                                     <Box mt="2px" flexShrink={0}><LuTriangleAlert size={12} /></Box>
-                                    <Text fontSize="16px">{m}</Text>
+                                    <Text fontSize="15px">{m}</Text>
                                   </Flex>
                                 ))}
                               </Flex>
@@ -257,16 +257,16 @@ function ImportData() {
                 </Table.Root>
               </Box>
               {preview.total > preview.preview.length && (
-                <Text px="20px" py="10px" fontSize="16px" color="#64748B">
+                <Text px="20px" py="10px" fontSize="15px" color="#64748B">
                   Menampilkan {preview.preview.length} baris pertama. Semua baris bermasalah tetap terdaftar di bawah.
                 </Text>
               )}
               {preview.failed.length > 0 && preview.total > preview.preview.length && (
                 <Box px="20px" pb="16px">
-                  <Text fontSize="16px" fontWeight="bold" color="#1C2833" mb="4px">Seluruh baris bermasalah</Text>
+                  <Text fontSize="15px" fontWeight="bold" color="#1C2833" mb="4px">Seluruh baris bermasalah</Text>
                   <Box maxH="200px" overflowY="auto">
                     {preview.failed.map((f) => (
-                      <Text key={f.row} fontSize="16px" color="#DC2626">Baris {f.row}: {f.reason}</Text>
+                      <Text key={f.row} fontSize="15px" color="#DC2626">Baris {f.row}: {f.reason}</Text>
                     ))}
                   </Box>
                 </Box>
@@ -279,14 +279,14 @@ function ImportData() {
             <Box bg="white" borderRadius="12px" border="1px solid" borderColor="#E2E8F0" p="20px">
               <Flex align="center" gap="8px" mb="8px" color={result.inserted ? "#16A34A" : "#D97706"}>
                 <LuCircleCheck size={18} />
-                <Text fontSize="16px" fontWeight="bold">{result.inserted} dari {result.total} baris berhasil diimpor</Text>
+                <Text fontSize="15px" fontWeight="bold">{result.inserted} dari {result.total} baris berhasil diimpor</Text>
               </Flex>
               {result.failed.length > 0 && (
                 <Box mb="12px">
-                  <Text fontSize="16px" fontWeight="bold" color="#1C2833" mb="4px">{result.failed_count} baris dilewati</Text>
+                  <Text fontSize="15px" fontWeight="bold" color="#1C2833" mb="4px">{result.failed_count} baris dilewati</Text>
                   <Box maxH="200px" overflowY="auto">
                     {result.failed.map((f) => (
-                      <Text key={f.row} fontSize="16px" color="#DC2626">Baris {f.row}: {f.reason}</Text>
+                      <Text key={f.row} fontSize="15px" color="#DC2626">Baris {f.row}: {f.reason}</Text>
                     ))}
                   </Box>
                 </Box>

@@ -50,7 +50,7 @@ function Pager({ page, total, onPage }: { page: number; total: number; onPage: (
     const end   = Math.min(page * PAGE_SIZE, total)
     return (
         <Flex justify="space-between" align="center" px="20px" py="12px" borderTop="1px solid" borderColor="#F1F5F9">
-            <Text color="#64748B" fontSize="14px">{start}–{end} dari {total}</Text>
+            <Text color="#64748B" fontSize="13px">{start}–{end} dari {total}</Text>
             <Flex gap="6px">
                 <Button size="xs" variant="outline" borderColor="#E2E8F0" color="#374151" aria-label="Halaman sebelumnya"
                     disabled={page <= 1} onClick={() => onPage(page - 1)}>
@@ -69,7 +69,7 @@ function SearchBox({ value, onChange, placeholder }: { value: string; onChange: 
     return (
         <Flex align="center" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="8px" px="12px" h="40px" flex="1" minW="200px">
             <LuSearch size={15} color="#64748B" />
-            <Input border="none" outline="none" fontSize="15px" color="#1C2833" placeholder={placeholder} aria-label={placeholder}
+            <Input border="none" outline="none" fontSize="14px" color="#1C2833" placeholder={placeholder} aria-label={placeholder}
                 value={value} onChange={(e) => onChange(e.target.value)} style={{ background: "transparent" }} />
             {value && (
                 <IconButton size="xs" variant="ghost" aria-label="Hapus pencarian" color="#64748B" onClick={() => onChange("")}>
@@ -87,8 +87,8 @@ function StatCard({ icon, label, value, tone, action }: {
         <Flex flex="1" minW="200px" bg="white" border="1px solid" borderColor="#E2E8F0" borderRadius="12px" p="16px" gap="12px" align="center">
             <Box p="10px" borderRadius="10px" bg={tone.bg} color={tone.color}>{icon}</Box>
             <Flex flexDir="column" flex="1" minW="0">
-                <Text color="#64748B" fontSize="14px">{label}</Text>
-                {value === null ? <Skeleton h="24px" w="40px" mt="2px" /> : <Text color="#1C2833" fontSize="22px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
+                <Text color="#64748B" fontSize="13px">{label}</Text>
+                {value === null ? <Skeleton h="24px" w="40px" mt="2px" /> : <Text color="#1C2833" fontSize="20px" fontWeight="bold" lineHeight="1.2">{value}</Text>}
             </Flex>
             {action}
         </Flex>
@@ -155,13 +155,13 @@ function DocumentsTab({ summary, insurers, reloadKey, onChanged }: {
                     <SearchSelect value={status} onChange={set((v: string) => setStatus((v || "active") as ApiDocumentStatus | "all"))}
                         options={STATUS_OPTIONS} ariaLabel="Filter status" />
                 </Box>
-                <Button bg="#0D1B3E" color="white" gap="6px" fontSize="15px" h="40px" _hover={{ bg: "#1A2F5C" }}
+                <Button bg="#0D1B3E" color="white" gap="6px" fontSize="14px" h="40px" _hover={{ bg: "#1A2F5C" }}
                     w={{ base: "100%", sm: "auto" }} onClick={() => setUploadOpen(true)}>
                     <LuUpload size={14} /> Unggah Dokumen
                 </Button>
             </Flex>
 
-            {error && <Text px="20px" py="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+            {error && <Text px="20px" py="20px" fontSize="14px" color="#DC2626">{error}</Text>}
 
             {!error && loading && (
                 <Flex flexDir="column" gap="8px" p="20px">
@@ -172,7 +172,7 @@ function DocumentsTab({ summary, insurers, reloadKey, onChanged }: {
             {!error && !loading && docs.length === 0 && (
                 <Flex flexDir="column" align="center" gap="8px" py="48px" px="20px" textAlign="center">
                     <LuFolderOpen size={40} color="#CBD5E1" />
-                    <Text color="#64748B" fontSize="16px">
+                    <Text color="#64748B" fontSize="15px">
                         {filtered ? "Tidak ada dokumen yang cocok dengan filter." : "Belum ada dokumen. Unggah polis, SPPA, atau dokumen KYC nasabah."}
                     </Text>
                 </Flex>
@@ -224,7 +224,7 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
             <Flex px="20px" py="14px" gap="10px" flexWrap="wrap" align="center" borderBottom="1px solid" borderColor="#E2E8F0">
                 <Flex bg="#EDEDF0" borderRadius="8px" p="3px" gap="2px">
                     {KYC_FILTERS.map((f) => (
-                        <Button key={f.value} size="sm" h="32px" px="12px" fontSize="15px" borderRadius="6px"
+                        <Button key={f.value} size="sm" h="32px" px="12px" fontSize="14px" borderRadius="6px"
                             bg={filter === f.value ? "white" : "transparent"} color={filter === f.value ? "#0F172A" : "#64748B"}
                             fontWeight={filter === f.value ? "bold" : "medium"} shadow={filter === f.value ? "sm" : "none"}
                             onClick={() => { setFilter(f.value); setPage(1) }}>
@@ -236,12 +236,12 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
             </Flex>
 
             <Box px="20px" py="10px" bg="#F8FAFC" borderBottom="1px solid" borderColor="#F1F5F9">
-                <Text color="#64748B" fontSize="14px">
+                <Text color="#64748B" fontSize="13px">
                     Dokumen wajib APU-PPT — Perorangan: KTP. Perusahaan: Akta Pendirian, NIB, NPWP, dan KTP direktur/pengurus. Nasabah tidak aktif tidak ditampilkan.
                 </Text>
             </Box>
 
-            {error && <Text px="20px" py="20px" fontSize="15px" color="#DC2626">{error}</Text>}
+            {error && <Text px="20px" py="20px" fontSize="14px" color="#DC2626">{error}</Text>}
 
             {!error && loading && (
                 <Flex flexDir="column" gap="8px" p="20px">
@@ -252,7 +252,7 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
             {!error && !loading && rows.length === 0 && (
                 <Flex flexDir="column" align="center" gap="8px" py="48px">
                     <LuCircleCheck size={40} color="#86EFAC" />
-                    <Text color="#64748B" fontSize="16px">
+                    <Text color="#64748B" fontSize="15px">
                         {filter === "incomplete" ? "Semua nasabah sudah melengkapi dokumen KYC." : "Tidak ada nasabah."}
                     </Text>
                 </Flex>
@@ -265,7 +265,7 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
                             <Table.Header>
                                 <Table.Row bg="#F8FAFC">
                                     {["NASABAH", "DOKUMEN KYC", "STATUS", ""].map((h) => (
-                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="14px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px">{h}</Table.ColumnHeader>
+                                        <Table.ColumnHeader key={h} color="#64748B" fontSize="13px" fontWeight="bold" letterSpacing="0.05em" px="16px" py="10px">{h}</Table.ColumnHeader>
                                     ))}
                                 </Table.Row>
                             </Table.Header>
@@ -273,15 +273,15 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
                                 {rows.map((r) => (
                                     <Table.Row key={r.customer_id} borderBottom="1px solid" borderColor="#F1F5F9" _hover={{ bg: "#F8FAFC" }}>
                                         <Table.Cell px="16px" py="10px" minW="180px">
-                                            <Text color="#1C2833" fontSize="15px" fontWeight="medium">{r.display_name}</Text>
-                                            <Text color="#64748B" fontSize="14px">{r.customer_type === "company" ? "Perusahaan" : "Perorangan"}</Text>
+                                            <Text color="#1C2833" fontSize="14px" fontWeight="medium">{r.display_name}</Text>
+                                            <Text color="#64748B" fontSize="13px">{r.customer_type === "company" ? "Perusahaan" : "Perorangan"}</Text>
                                         </Table.Cell>
                                         <Table.Cell px="16px" py="10px">
                                             <Flex gap="6px" flexWrap="wrap">
                                                 {r.required.map((t) => {
                                                     const ok = r.present.includes(t)
                                                     return (
-                                                        <Badge key={t} px="8px" py="1px" borderRadius="full" fontSize="14px" gap="4px"
+                                                        <Badge key={t} px="8px" py="1px" borderRadius="full" fontSize="13px" gap="4px"
                                                             bg={ok ? "#DCFCE7" : "#FEF3C7"} color={ok ? "#16A34A" : "#B45309"}>
                                                             {ok ? <LuCircleCheck size={11} /> : <LuCircleAlert size={11} />} {DOCUMENT_TYPE_LABELS[t]}
                                                         </Badge>
@@ -290,18 +290,18 @@ function KycTab({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => 
                                             </Flex>
                                         </Table.Cell>
                                         <Table.Cell px="16px" py="10px" whiteSpace="nowrap">
-                                            <Text fontSize="14px" fontWeight="semibold" color={r.complete ? "#16A34A" : "#B45309"}>
+                                            <Text fontSize="13px" fontWeight="semibold" color={r.complete ? "#16A34A" : "#B45309"}>
                                                 {r.complete ? "Lengkap" : `Kurang ${r.missing.length}`}
                                             </Text>
                                         </Table.Cell>
                                         <Table.Cell px="12px" py="10px" textAlign="end" whiteSpace="nowrap">
                                             {!r.complete && (
-                                                <Button size="xs" variant="ghost" color="#0D1B3E" gap="4px" fontSize="14px"
+                                                <Button size="xs" variant="ghost" color="#0D1B3E" gap="4px" fontSize="13px"
                                                     onClick={() => setUpload({ customer: r, type: r.missing[0] })}>
                                                     <LuUpload size={12} /> Unggah
                                                 </Button>
                                             )}
-                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="14px"
+                                            <Button size="xs" variant="ghost" color="#3B82F6" gap="4px" fontSize="13px"
                                                 onClick={() => router.push(`/agentra/customer/detail?id=${encodeURIComponent(r.customer_id)}#dokumen`)}>
                                                 <LuUser size={12} /> Nasabah
                                             </Button>
@@ -393,8 +393,8 @@ export default function Documents() {
 
                 <Flex px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} gap="20px" flexDir="column">
                     <Flex gap="4px" flexDir="column">
-                        <Text color="#1C2833" fontSize="24px" fontWeight="bold">Dokumen</Text>
-                        <Text color="#5D6D7E" fontSize="16px">Polis, endorsemen, SPPA, dokumen KYC, foto survei, dan dokumen klaim nasabah</Text>
+                        <Text color="#1C2833" fontSize="22px" fontWeight="bold">Dokumen</Text>
+                        <Text color="#5D6D7E" fontSize="15px">Polis, endorsemen, SPPA, dokumen KYC, foto survei, dan dokumen klaim nasabah</Text>
                     </Flex>
 
                     <Flex gap="12px" flexWrap="wrap">
@@ -403,12 +403,12 @@ export default function Documents() {
                         <StatCard icon={<LuCircleAlert size={18} />} label="KYC Belum Lengkap" value={summary?.kyc_incomplete ?? null}
                             tone={{ bg: "#FEF3C7", color: "#B45309" }}
                             action={tab !== "kyc" && !!summary?.kyc_incomplete && (
-                                <Button size="xs" variant="ghost" color="#B45309" fontSize="14px" onClick={() => setTab("kyc")}>Lihat</Button>
+                                <Button size="xs" variant="ghost" color="#B45309" fontSize="13px" onClick={() => setTab("kyc")}>Lihat</Button>
                             )} />
                         <StatCard icon={<LuArchive size={18} />} label="Polis Berakhir, Belum Diarsip" value={summary?.expired_policy_active ?? null}
                             tone={{ bg: "#FEE2E2", color: "#DC2626" }}
                             action={!!summary?.expired_policy_active && (
-                                <Button size="xs" variant="outline" borderColor="#FCA5A5" color="#DC2626" fontSize="14px"
+                                <Button size="xs" variant="outline" borderColor="#FCA5A5" color="#DC2626" fontSize="13px"
                                     loading={archiving} onClick={handleArchiveExpired}>
                                     Arsipkan
                                 </Button>
@@ -418,7 +418,7 @@ export default function Documents() {
                     {notice && (
                         <Flex px="14px" py="10px" borderRadius="8px" border="1px solid" justify="space-between" align="center"
                             bg={notice.ok ? "#F0FDF4" : "#FEF2F2"} borderColor={notice.ok ? "#BBF7D0" : "#FECACA"}>
-                            <Text fontSize="15px" color={notice.ok ? "#16A34A" : "#DC2626"}>{notice.text}</Text>
+                            <Text fontSize="14px" color={notice.ok ? "#16A34A" : "#DC2626"}>{notice.text}</Text>
                             <IconButton size="xs" variant="ghost" aria-label="Tutup" color="#64748B" onClick={() => setNotice(null)}><LuX size={14} /></IconButton>
                         </Flex>
                     )}
@@ -426,7 +426,7 @@ export default function Documents() {
                     <Tabs.Root value={tab} onValueChange={(d) => setTab(d.value as "documents" | "kyc")} variant="plain">
                         <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w="max-content" mb="16px">
                             {([["documents", "Semua Dokumen"], ["kyc", "KYC Nasabah"]] as const).map(([v, label]) => (
-                                <Tabs.Trigger key={v} value={v} px="18px" py="8px" borderRadius="8px" fontSize="16px" fontWeight="medium" color="#64748B"
+                                <Tabs.Trigger key={v} value={v} px="18px" py="8px" borderRadius="8px" fontSize="15px" fontWeight="medium" color="#64748B"
                                     _selected={{ bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" }}>
                                     {label}
                                 </Tabs.Trigger>

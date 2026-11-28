@@ -152,9 +152,9 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                 <Dialog.Content bg="white" borderRadius="12px" maxW="520px" w="92vw" shadow="xl">
                     <Dialog.Header px="24px" pt="24px" pb="0">
                         <Flex flexDir="column" gap="2px">
-                            <Dialog.Title color="#1C2833" fontSize="16px" fontWeight="bold">Daftarkan Klaim</Dialog.Title>
+                            <Dialog.Title color="#1C2833" fontSize="15px" fontWeight="bold">Daftarkan Klaim</Dialog.Title>
                             {(policy || customer) && (
-                                <Text color="#64748B" fontSize="14px">{policy ? `Polis ${policy.number}` : customer?.name}</Text>
+                                <Text color="#64748B" fontSize="13px">{policy ? `Polis ${policy.number}` : customer?.name}</Text>
                             )}
                         </Flex>
                     </Dialog.Header>
@@ -173,7 +173,7 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                                     <SearchSelect value={policyId} onChange={setPolicyId} options={policyOptions} loading={policiesLoading}
                                         disabled={saving} placeholder="Pilih polis" ariaLabel="Polis" />
                                     {!policiesLoading && policyOptions.length === 0 && (
-                                        <Text color="#64748B" fontSize="14px">Nasabah ini belum memiliki polis.</Text>
+                                        <Text color="#64748B" fontSize="13px">Nasabah ini belum memiliki polis.</Text>
                                     )}
                                 </Flex>
                             )}
@@ -191,7 +191,7 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                                 </Flex>
                             </Flex>
                             {chosen && (
-                                <Text color="#64748B" fontSize="14px" mt="-8px">
+                                <Text color="#64748B" fontSize="13px" mt="-8px">
                                     Masa pertanggungan: {chosen.coverage_start} s/d {chosen.coverage_end}
                                 </Text>
                             )}
@@ -248,7 +248,7 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                                     <Text {...CLAIM_LABEL}>Risiko Sendiri / Deductible (Rp)</Text>
                                     <MoneyInput value={deductible} onChange={setDeductible} aria-label="Risiko sendiri" placeholder="Otomatis dari polis" />
                                     {!deductible && dedPreview && (
-                                        <Text color="#64748B" fontSize="14px">
+                                        <Text color="#64748B" fontSize="13px">
                                             {dedPreview.deductible > 0 ? `Dari ketentuan polis: ${fmtIDR(dedPreview.deductible)}` : "Polis tidak mencatat risiko sendiri"}
                                         </Text>
                                     )}
@@ -259,7 +259,7 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                                 <Flex flexDir="column" gap="4px">
                                     <Text {...CLAIM_LABEL}>Nilai sebenarnya objek saat kejadian (Rp)</Text>
                                     <MoneyInput value={valueAtRisk} onChange={setValueAtRisk} aria-label="Nilai sebenarnya" />
-                                    <Text color="#64748B" fontSize="14px">
+                                    <Text color="#64748B" fontSize="13px">
                                         Bila lebih besar dari nilai pertanggungan{dedPreview ? ` (${fmtIDR(dedPreview.sum_insured)})` : ""}, ganti rugi dipotong proporsional (klausula average).
                                     </Text>
                                 </Flex>
@@ -270,15 +270,15 @@ function RegisterClaimForm({ onClose, onRegistered, policy, customer }: Register
                                 <Input {...CLAIM_INPUT} maxLength={100} value={insurerRef} onChange={(e) => setInsurerRef(e.target.value)} />
                             </Flex>
 
-                            {error && <Text fontSize="14px" color="#DC2626">{error}</Text>}
+                            {error && <Text fontSize="13px" color="#DC2626">{error}</Text>}
                         </Flex>
                     </Dialog.Body>
                     <Dialog.Footer px="24px" pb="24px" pt="8px" gap="8px">
-                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="16px" borderRadius="8px"
+                        <Button flex="1" variant="outline" bg="white" borderColor="#E2E8F0" color="#374151" fontSize="15px" borderRadius="8px"
                             _hover={{ bg: "#F1F5F9" }} disabled={saving} onClick={onClose}>
                             Batal
                         </Button>
-                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="16px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
+                        <Button flex="1" bg="#0D1B3E" color="white" fontSize="15px" borderRadius="8px" _hover={{ bg: "#1A2F5C" }}
                             loading={saving} loadingText="Menyimpan..." onClick={handleSubmit}>
                             Daftarkan
                         </Button>

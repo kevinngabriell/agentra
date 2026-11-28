@@ -20,7 +20,7 @@ export function ChangeKindFields({ value, onChange, billing = false }: { value: 
     const set = (p: Partial<ChangeInfo>) => onChange({ ...value, ...p })
     return (
         <Flex flexDir="column" gap="10px" p="12px" bg="#F8FAFC" border="1px solid" borderColor="#E2E8F0" borderRadius="8px">
-            <Text fontSize="14px" fontWeight="semibold" color="#1C2833">Kenapa diubah?</Text>
+            <Text fontSize="13px" fontWeight="semibold" color="#1C2833">Kenapa diubah?</Text>
             <Flex gap="8px" flexDir={{ base: "column", sm: "row" }}>
                 {KINDS.map(k => {
                     const active = value.change_kind === k.kind
@@ -28,8 +28,8 @@ export function ChangeKindFields({ value, onChange, billing = false }: { value: 
                         <Box key={k.kind} as="button" flex="1" textAlign="left" p="10px" borderRadius="8px"
                             border="1px solid" borderColor={active ? "#0D1B3E" : "#E2E8F0"} bg={active ? "#EFF6FF" : "white"}
                             aria-pressed={active} onClick={() => set({ change_kind: k.kind })}>
-                            <Text fontSize="14px" fontWeight="semibold" color={active ? "#0D1B3E" : "#1C2833"}>{k.title}</Text>
-                            <Text fontSize="14px" color="#64748B">{k.hint}</Text>
+                            <Text fontSize="13px" fontWeight="semibold" color={active ? "#0D1B3E" : "#1C2833"}>{k.title}</Text>
+                            <Text fontSize="13px" color="#64748B">{k.hint}</Text>
                         </Box>
                     )
                 })}

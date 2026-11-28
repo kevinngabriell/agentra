@@ -18,8 +18,8 @@ import { MessageLog } from "@/components/communications"
 import { TemplateDialog } from "@/components/communications/TemplateDialog"
 import { useConfirm } from "@/components/ui/confirm-dialog"
 
-const LABEL = { fontSize: "16px", color: "#5D6D7E", fontWeight: "medium" } as const
-const TAB = { px: "18px", py: "8px", borderRadius: "8px", fontSize: "16px", fontWeight: "medium", color: "#64748B", _selected: { bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" } } as const
+const LABEL = { fontSize: "15px", color: "#5D6D7E", fontWeight: "medium" } as const
+const TAB = { px: "18px", py: "8px", borderRadius: "8px", fontSize: "15px", fontWeight: "medium", color: "#64748B", _selected: { bg: "white", color: "#0F172A", fontWeight: "bold", shadow: "sm" } } as const
 
 function fmtDate(iso: string) {
     return new Date(iso.replace(" ", "T")).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
@@ -64,20 +64,20 @@ function TemplatesTab() {
         <Flex flexDir="column" gap="12px">
       {dialog}
             <Flex justify="space-between" align="center" gap="12px" flexWrap="wrap">
-                <Text color="#64748B" fontSize="16px">Template untuk invoice, pengingat premi, ucapan dan broadcast. Template perpanjangan diatur di Pengaturan.</Text>
-                <Button size="sm" bg="#0D1B3E" color="white" fontSize="16px" gap="6px" onClick={() => setEditing("new")}><LuPlus size={14} /> Template Baru</Button>
+                <Text color="#64748B" fontSize="15px">Template untuk invoice, pengingat premi, ucapan dan broadcast. Template perpanjangan diatur di Pengaturan.</Text>
+                <Button size="sm" bg="#0D1B3E" color="white" fontSize="15px" gap="6px" onClick={() => setEditing("new")}><LuPlus size={14} /> Template Baru</Button>
             </Flex>
-            {error && <Text color="#DC2626" fontSize="16px">{error}</Text>}
+            {error && <Text color="#DC2626" fontSize="15px">{error}</Text>}
             {!templates && !error && <Skeleton h="160px" borderRadius="12px" />}
             {templates?.map((t) => (
                 <Box key={t.template_id} bg="white" border="1px solid #E2E8F0" borderRadius="12px" p="16px">
                     <Flex justify="space-between" align="start" gap="12px" flexWrap="wrap">
                         <Flex gap="8px" align="center" flexWrap="wrap">
-                            <Text color="#1C2833" fontSize="16px" fontWeight="semibold">{t.name}</Text>
-                            <Badge px="8px" borderRadius="full" bg="#EFF6FF" color="#1D4ED8" fontSize="16px">{TEMPLATE_TYPE_LABELS[t.template_type]}</Badge>
-                            {t.auto_send && <Badge px="8px" borderRadius="full" bg="#DCFCE7" color="#15803D" fontSize="16px">Otomatis</Badge>}
+                            <Text color="#1C2833" fontSize="15px" fontWeight="semibold">{t.name}</Text>
+                            <Badge px="8px" borderRadius="full" bg="#EFF6FF" color="#1D4ED8" fontSize="15px">{TEMPLATE_TYPE_LABELS[t.template_type]}</Badge>
+                            {t.auto_send && <Badge px="8px" borderRadius="full" bg="#DCFCE7" color="#15803D" fontSize="15px">Otomatis</Badge>}
                             {t.template_type === "holiday" && t.send_on_date && (
-                                <Text fontSize="16px" color="#64748B">{t.repeat_yearly ? `Setiap ${new Date(t.send_on_date).toLocaleDateString("id-ID", { day: "numeric", month: "long" })}` : fmtDate(t.send_on_date)}</Text>
+                                <Text fontSize="15px" color="#64748B">{t.repeat_yearly ? `Setiap ${new Date(t.send_on_date).toLocaleDateString("id-ID", { day: "numeric", month: "long" })}` : fmtDate(t.send_on_date)}</Text>
                             )}
                         </Flex>
                         <Flex gap="4px">
@@ -85,7 +85,7 @@ function TemplatesTab() {
                             <Button size="xs" variant="ghost" color="#DC2626" aria-label={`Hapus ${t.name}`} onClick={() => void remove(t)}><LuTrash2 size={13} /></Button>
                         </Flex>
                     </Flex>
-                    <Text mt="6px" fontSize="16px" color="#64748B" whiteSpace="pre-wrap">{t.body}</Text>
+                    <Text mt="6px" fontSize="15px" color="#64748B" whiteSpace="pre-wrap">{t.body}</Text>
                 </Box>
             ))}
             {editing && (
@@ -162,23 +162,23 @@ function BroadcastTab() {
         <Flex flexDir="column" gap="16px">
       {dialog}
             <Box bg="white" border="1px solid #E2E8F0" borderRadius="12px" p="20px">
-                <Text color="#1C2833" fontSize="16px" fontWeight="semibold" mb="4px">Segmen penerima</Text>
-                <Text color="#64748B" fontSize="16px" mb="12px">Nasabah aktif yang punya polis berlaku sesuai filter. Kosongkan semua filter untuk semua nasabah aktif.</Text>
+                <Text color="#1C2833" fontSize="15px" fontWeight="semibold" mb="4px">Segmen penerima</Text>
+                <Text color="#64748B" fontSize="15px" mb="12px">Nasabah aktif yang punya polis berlaku sesuai filter. Kosongkan semua filter untuk semua nasabah aktif.</Text>
                 <Flex gap="12px" flexWrap="wrap">
                     <Flex flexDir="column" gap="4px" flex="1" minW="200px"><Text {...LABEL}>Produk</Text>
                         <SearchSelect value={filters.product_type ?? ""} onChange={(v) => setFilter("product_type", v)} options={productOptions} placeholder="Semua produk" /></Flex>
                     <Flex flexDir="column" gap="4px" flex="1" minW="200px"><Text {...LABEL}>Asuransi</Text>
                         <SearchSelect value={filters.insurer_id ?? ""} onChange={(v) => setFilter("insurer_id", v)} options={insurerOptions} placeholder="Semua asuransi" /></Flex>
                     <Flex flexDir="column" gap="4px" flex="1" minW="160px"><Text {...LABEL}>Kota lokasi risiko</Text>
-                        <Input fontSize="16px" maxLength={100} placeholder="mis. Jakarta" value={filters.city ?? ""} onChange={(e) => setFilter("city", e.target.value)} /></Flex>
+                        <Input fontSize="15px" maxLength={100} placeholder="mis. Jakarta" value={filters.city ?? ""} onChange={(e) => setFilter("city", e.target.value)} /></Flex>
                     <Flex flexDir="column" gap="4px" flex="1" minW="160px"><Text {...LABEL}>Jenis nasabah</Text>
                         <SearchSelect value={filters.customer_type ?? ""} onChange={(v) => setFilter("customer_type", v)} placeholder="Semua"
                             options={[{ value: "", label: "Semua" }, { value: "individual", label: "Perorangan" }, { value: "company", label: "Perusahaan" }]} /></Flex>
                 </Flex>
                 <Flex mt="12px" gap="12px" align="center" flexWrap="wrap">
-                    <Button size="sm" variant="outline" fontSize="16px" loading={busy && !current} onClick={() => void doPreview()}>Hitung penerima</Button>
+                    <Button size="sm" variant="outline" fontSize="15px" loading={busy && !current} onClick={() => void doPreview()}>Hitung penerima</Button>
                     {current && (
-                        <Text fontSize="16px" color="#334155">
+                        <Text fontSize="15px" color="#334155">
                             <b>{current.reachable}</b> nasabah bisa dihubungi
                             {current.no_whatsapp > 0 ? `, ${current.no_whatsapp} tanpa WhatsApp valid dilewati` : ""}
                             {current.sample.length > 0 ? ` · mis. ${current.sample.slice(0, 3).join(", ")}` : ""}
@@ -186,37 +186,37 @@ function BroadcastTab() {
                     )}
                 </Flex>
                 {current && current.reachable > current.max_recipients && (
-                    <Text mt="6px" fontSize="16px" color="#B45309">Maksimal {current.max_recipients} penerima per broadcast. Persempit segmen.</Text>
+                    <Text mt="6px" fontSize="15px" color="#B45309">Maksimal {current.max_recipients} penerima per broadcast. Persempit segmen.</Text>
                 )}
             </Box>
 
             <Box bg="white" border="1px solid #E2E8F0" borderRadius="12px" p="20px">
-                <Text color="#1C2833" fontSize="16px" fontWeight="semibold" mb="12px">Pesan</Text>
+                <Text color="#1C2833" fontSize="15px" fontWeight="semibold" mb="12px">Pesan</Text>
                 <Flex flexDir="column" gap="12px">
                     <Flex flexDir="column" gap="4px"><Text {...LABEL}>Nama broadcast *</Text>
-                        <Input fontSize="16px" maxLength={150} placeholder="mis. Promo asuransi kendaraan Oktober" value={name} onChange={(e) => setName(e.target.value)} /></Flex>
+                        <Input fontSize="15px" maxLength={150} placeholder="mis. Promo asuransi kendaraan Oktober" value={name} onChange={(e) => setName(e.target.value)} /></Flex>
                     <Flex flexDir="column" gap="4px"><Text {...LABEL}>Template Pesan</Text>
                         <SearchSelect value={templateId} clearable placeholder="Pilih template (opsional)"
                             onChange={(id) => { setTemplateId(id); const t = templates.find((x) => x.template_id === id); if (t) setBody(t.body) }}
                             options={templates.map((t) => ({ value: t.template_id, label: t.name }))} /></Flex>
                     <Flex flexDir="column" gap="4px"><Text {...LABEL}>Isi pesan *</Text>
-                        <Textarea fontSize="16px" rows={5} maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} />
-                        <Text fontSize="16px" color="#64748B">{"{customer_name}"} diisi dengan nama masing-masing nasabah. Penanda polis tidak tersedia di broadcast.</Text></Flex>
-                    {error && <Text color="#DC2626" fontSize="16px" role="alert">{error}</Text>}
-                    {result && <Text color="#16A34A" fontSize="16px" role="status">{result}</Text>}
-                    <Box><Button bg="#25D366" color="white" fontSize="16px" gap="6px" loading={busy && !!current} disabled={!current || current.reachable === 0 || current.reachable > current.max_recipients} onClick={() => void send()}>
+                        <Textarea fontSize="15px" rows={5} maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} />
+                        <Text fontSize="15px" color="#64748B">{"{customer_name}"} diisi dengan nama masing-masing nasabah. Penanda polis tidak tersedia di broadcast.</Text></Flex>
+                    {error && <Text color="#DC2626" fontSize="15px" role="alert">{error}</Text>}
+                    {result && <Text color="#16A34A" fontSize="15px" role="status">{result}</Text>}
+                    <Box><Button bg="#25D366" color="white" fontSize="15px" gap="6px" loading={busy && !!current} disabled={!current || current.reachable === 0 || current.reachable > current.max_recipients} onClick={() => void send()}>
                         <LuSend size={14} /> Kirim Broadcast
                     </Button>
-                    {!current && <Text mt="4px" fontSize="16px" color="#64748B">Hitung penerima dulu setelah mengubah filter.</Text>}</Box>
+                    {!current && <Text mt="4px" fontSize="15px" color="#64748B">Hitung penerima dulu setelah mengubah filter.</Text>}</Box>
                 </Flex>
             </Box>
 
             {history.length > 0 && (
                 <Box bg="white" border="1px solid #E2E8F0" borderRadius="12px" p="20px">
-                    <Text color="#1C2833" fontSize="16px" fontWeight="semibold" mb="10px">Broadcast sebelumnya</Text>
+                    <Text color="#1C2833" fontSize="15px" fontWeight="semibold" mb="10px">Broadcast sebelumnya</Text>
                     <Flex flexDir="column" gap="8px">
                         {history.map((b) => (
-                            <Flex key={b.broadcast_id} justify="space-between" gap="12px" flexWrap="wrap" fontSize="16px">
+                            <Flex key={b.broadcast_id} justify="space-between" gap="12px" flexWrap="wrap" fontSize="15px">
                                 <Text color="#334155" fontWeight="medium">{b.name}</Text>
                                 <Text color="#64748B">{fmtDate(b.created_at)} · {b.sent_count}/{b.recipient_count} terkirim{b.failed_count ? ` · ${b.failed_count} gagal` : ""}</Text>
                             </Flex>
@@ -259,8 +259,8 @@ export default function CommunicationsPage() {
                 <Box display={{ base: "none", md: "block" }}><TopBar title="Communications" /></Box>
                 <Flex flexDir="column" gap="20px" p={{ base: "16px", md: "32px" }}>
                     <Flex flexDir="column" gap="4px">
-                        <Text color="#1C2833" fontSize="24px" fontWeight="bold">Komunikasi Nasabah</Text>
-                        <Text color="#5D6D7E" fontSize="16px">Template pesan, ucapan otomatis, broadcast ke segmen nasabah, dan riwayat semua pesan WhatsApp.</Text>
+                        <Text color="#1C2833" fontSize="22px" fontWeight="bold">Komunikasi Nasabah</Text>
+                        <Text color="#5D6D7E" fontSize="15px">Template pesan, ucapan otomatis, broadcast ke segmen nasabah, dan riwayat semua pesan WhatsApp.</Text>
                     </Flex>
                     <Tabs.Root defaultValue="templates" variant="plain">
                         <Tabs.List bg="#EDEDF0" borderRadius="10px" p="4px" gap="2px" w="max-content" maxW="100%" overflowX="auto" mb="16px">
