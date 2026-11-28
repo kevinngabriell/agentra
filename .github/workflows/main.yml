@@ -11,7 +11,14 @@ jobs:
 
     env:
       APP_DIR: /home/ubuntu/apps/agentra
+      # NEXT_PUBLIC_* values are inlined by `next build`, so they must be set here, in the build
+      # environment. A .env on the server is read too late (and rsync --delete removes it).
       NEXT_PUBLIC_API_URL: "https://getmovira.com/agentra-api"
+      NEXT_PUBLIC_APP_ID: "7c2e6a2f-b254-4bbb-87f2-c6ece0f88db2"
+      NEXT_PUBLIC_APP_ROLE_ID: "app_role69f45cfb90d05"
+      NEXT_PUBLIC_SUPPORT_WHATSAPP: "628114411307"
+      NEXT_PUBLIC_STORAGE_URL: "https://kencana.basic.box.cloudeka.id"
+      NEXT_PUBLIC_SITE_URL: "https://agentra.getmovira.com"
 
     steps:
       - name: Checkout repository
